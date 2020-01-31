@@ -34,3 +34,5 @@
 .vs/
 *.filters
 *.user
+Debug/
+x64/
