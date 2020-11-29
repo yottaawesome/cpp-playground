@@ -12,7 +12,4 @@ int fnDllModule()
     return 0;
 }
 
-void DllClass::Hello()
-{
-    std::wcout << L"Hello from DllClass!" << std::endl;
-}
+int fnDllModule2() { return 0; }
