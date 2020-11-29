@@ -17,6 +17,11 @@ namespace TestNamespace
 
 	void Test::Print()
 	{
+		InternalPrint();
+	}
+
+	void InternalPrint()
+	{
 		std::wcout << L"Hello World from TestNamespace::Test!" << std::endl;
 	}
 }

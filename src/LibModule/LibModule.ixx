@@ -11,3 +11,10 @@ export namespace TestNamespace
 			void Print();
 	};
 }
+
+module :private;
+
+namespace TestNamespace
+{
+	void InternalPrint();
+}
