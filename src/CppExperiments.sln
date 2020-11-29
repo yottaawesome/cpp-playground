@@ -13,6 +13,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "LibModule", "LibModule\LibM
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ConsoleModuleTest", "ConsoleModuleTest\ConsoleModuleTest.vcxproj", "{F39310A1-48DD-4BB6-B8FE-DE0609590B7B}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "DllModule", "DllModule\DllModule.vcxproj", "{EBF6008A-5C15-4313-826F-FFD9B8831BC0}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -53,6 +55,14 @@ Global
 		{F39310A1-48DD-4BB6-B8FE-DE0609590B7B}.Release|x64.Build.0 = Release|x64
 		{F39310A1-48DD-4BB6-B8FE-DE0609590B7B}.Release|x86.ActiveCfg = Release|Win32
 		{F39310A1-48DD-4BB6-B8FE-DE0609590B7B}.Release|x86.Build.0 = Release|Win32
+		{EBF6008A-5C15-4313-826F-FFD9B8831BC0}.Debug|x64.ActiveCfg = Debug|x64
+		{EBF6008A-5C15-4313-826F-FFD9B8831BC0}.Debug|x64.Build.0 = Debug|x64
+		{EBF6008A-5C15-4313-826F-FFD9B8831BC0}.Debug|x86.ActiveCfg = Debug|Win32
+		{EBF6008A-5C15-4313-826F-FFD9B8831BC0}.Debug|x86.Build.0 = Debug|Win32
+		{EBF6008A-5C15-4313-826F-FFD9B8831BC0}.Release|x64.ActiveCfg = Release|x64
+		{EBF6008A-5C15-4313-826F-FFD9B8831BC0}.Release|x64.Build.0 = Release|x64
+		{EBF6008A-5C15-4313-826F-FFD9B8831BC0}.Release|x86.ActiveCfg = Release|Win32
+		{EBF6008A-5C15-4313-826F-FFD9B8831BC0}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -60,6 +70,7 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{10167BD5-62F9-4F22-8FA8-374E102DF14C} = {8EBE9AB0-920F-4B6E-B695-A95CBC521A53}
 		{F39310A1-48DD-4BB6-B8FE-DE0609590B7B} = {8EBE9AB0-920F-4B6E-B695-A95CBC521A53}
+		{EBF6008A-5C15-4313-826F-FFD9B8831BC0} = {8EBE9AB0-920F-4B6E-B695-A95CBC521A53}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {19DD61FA-03AE-40FC-9766-C324D9CCDFDB}
