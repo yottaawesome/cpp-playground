@@ -1,6 +1,36 @@
 #include <iostream>
 #include <utility>
+#include <memory>
+#include <stdexcept>
 #include "MemoryPool.hpp"
+
+template<typename T>
+class required_shared_ptr
+{
+    public:
+        virtual T* operator->() const
+        {
+            T* value = _internal.operator->();
+            if (value == nullptr)
+                throw std::runtime_error("value is nullptr");
+            return value;
+        }
+
+        virtual required_shared_ptr<T>& operator=(T* other)
+        {
+            _internal.reset(other);
+            return *this;
+        }
+
+        virtual required_shared_ptr<T>& operator=(required_shared_ptr<T>& other)
+        {
+            _internal = other._internal;
+            return *this;
+        }
+
+    private:
+        std::shared_ptr<T> _internal;
+};
 
 class A
 {
@@ -13,6 +43,8 @@ public:
 
 int main(int argc, char* args)
 {
+    required_shared_ptr<int> test;
+
     MemoryPool op(10000);
     A* a = op.Allocate<A>(1, 5);
     std::cout << a->i << std::endl;
