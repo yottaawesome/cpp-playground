@@ -10,6 +10,13 @@ export namespace TestNamespace
 			Test();
 			void Print();
 	};
+
+	class Test2
+	{
+		public:
+			Test2();
+			void Print();
+	};
 }
 
 module :private;
