@@ -14,4 +14,6 @@ namespace TestNamespace
 	{
 		InternalPrint();
 	}
+
+	ITest3::~ITest3() {};
 }

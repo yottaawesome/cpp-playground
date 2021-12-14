@@ -17,6 +17,12 @@ export namespace TestNamespace
 			Test2();
 			void Print();
 	};
+
+	struct ITest3
+	{
+		virtual void Func() = 0;
+		virtual ~ITest3(); // = 0 (abstract not allowed here);
+	};
 }
 
 module :private;
