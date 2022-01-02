@@ -2,6 +2,8 @@
 
 #include <cmath>
 
+// see new additions https://en.cppreference.com/w/cpp/memory/construct_at
+// and https://en.cppreference.com/w/cpp/memory/destroy_at
 class MemoryPool
 {
     public:
