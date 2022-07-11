@@ -4,6 +4,7 @@
 
 import LibModule;
 import DllModule;
+import TestModule;
 
 typedef int (*fnDllModule2Ptr)();
 
@@ -15,7 +16,9 @@ using int_unique = releasable_unique_ptr<int>;
 int main(int argc, char** args)
 {
 	AA a;
-	F x1;
+	//F x1;
+
+	TestModule::TestFunc();
 
 	releasable_unique_ptr<int>(new int(1), [](int* value) { delete value; });
 	int_unique(new int(1), [](int* ptr) { delete ptr; });
