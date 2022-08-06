@@ -14,7 +14,8 @@ struct FixedString
 		return buf; 
 	}
 };
-template<unsigned N> FixedString(char const (&)[N])->FixedString<N - 1>;
+template<unsigned N> 
+FixedString(char const (&)[N])->FixedString<N - 1>;
 
 template<FixedString T>
 class Foo 
@@ -47,7 +48,8 @@ struct FixedString2
 		std::cout << buf << std::endl;
 	}
 };
-template<size_t N> FixedString2(char const (&)[N])->FixedString2<N>;
+template<size_t N>
+FixedString2(char const (&)[N])->FixedString2<N>;
 
 template<FixedString2 T>
 class Foo2 
@@ -56,8 +58,45 @@ class Foo2
 		static constexpr const char* Name = T;
 		void hello() const
 		{
-			std::cout << Name << std::endl;;
+			std::cout << Name << std::endl;
 		};
+};
+
+
+enum class SomeEnum
+{
+	Entry1,
+	Entry2,
+	Entry3
+};
+
+template<SomeEnum S>
+struct Command
+{
+	void operator()()
+	{
+		std::cout << 1 << std::endl;
+	}
+};
+
+template<>
+struct Command<SomeEnum::Entry2>
+{
+	Command(int x) {}
+
+	void operator()()
+	{
+		std::cout << 2 << std::endl;
+	}
+};
+
+template<>
+struct Command<SomeEnum::Entry3>
+{
+	static void Execute()
+	{
+		std::cout << 2 << std::endl;
+	}
 };
 
 int main(int argc, char* argv[])
@@ -75,6 +114,10 @@ int main(int argc, char* argv[])
 	//H a = "A";
 	//H b = L"A";
 	//H c = L"A";
+
+	Command<SomeEnum::Entry1>()();
+	Command<SomeEnum::Entry2>(1)();
+	Command<SomeEnum::Entry3>::Execute();
 
     return 0;
 }
