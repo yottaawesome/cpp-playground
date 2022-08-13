@@ -21,6 +21,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ExecutableModule", "Executa
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "StringTemplates", "StringTemplates\StringTemplates.vcxproj", "{9B1A898B-2772-434E-9279-9324042CC1FA}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "EventLoop", "EventLoop\EventLoop.vcxproj", "{16681378-2234-4BC0-AEB5-54031AE75348}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -93,6 +95,14 @@ Global
 		{9B1A898B-2772-434E-9279-9324042CC1FA}.Release|x64.Build.0 = Release|x64
 		{9B1A898B-2772-434E-9279-9324042CC1FA}.Release|x86.ActiveCfg = Release|Win32
 		{9B1A898B-2772-434E-9279-9324042CC1FA}.Release|x86.Build.0 = Release|Win32
+		{16681378-2234-4BC0-AEB5-54031AE75348}.Debug|x64.ActiveCfg = Debug|x64
+		{16681378-2234-4BC0-AEB5-54031AE75348}.Debug|x64.Build.0 = Debug|x64
+		{16681378-2234-4BC0-AEB5-54031AE75348}.Debug|x86.ActiveCfg = Debug|Win32
+		{16681378-2234-4BC0-AEB5-54031AE75348}.Debug|x86.Build.0 = Debug|Win32
+		{16681378-2234-4BC0-AEB5-54031AE75348}.Release|x64.ActiveCfg = Release|x64
+		{16681378-2234-4BC0-AEB5-54031AE75348}.Release|x64.Build.0 = Release|x64
+		{16681378-2234-4BC0-AEB5-54031AE75348}.Release|x86.ActiveCfg = Release|Win32
+		{16681378-2234-4BC0-AEB5-54031AE75348}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
