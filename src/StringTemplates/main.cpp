@@ -65,7 +65,7 @@ class Foo2
 
 enum class SomeEnum
 {
-	Entry1,
+	Entry1 = 'A',
 	Entry2,
 	Entry3
 };
