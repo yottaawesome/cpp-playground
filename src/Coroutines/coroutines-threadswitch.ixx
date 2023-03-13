@@ -1,3 +1,4 @@
+// Sample from https://en.cppreference.com/w/cpp/language/coroutines
 module;
 
 #include <coroutine>
@@ -9,27 +10,22 @@ export module coroutines:threadswitch;
 
 export namespace Coroutines::ThreadSwitch
 {
-    // Sample from https://en.cppreference.com/w/cpp/language/coroutines
-    auto switch_to_new_thread(std::jthread& out)
+    struct awaitable
     {
-        struct awaitable
+        std::jthread* p_out;
+        bool await_ready() { return false; }
+        void await_suspend(std::coroutine_handle<> h)
         {
-            std::jthread* p_out;
-            bool await_ready() { return false; }
-            void await_suspend(std::coroutine_handle<> h)
-            {
-                std::jthread& out = *p_out;
-                if (out.joinable())
-                    throw std::runtime_error("Output jthread parameter not empty");
-                out = std::jthread([h] { h.resume(); });
-                // Potential undefined behavior: accessing potentially destroyed *this
-                // std::cout << "New thread ID: " << p_out->get_id() << '\n';
-                std::cout << "New thread ID: " << out.get_id() << '\n'; // this is OK
-            }
-            void await_resume() {}
-        };
-        return awaitable{ &out };
-    }
+            std::jthread& out = *p_out;
+            if (out.joinable())
+                throw std::runtime_error("Output jthread parameter not empty");
+            out = std::jthread([h] { h.resume(); });
+            // Potential undefined behavior: accessing potentially destroyed *this
+            // std::cout << "New thread ID: " << p_out->get_id() << '\n';
+            std::cout << "New thread ID: " << out.get_id() << '\n'; // this is OK
+        }
+        void await_resume() {}
+    };
 
     struct task
     {
@@ -42,6 +38,11 @@ export namespace Coroutines::ThreadSwitch
             void unhandled_exception() {}
         };
     };
+
+    auto switch_to_new_thread(std::jthread& out)
+    {   
+        return awaitable{ &out };
+    }
 
     task resuming_on_new_thread(std::jthread& out)
     {
