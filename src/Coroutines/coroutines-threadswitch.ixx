@@ -5,6 +5,7 @@ module;
 #include <iostream>
 #include <stdexcept>
 #include <thread>
+#include <format>
 
 export module coroutines:threadswitch;
 
@@ -19,12 +20,16 @@ export namespace Coroutines::ThreadSwitch
             std::jthread& out = *p_out;
             if (out.joinable())
                 throw std::runtime_error("Output jthread parameter not empty");
+            std::cout << "This thread ID: " << std::this_thread::get_id() << '\n'; // this is OK
             out = std::jthread([h] { h.resume(); });
             // Potential undefined behavior: accessing potentially destroyed *this
             // std::cout << "New thread ID: " << p_out->get_id() << '\n';
             std::cout << "New thread ID: " << out.get_id() << '\n'; // this is OK
         }
-        void await_resume() {}
+        void await_resume() 
+        {
+            std::cout << "AwaitResume(): " << std::this_thread::get_id() << '\n';
+        }
     };
 
     struct task
