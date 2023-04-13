@@ -129,6 +129,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="coroutines-eagerfuture.ixx" />
     <ClCompile Include="coroutines-threadswitch2.ixx" />
     <ClCompile Include="coroutines-generator.ixx" />
     <ClCompile Include="coroutines-threadswitch.ixx" />
