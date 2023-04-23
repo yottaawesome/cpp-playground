@@ -35,6 +35,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Ranges", "Ranges\Ranges.vcx
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TypeErasure", "TypeErasure\TypeErasure.vcxproj", "{B6DF74E6-EEA9-4998-95D0-AA679A4A8B45}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MultiVector", "MultiVector\MultiVector.vcxproj", "{D9ED2267-9A44-4F1C-8407-63CC859D3DB3}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -163,6 +165,14 @@ Global
 		{B6DF74E6-EEA9-4998-95D0-AA679A4A8B45}.Release|x64.Build.0 = Release|x64
 		{B6DF74E6-EEA9-4998-95D0-AA679A4A8B45}.Release|x86.ActiveCfg = Release|Win32
 		{B6DF74E6-EEA9-4998-95D0-AA679A4A8B45}.Release|x86.Build.0 = Release|Win32
+		{D9ED2267-9A44-4F1C-8407-63CC859D3DB3}.Debug|x64.ActiveCfg = Debug|x64
+		{D9ED2267-9A44-4F1C-8407-63CC859D3DB3}.Debug|x64.Build.0 = Debug|x64
+		{D9ED2267-9A44-4F1C-8407-63CC859D3DB3}.Debug|x86.ActiveCfg = Debug|Win32
+		{D9ED2267-9A44-4F1C-8407-63CC859D3DB3}.Debug|x86.Build.0 = Debug|Win32
+		{D9ED2267-9A44-4F1C-8407-63CC859D3DB3}.Release|x64.ActiveCfg = Release|x64
+		{D9ED2267-9A44-4F1C-8407-63CC859D3DB3}.Release|x64.Build.0 = Release|x64
+		{D9ED2267-9A44-4F1C-8407-63CC859D3DB3}.Release|x86.ActiveCfg = Release|Win32
+		{D9ED2267-9A44-4F1C-8407-63CC859D3DB3}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
