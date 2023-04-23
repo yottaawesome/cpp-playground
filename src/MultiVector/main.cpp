@@ -22,6 +22,14 @@ int main()
     vectorOfThings.push_back(B{});
     vectorOfThings.push_back(C{});
 
+    // Invoke only A objects
+    vectorOfThings.for_all<A>(
+        [](A& item)
+        {
+            item.DoSomething();
+        }
+    );
+    // Invoke all
     vectorOfThings.for_all(
         [](auto& item)
         {
