@@ -12,4 +12,4 @@ int fnDllModule()
     return 0;
 }
 
-int fnDllModule2() { return 0; }
+int returnNumber() { return 0; }

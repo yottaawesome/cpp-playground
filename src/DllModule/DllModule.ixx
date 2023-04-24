@@ -3,7 +3,7 @@ export module DllModule;
 // may need to put __declspec before the return type to appease the compiler sometimes
 export int __declspec(dllexport) fnDllModule();
 
-export extern "C" int __declspec(dllexport) fnDllModule2();
+export extern "C" int __declspec(dllexport) returnNumber();
 
 export class AA
 {

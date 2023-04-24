@@ -1,41 +1,50 @@
 #include <iostream>
 #include <memory>
+#include <format>
 #include <Windows.h>
 
 import LibModule;
 import DllModule;
 import TestModule;
 
-typedef int (*fnDllModule2Ptr)();
-
-template<typename T>
-using releasable_unique_ptr = std::unique_ptr<T, void(*)(T*)>;
-
-using int_unique = releasable_unique_ptr<int>;
-
 int main(int argc, char** args)
 {
+	// Here we use the exported class from the DLL
 	AA a;
-	//F x1;
+	a.MM();
 
+	// Here we use TestFunc from ExecutableModule
 	TestModule::TestFunc();
 
-	releasable_unique_ptr<int>(new int(1), [](int* value) { delete value; });
-	int_unique(new int(1), [](int* ptr) { delete ptr; });
-
+	// Here we use the module from the static lib
 	TestNamespace::MyFunc();
 	TestNamespace::Test t;
 	t.Print();
+
+	// Here we use the exported class from the DLL
 	DllClass dll;
 	dll.Hello();
 
-	HMODULE hmod = nullptr;
-	hmod = GetModuleHandleW(L"DllModule");
-	//GetModuleHandleExW(GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT, L"DllModule", &hmod);
-	if (hmod)
-		std::wcout << L"OK" << std::endl;
-	fnDllModule2Ptr x = (fnDllModule2Ptr)GetProcAddress(hmod, "fnDllModule2");
-	if (x)
-		std::wcout << L"OK " << x() << std::endl;
+	HMODULE dllModule = GetModuleHandleW(L"DllModule");
+	if (!dllModule)
+	{
+		std::wcout << L"Failed getting DllModule HMODULE\n";
+		return 1;
+	}
+
+	using returnNumberFromDLL = int(*)();
+	returnNumberFromDLL returnNumber = reinterpret_cast<returnNumberFromDLL>(
+		GetProcAddress(dllModule, "returnNumber")
+	);
+	if (!returnNumber)
+	{
+		std::wcout << L"Failed getting returnNumber() pointer\n";
+		return 1;
+	}
+
+	std::wcout << std::format(
+		L"Successfully invoked returnNumber(): {}", 
+		returnNumber()
+	);
 	return 0;
 }
