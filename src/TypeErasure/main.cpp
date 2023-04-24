@@ -24,7 +24,7 @@ class Object // (2)
         };
 
         template<typename T> // (6)
-        struct Model : Concept 
+        struct Model final : Concept 
         {
             Model(const T& t) : object(t) {}
             std::string getName() const override 
