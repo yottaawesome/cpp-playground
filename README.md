@@ -2,7 +2,7 @@
 
 ## Introduction 
 
-This repo just holds some random C++ experiments to evaluate various features of the language. Some of the samples are derived from external sources, wjhich are credited in the relevant source files.
+This repo just holds some random C++ experiments to evaluate various features of the language. Some of the samples are derived from external sources, which are credited in the relevant source files.
 
 ## Building
 
