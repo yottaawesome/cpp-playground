@@ -6,9 +6,6 @@ export module zstring_view;
 
 export namespace View
 {
-	export constexpr int x = 10;
-	const std::string Blah = "HAHA";
-
 	// Adopted from https://github.com/Aszarsha/zstring_view/blob/master/zstring_view.hpp
 	// See also https://stackoverflow.com/questions/41286898/using-stdstring-view-with-api-that-expects-null-terminated-string
 	template<class CharT, class Traits = std::char_traits<CharT>>

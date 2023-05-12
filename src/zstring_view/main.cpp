@@ -11,9 +11,6 @@ int main()
     //
     View::zstring_view blah{ "Hello, world!\n" };
     std::cout << blah;
-    std::string
-
-    int m = View::x;
 
     return 0;
 }
