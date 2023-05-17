@@ -1,4 +1,6 @@
-// Cannot include #include any standard headers for this to work
+// Cannot include #include any standard headers for this to work.
+// Headers #including the standard headers are probably also going
+// to cause this to fail.
 import std;
 
 int main()
