@@ -17,37 +17,7 @@
 */
 
 import std;
-
-struct MessageAndLocation
-{
-	std::string_view message;
-	std::source_location loc;
-
-	template<typename T>
-	MessageAndLocation(
-		T&& msg,
-		std::source_location loc = std::source_location::current()
-	) requires std::is_convertible_v<T, std::string_view>
-		: message{ msg },
-		loc{ loc }
-	{}
-};
-
-template<typename T>
-constexpr auto Conversion(const T& value)
-{
-	if (std::is_convertible_v<T, std::wstring_view>)
-	{
-		return "A";
-	}
-	return "B";
-}
-
-template<typename...Args>
-void TestFunction(MessageAndLocation msg, const Args&... args)
-{
-	std::string s = std::vformat(msg.message, std::make_format_args(Conversion(args)...));
-}
+import messageandloc;
 
 template <typename... Args>
 std::vector<std::string> toStringVector(Args... args) {
@@ -83,7 +53,7 @@ void test(Args...) { std::cout << "istring\n"; }
 int main()
 {
 	std::wstring something = L"IO";
-	TestFunction("Blah {} {} {}", "A", L"A", something);
+	Formatting::TestPrint("Blah {} {} {} {}", 1, "A", L"A", something);
 	auto m = Convert(1, 2, 3, "a");
 
     return 0;
