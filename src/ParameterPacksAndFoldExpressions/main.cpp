@@ -43,9 +43,15 @@ void test(Args...) { std::cout << "int\n"; }
 
 template <typename... Args>
 concept Istring =
-((std::is_convertible_v<Args, int> ||
-	std::is_convertible_v<Args, std::string>) && ...) &&
-	(std::is_convertible_v<Args, std::string> || ...);
+	(
+		(	
+			std::is_convertible_v<Args, int> ||
+			std::is_convertible_v<Args, std::string>
+		) && ...
+	)
+	&& (
+		std::is_convertible_v<Args, std::string> || ...
+	);
 
 template <Istring... Args>
 void test(Args...) { std::cout << "istring\n"; }
