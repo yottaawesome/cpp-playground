@@ -52,8 +52,17 @@ void test(Args...) { std::cout << "istring\n"; }
 
 int main()
 {
-	std::wstring something = L"IO";
-	Formatting::TestPrint("Blah {} {} {} {}", 1, "A", L"A", something);
+	if constexpr (true)
+	{
+		std::wstring something = L"IO";
+		Formatting::TestPrint("Blah {} {} {} {}", 1, "A", L"A", something);
+	}
+	else
+	{
+		std::string something = "IO";
+		Formatting::TestPrint(L"Blah {} {} {} {}", 1, "A", L"A", something);
+	}
+
 	auto m = Convert(1, 2, 3, "a");
 
     return 0;

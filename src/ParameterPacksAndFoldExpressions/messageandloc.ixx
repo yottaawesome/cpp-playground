@@ -44,6 +44,39 @@ export namespace Formatting
 		return strTo;
 	}
 
+	std::wstring ConvertString(const std::string_view str)
+	{
+		if (str.empty())
+			return {};
+
+		// https://docs.microsoft.com/en-us/windows/win32/api/stringapiset/nf-stringapiset-multibytetowidechar
+		// Returns the size in characters, this differs from WideCharToMultiByte, which returns the size in bytes
+		const int sizeInCharacters = MultiByteToWideChar(
+			CP_UTF8,									// CodePage
+			0,											// dwFlags
+			&str[0],									// lpMultiByteStr
+			static_cast<int>(str.size() * sizeof(char)),// cbMultiByte
+			nullptr,									// lpWideCharStr
+			0											// cchWideChar
+		);
+		if (sizeInCharacters == 0)
+			throw std::runtime_error("MultiByteToWideChar() [1] failed");
+
+		std::wstring wstrTo(sizeInCharacters, '\0');
+		const int status = MultiByteToWideChar(
+			CP_UTF8,									// CodePage
+			0,											// dwFlags
+			&str[0],									// lpMultiByteStr
+			static_cast<int>(str.size() * sizeof(char)),	// cbMultiByte
+			&wstrTo[0],									// lpWideCharStr
+			static_cast<int>(wstrTo.size())				// cchWideChar
+		);
+		if (status == 0)
+			throw std::runtime_error("MultiByteToWideChar() [2] failed");
+
+		return wstrTo;
+	}
+
 	struct MessageAndLocation
 	{
 		std::string_view message;
@@ -54,6 +87,21 @@ export namespace Formatting
 			T&& msg,
 			std::source_location loc = std::source_location::current()
 		) requires std::is_convertible_v<T, std::string_view>
+			: message{ msg },
+			loc{ loc }
+		{}
+	};
+
+	struct MessageAndLocationW
+	{
+		std::wstring_view message;
+		std::source_location loc;
+
+		template<typename T>
+		MessageAndLocationW(
+			T&& msg,
+			std::source_location loc = std::source_location::current()
+		) requires std::is_convertible_v<T, std::wstring_view>
 			: message{ msg },
 			loc{ loc }
 		{}
@@ -72,6 +120,49 @@ export namespace Formatting
 		}
 	}
 
+	template<typename T>
+	inline constexpr auto AutoConvertNarrowTypes(const T& value)
+	{
+		if constexpr (std::is_convertible_v<T, std::string_view>)
+		{
+			return ConvertString(value);
+		}
+		else
+		{
+			return value;
+		}
+	}
+
+	// This is a combination of the above functions:
+	// AutoConvertWideTypes and AutoConvertNarrowTypes.
+	// Not really sure whether it's cleaner or not.
+	template<bool ToNarrow, typename T>
+	inline constexpr auto AutoConvertStringTypes(const T& value)
+	{
+		if constexpr (ToNarrow) // wide-to-narrow
+		{
+			if constexpr (std::is_convertible_v<T, std::wstring_view>)
+			{
+				return ConvertString(value);
+			}
+			else
+			{
+				return value;
+			}
+		}
+		else // narrow-to-wide
+		{
+			if constexpr (std::is_convertible_v<T, std::string_view>)
+			{
+				return ConvertString(value);
+			}
+			else
+			{
+				return value;
+			}
+		}
+	}
+
 	template<typename...Args>
 	void TestPrint(MessageAndLocation msg, const Args&... args)
 	{
@@ -79,8 +170,22 @@ export namespace Formatting
 			<< std::vformat(
 				msg.message, 
 				std::make_format_args(
-					AutoConvertWideTypes(args)...
+					// Can also use AutoConvertWideTypes(args)...
+					AutoConvertStringTypes<true>(args)...
 				)) 
+			<< std::endl;
+	}
+
+	template<typename...Args>
+	void TestPrint(MessageAndLocationW msg, const Args&... args)
+	{
+		std::wcout
+			<< std::vformat(
+				msg.message,
+				std::make_wformat_args(
+					// Can also use AutoConvertNarrowTypes(args)...
+					AutoConvertStringTypes<false>(args)...
+				))
 			<< std::endl;
 	}
 }
