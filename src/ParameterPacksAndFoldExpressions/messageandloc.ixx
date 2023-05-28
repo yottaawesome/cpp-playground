@@ -136,12 +136,12 @@ export namespace Formatting
 	// This is a combination of the above functions:
 	// AutoConvertWideTypes and AutoConvertNarrowTypes.
 	// Not really sure whether it's cleaner or not.
-	template<bool ToNarrow, typename T>
-	inline constexpr auto AutoConvertStringTypes(const T& value)
+	template<bool ToNarrow>
+	inline constexpr decltype(auto) AutoConvertStringTypes(const auto& value)
 	{
 		if constexpr (ToNarrow) // wide-to-narrow
 		{
-			if constexpr (std::is_convertible_v<T, std::wstring_view>)
+			if constexpr (std::is_convertible_v<decltype(value), std::wstring_view>)
 			{
 				return ConvertString(value);
 			}
@@ -152,7 +152,7 @@ export namespace Formatting
 		}
 		else // narrow-to-wide
 		{
-			if constexpr (std::is_convertible_v<T, std::string_view>)
+			if constexpr (std::is_convertible_v<decltype(value), std::string_view>)
 			{
 				return ConvertString(value);
 			}
