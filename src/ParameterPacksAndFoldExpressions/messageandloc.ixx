@@ -137,7 +137,7 @@ export namespace Formatting
 	// AutoConvertWideTypes and AutoConvertNarrowTypes.
 	// Not really sure whether it's cleaner or not.
 	template<bool ToNarrow>
-	inline constexpr decltype(auto) AutoConvertStringTypes(const auto& value)
+	inline constexpr decltype(auto) AutoConvertStringTypes(auto&& value)
 	{
 		if constexpr (ToNarrow) // wide-to-narrow
 		{
@@ -164,7 +164,7 @@ export namespace Formatting
 	}
 
 	template<typename...Args>
-	void TestPrint(MessageAndLocation msg, const Args&... args)
+	void TestPrint(MessageAndLocation msg, Args&&... args)
 	{
 		std::cout 
 			<< std::vformat(
@@ -177,7 +177,7 @@ export namespace Formatting
 	}
 
 	template<typename...Args>
-	void TestPrint(MessageAndLocationW msg, const Args&... args)
+	void TestPrint(MessageAndLocationW msg, Args&&... args)
 	{
 		std::wcout
 			<< std::vformat(
