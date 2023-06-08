@@ -1,33 +1,50 @@
+module; // everything below is part of the implicit global module fragment
+
+#include <iostream>
+
 export module LibModule;
 
-export namespace TestNamespace
+namespace TestNamespace
 {
-	void MyFunc();
-
-	class Test
+	void InternalPrint();
+	export 
 	{
-		public:
-			Test();
-			void Print();
-	};
+		void MyFunc()
+		{
+			std::wcout << L"Hello World from TestNamespace::MyFunc()!" << std::endl;
+		}
 
-	class Test2
-	{
-		public:
-			Test2();
-			void Print();
-	};
+		class Test
+		{
+			public:
+				Test() {}
+				void Print()
+				{
+					InternalPrint();
+				}
+		};
 
-	struct ITest3
-	{
-		virtual void Func() = 0;
-		virtual ~ITest3(); // = 0 (abstract not allowed here);
-	};
+		class Test2
+		{
+			public:
+				Test2();
+				void Print();
+		};
+
+		struct ITest3
+		{
+			virtual void Func() = 0;
+			virtual ~ITest3(); // = 0 (abstract not allowed here);
+		};
+	}
 }
 
 module :private;
 
 namespace TestNamespace
 {
-	void InternalPrint();
+	void InternalPrint()
+	{
+		std::wcout << L"Hello World from TestNamespace::Test!" << std::endl;
+	}
 }

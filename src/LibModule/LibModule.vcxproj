@@ -154,7 +154,6 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="LibModule.cpp" />
     <ClCompile Include="LibModule.ixx" />
     <ClCompile Include="Test2.cpp" />
   </ItemGroup>
