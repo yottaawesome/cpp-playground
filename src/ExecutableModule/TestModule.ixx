@@ -16,6 +16,10 @@ export namespace TestModule
 	using Blah = Internal::TestStruct;
 	using Internal::TestFunc2;
 	using Internal::Alias;
+
+	// The following do not work.
+	// using namespace Internal;
+	// using Internal;
 }
 
 // This doesn't export the symbols.
