@@ -56,8 +56,26 @@ concept Istring =
 template <Istring... Args>
 void test(Args...) { std::cout << "istring\n"; }
 
+
+//template<typename>
+//struct strip;
+//
+//template<typename ...T>
+//struct strip<std::tuple<T...>>
+//{
+//	using type = vct<T...>;
+//};
+//
+//template<typename ...T>
+//void BlahBlah(T&&... args)
+//{
+//
+//}
+
 int main()
 {
+	//BlahBlah(1, 2);
+
 	if constexpr (true)
 	{
 		std::wstring something = L"IO";
