@@ -45,8 +45,7 @@ export namespace ParamPacks
         return 0;
     }
 
-    template<typename...T>
-    void BlahBlah(T&&...args)
+    void BlahBlah(auto&&...args)
     {
 
     }
@@ -60,6 +59,7 @@ export namespace ParamPacks
     int main2()
     {
         BlahBlahCaller(1, 2);
+        std::apply(BlahBlah<int, int>, std::make_tuple(1,2));
 
         return 0;
     }
@@ -100,12 +100,11 @@ export namespace ParamPacks
     void for_each_tuple2(TupleT&& tp, Fn&& fn) 
     {
         std::apply(
-            [&fn]<typename ...T>(T&& ...args)
+            [&fn]<typename ...T>(T&& ...args) // C++20 template lambda
             {
                 (fn(std::forward<T>(args)), ...);
             }, 
             std::forward<TupleT>(tp)
         );
     }
-
 }
