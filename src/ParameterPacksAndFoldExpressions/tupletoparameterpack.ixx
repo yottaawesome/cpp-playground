@@ -94,4 +94,18 @@ export namespace ParamPacks
 
         return 0;
     }
+
+    // From https://www.cppstories.com/2022/tuple-iteration-apply/
+    template <typename TupleT, typename Fn>
+    void for_each_tuple2(TupleT&& tp, Fn&& fn) 
+    {
+        std::apply(
+            [&fn]<typename ...T>(T&& ...args)
+            {
+                (fn(std::forward<T>(args)), ...);
+            }, 
+            std::forward<TupleT>(tp)
+        );
+    }
+
 }
