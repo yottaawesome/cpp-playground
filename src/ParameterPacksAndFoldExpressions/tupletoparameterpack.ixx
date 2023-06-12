@@ -56,10 +56,21 @@ export namespace ParamPacks
         std::apply(BlahBlah<T...>, std::make_tuple(std::forward<T>(t)...));
     }
 
+    template<typename A>
+    struct Callable
+    {
+        template<typename...T>
+        void operator()(T&&...args)
+        {
+
+        }
+    };
+
     int main2()
     {
         BlahBlahCaller(1, 2);
         std::apply(BlahBlah<int, int>, std::make_tuple(1,2));
+        std::apply([](auto &&... args) { BlahBlah(args...); }, std::make_tuple(1, 2));
 
         return 0;
     }
@@ -106,5 +117,19 @@ export namespace ParamPacks
             }, 
             std::forward<TupleT>(tp)
         );
+    }
+
+    void Lop(int i, int a) {}
+
+    int main4()
+    {
+        for_each_tuple2(
+            std::make_tuple(1, 2), 
+            [](auto&& x) 
+            {
+                x *= 2;
+            }
+        );
+        return 0;
     }
 }
