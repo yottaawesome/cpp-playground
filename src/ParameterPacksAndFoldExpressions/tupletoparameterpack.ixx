@@ -132,4 +132,23 @@ export namespace ParamPacks
         );
         return 0;
     }
+
+    template<int X>
+    struct M
+    {
+        void A() requires (X == 1) 
+        {
+        }
+
+        void A() requires (X == 2) 
+        {
+        }
+    };
+
+    int main5()
+    {
+        M<1> m1; m1.A();
+        M<2> m2; m2.A();
+        return 0;
+    }
 }
