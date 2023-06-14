@@ -22,8 +22,31 @@ constexpr int TestImpl2<FOO_INIT>::foo;
 template<int size>
 struct Test : std::conditional_t<(size < 10), TestImpl1<7>,TestImpl2<12>> {};
 
+template<typename T>
+concept HasValue = requires(T t) 
+{
+    std::is_same_v<decltype(t.V), int>;
+};
+
+struct X
+{
+    int V = 5;
+};
+
+template<X x>
+struct Y
+{
+    constexpr int Blah() requires HasValue<X> { return x.V; }
+};
+
 int main()
 {
+    constexpr X x{};
+    //Y<{ .V = 10 }> y;
+    Y<x> y;
+    std::cout << y.Blah() << "\n";
+
+
     Test<5> v1;
     Test<15> v2;
 
