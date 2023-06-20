@@ -4,6 +4,10 @@ export import :Partition;
 // See pre-link event in https://stackoverflow.com/questions/2658215/how-do-i-create-both-a-lib-file-and-an-exe-file-in-visual-c
 export namespace TestModule 
 {
+	class Partial;
+
+	Partial* GetPartial();
+
 	int TestFunc()
 	{
 		return 1;
@@ -24,3 +28,23 @@ export namespace TestModule
 
 // This doesn't export the symbols.
 export namespace X = TestModule::Internal;
+
+namespace TestModule
+{
+	// if moved to the private fragment, the class
+	// can be instantiated via pointer but not used
+	class Partial
+	{
+	public:
+		void Blah() {}
+	};
+}
+
+module :private;
+namespace TestModule
+{
+	Partial* GetPartial()
+	{
+		return new Partial();
+	}
+}

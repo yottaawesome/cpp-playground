@@ -8,5 +8,9 @@ int main()
     TestModule::TestFunc2();
     TestModule::Alias value = 5;
 
+    TestModule::Partial p2;
+    TestModule::Partial* p = TestModule::GetPartial();
+    p->Blah();
+
     return 0;
 }
