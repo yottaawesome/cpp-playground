@@ -1,3 +1,8 @@
+module;
+
+#include "Test.hpp"
+#include <memory>
+
 export module TestModule;
 export import :Partition;
 
@@ -5,8 +10,12 @@ export import :Partition;
 export namespace TestModule 
 {
 	class Partial;
+	using PtrPartial2 = std::unique_ptr<TestModule2::Partial2>;
+
 
 	Partial* GetPartial();
+	PtrPartial2 GetPartial2();
+	std::unique_ptr<TestModule2::Partial2> GetPartial3();
 
 	int TestFunc()
 	{
@@ -46,5 +55,15 @@ namespace TestModule
 	Partial* GetPartial()
 	{
 		return new Partial();
+	}
+
+	PtrPartial2 GetPartial2()
+	{
+		return std::make_unique<TestModule2::Partial2>();
+	}
+
+	std::unique_ptr<TestModule2::Partial2> GetPartial3()
+	{
+		return std::make_unique<TestModule2::Partial2>();
 	}
 }

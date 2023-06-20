@@ -11,6 +11,12 @@ int main()
     TestModule::Partial p2;
     TestModule::Partial* p = TestModule::GetPartial();
     p->Blah();
+    
+    //TestModule::Partial2 p3;
+    TestModule::PtrPartial2 p3 = TestModule::GetPartial2();
+
+    std::unique_ptr p4 = TestModule::GetPartial3();
+    p4->Blah();
 
     return 0;
 }
