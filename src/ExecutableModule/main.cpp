@@ -18,5 +18,8 @@ int main()
     std::unique_ptr p4 = TestModule::GetPartial3();
     p4->Blah();
 
+    TestModule::SomeClass sc;
+    TestModule::Unnamespaced sss;
+
     return 0;
 }

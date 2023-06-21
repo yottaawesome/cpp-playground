@@ -8,3 +8,26 @@ namespace TestModule2
 			void Blah() {}
 	};
 }
+
+namespace TestModule3
+{
+	class SomeClass
+	{
+	public:
+		void Blah() {}
+	};
+}
+
+class Unnamespaced
+{
+
+};
+
+namespace TestModule4
+{
+	class SomeClass56
+	{
+	public:
+		void Blah() {}
+	};
+}
