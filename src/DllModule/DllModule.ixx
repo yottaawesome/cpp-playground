@@ -5,6 +5,15 @@ export int __declspec(dllexport) fnDllModule();
 
 export extern "C" int __declspec(dllexport) returnNumber();
 
+export namespace ERT
+{
+	export class __declspec(dllexport) XX
+	{
+		public:
+			void MM();
+	};
+}
+
 export class AA
 {
 	public:

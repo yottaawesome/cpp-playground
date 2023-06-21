@@ -13,3 +13,8 @@ int fnDllModule()
 }
 
 int returnNumber() { return 0; }
+
+namespace ERT
+{
+	void XX::MM() {};
+}

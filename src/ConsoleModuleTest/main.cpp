@@ -9,6 +9,9 @@ import TestModule;
 
 int main(int argc, char** args)
 {
+	ERT::XX k;
+	k.MM();
+
 	// Here we use the exported class from the DLL
 	AA a;
 	a.MM();
