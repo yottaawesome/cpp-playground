@@ -1,4 +1,5 @@
 import std;
+import std.compat;
 
 // Adapted from https://stackoverflow.com/a/58455135/7448661
 template<int FOO_INIT>
@@ -41,6 +42,7 @@ struct Y
 
 int main()
 {
+    uint64_t i;
     constexpr X x{};
     //Y<{ .V = 10 }> y;
     Y<x> y;
