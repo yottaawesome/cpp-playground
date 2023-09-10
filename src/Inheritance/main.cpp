@@ -219,8 +219,10 @@ namespace ApproachD
             return std::format("WinError: {}", message);
         }
     };
-    template<typename T = WinErrorGenerator>
-    using WinError = Ex1<T>;
+    //template<typename T = WinErrorGenerator>
+    //using WinError = Ex1<T>;
+
+    using WinError = Ex1<WinErrorGenerator>;
 
     struct WinErrorGenerator2
     {
@@ -229,7 +231,64 @@ namespace ApproachD
             return ExactMessage{ std::format("WinError2 exact: {}", message) };
         }
     };
-    using WinError2 = Ex1<WinErrorGenerator2, WinError<WinErrorGenerator>>;
+    using WinError2 = Ex1<WinErrorGenerator2, WinError>;
+}
+
+namespace ApproachE
+{
+    template <typename Derived, typename TImpl = Derived>
+    class BaseError : public std::exception
+    {
+        public:
+            BaseError(std::string_view msg) : std::exception(Generate(msg).c_str()) {}
+
+        protected:
+            std::string Generate(std::string_view msg)
+            {
+                return static_cast<TImpl*>(this)->Implementation(msg);
+            }
+
+            std::string Implementation(std::string_view msg)
+            {
+                return "Implementation Base";
+            }
+    };
+
+    class WinError : public BaseError<WinError>
+    {
+        public:
+            WinError(std::string_view msg) : BaseError<WinError>(msg) {}
+
+            std::string Implementation(std::string_view msg)
+            {
+                return "Implementation Derived1";
+            }
+    };
+
+    class WinError2 : public BaseError<WinError, WinError2>
+    {
+        public:
+            WinError2(std::string_view msg) : BaseError<WinError, WinError2>(msg) {}
+
+            std::string Implementation(std::string_view msg)
+            {
+                return "Implementation Derived2";
+            }
+    };
+}
+
+struct Gen
+{
+    void Generate() {};
+    static void Generate2() {};
+};
+
+template<typename...Args>
+void SomeTest(Args&&...args)
+{
+    auto x = (std::get<sizeof...(args) - 1>(std::tuple{ args... }));
+    decltype(x)::Generate2();
+    x.Generate();
 }
 
 int main()
@@ -252,6 +311,25 @@ int main()
 
     std::exception win5 = win4;
     std::cout << win5.what() << std::endl;
+
+    ApproachE::WinError win6("blah blah");
+    std::cout << win6.what() << std::endl;
+
+    ApproachE::WinError2 win7("blah blah");
+    std::cout << win7.what() << std::endl;
+
+    try
+    {
+        throw ApproachD::WinError2("blah blah");
+    }
+    catch (const ApproachD::WinError& err)
+    {
+        std::cout << err.what() << std::endl;
+    }
+
+    
+    Gen g;
+    SomeTest(g);
 
     return 0;
 }
