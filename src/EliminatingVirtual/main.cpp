@@ -8,15 +8,34 @@ class A
 
 };
 
+void GH() noexcept {}
+
+// https://stackoverflow.com/questions/44269678/stdis-nothrow-invocable-with-member-function
+// https://mariusbancila.ro/blog/2022/06/20/requires-expressions-and-requires-clauses-in-cpp20/
 template<typename T>
-concept IInterface = requires(T t, const T m, const A a)
+concept No = noexcept(std::declval<T>().Another());
+
+template<typename T>
+concept No2 = noexcept(T());
+
+template<typename T>
+concept IInterface = No<T> && requires(T t, const T m, const A a)
 {
     {t.Blah()} -> std::same_as<int>;
     {t.AnotherBlah()} -> std::same_as<std::string>;
     //{std::declval<const T&>().AnotherBlah()} -> std::same_as<std::string>;
     {m.AnotherBlah()} -> std::same_as<std::string>; // Same as above
     {t.Something(a)} -> std::same_as<void>;
+    //{noexcept(std::declval<T>().Another2())} -> true;
+    
+    //std::is_nothrow_invocable<decltype(&T::Another2), T>;
+    
+    //noexcept(decltype(t.Another));
+
+    requires std::is_nothrow_invocable_v<decltype(&T::Another2), T, int>;
 };
+
+
 
 class SomeClass
 {
@@ -24,6 +43,8 @@ class SomeClass
         int Blah() { return 1; }
         std::string AnotherBlah() const { return "Blah"; }
         void Something(A i) {}
+        void Another() noexcept { }
+        void Another2(int i) noexcept { }
 };
 
 void Func(IInterface auto& obj)
@@ -93,6 +114,7 @@ int main()
     Func(c);
 
     Bar<SomeClass> bar(c);
+    static_assert(No<SomeClass>);
 
     return 0;
 }
