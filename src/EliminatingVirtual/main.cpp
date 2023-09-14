@@ -3,21 +3,27 @@
 
 import std;
 
+class A
+{
+
+};
+
 template<typename T>
-concept IInterface = requires(T t, const T m)
+concept IInterface = requires(T t, const T m, const A a)
 {
     {t.Blah()} -> std::same_as<int>;
     {t.AnotherBlah()} -> std::same_as<std::string>;
     //{std::declval<const T&>().AnotherBlah()} -> std::same_as<std::string>;
     {m.AnotherBlah()} -> std::same_as<std::string>; // Same as above
+    {t.Something(a)} -> std::same_as<void>;
 };
-
 
 class SomeClass
 {
     public:
         int Blah() { return 1; }
         std::string AnotherBlah() const { return "Blah"; }
+        void Something(A i) {}
 };
 
 void Func(IInterface auto& obj)
