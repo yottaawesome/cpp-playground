@@ -9,6 +9,16 @@ export module crtp;
 // crtp.cpp
 export namespace CRTP
 {
+    struct cat 
+    {
+        std::string name;
+
+        /*void print_name(this const cat& self) 
+        {
+            std::cout << self.name;
+        }*/
+    };
+
     template <typename Derived>
     struct Base 
     {
@@ -22,11 +32,6 @@ export namespace CRTP
         void interface()
         {
             static_cast<Derived*>(this)->implementation();
-        }
-
-        void implementation() 
-        {
-            std::cout << "Implementation Base" << std::endl;
         }
     };
 
