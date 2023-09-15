@@ -36,7 +36,6 @@ concept IInterface = No<T> && requires(T t, const T m, const A a)
 };
 
 
-
 class SomeClass
 {
     public:
@@ -46,6 +45,8 @@ class SomeClass
         void Another() noexcept { }
         void Another2(int i) noexcept { }
 };
+
+static_assert(IInterface<SomeClass>, "Must conform to the requirements of the IInterface concept");
 
 void Func(IInterface auto& obj)
 {
