@@ -3,15 +3,13 @@
 
 import std;
 
-class A
-{
-
-};
+class A { };
 
 void GH() noexcept {}
 
 // https://stackoverflow.com/questions/44269678/stdis-nothrow-invocable-with-member-function
 // https://mariusbancila.ro/blog/2022/06/20/requires-expressions-and-requires-clauses-in-cpp20/
+// https://www.fluentcpp.com/2020/09/11/replacing-crtp-static-polymorphism-with-concepts/
 template<typename T>
 concept No = noexcept(std::declval<T>().Another());
 
@@ -27,14 +25,10 @@ concept IInterface = No<T> && requires(T t, const T m, const A a)
     {m.AnotherBlah()} -> std::same_as<std::string>; // Same as above
     {t.Something(a)} -> std::same_as<void>;
     //{noexcept(std::declval<T>().Another2())} -> true;
-    
-    //std::is_nothrow_invocable<decltype(&T::Another2), T>;
-    
-    //noexcept(decltype(t.Another));
 
+    requires noexcept(std::declval<T>().Another2(1));
     requires std::is_nothrow_invocable_v<decltype(&T::Another2), T, int>;
 };
-
 
 class SomeClass
 {
