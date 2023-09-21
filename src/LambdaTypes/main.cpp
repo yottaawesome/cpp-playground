@@ -10,5 +10,6 @@ int main()
     A::Test();
     B::Test();
     C::Test();
+    D::Test();
     return 0;
 }

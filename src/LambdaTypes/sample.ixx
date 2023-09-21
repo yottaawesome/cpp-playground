@@ -134,3 +134,29 @@ export namespace C
         std::cout << deduce([](int) {}) << std::endl;
     }
 }
+
+// Adapted from https://www.reddit.com/r/cpp_questions/comments/ta9s1t/comment/hzzdekd/?utm_source=share&utm_medium=web2x&context=3
+export namespace D
+{
+    template< class R, class... A >
+    struct Func_type_;
+
+    template< class R, class... A >
+    struct Func_type_<auto(A...)->R>
+    {
+        using Return_type = R;
+        using Args_tuple = std::tuple< A... >;
+    };
+
+    void foo(int, double);
+
+    void Test()
+    {
+        std::cout << "\n--- Sample D ---\n";
+        using Func = Func_type_<decltype(foo)>;
+        using T0 = Func::Return_type;
+        using T1 = std::tuple_element_t< 0, Func::Args_tuple >;
+        using T2 = std::tuple_element_t< 1, Func::Args_tuple >;
+        std::cout << std::format("auto foo({}, {}) -> {}\n", typeid(T1).name(), typeid(T2).name(), typeid(T0).name());
+    }
+}
