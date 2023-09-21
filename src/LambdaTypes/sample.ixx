@@ -165,14 +165,40 @@ export namespace D
 
     void foo(int, double);
 
+    template<std::size_t I = 0, typename... Tp>
+    inline typename std::enable_if<I == sizeof...(Tp), void>::type
+        print(std::tuple<Tp...>& t)
+    { }
+
+    template<std::size_t I = 0, typename... Tp>
+    inline typename std::enable_if < I < sizeof...(Tp), void>::type
+        print(std::tuple<Tp...>& t)
+    {
+        std::cout << std::get<I>(t) << std::endl;
+        print<I + 1, Tp...>(t);
+    }
+
+
+
     void Test()
     {
         std::cout << "\n--- Sample D ---\n";
-        auto x = [](int f) {};
+        auto x = [](int* f, double) {};
         using M = decltype(x);
         using Func_l = Func_type_<decltype(&M::operator())>;
         using T1_l = std::tuple_element_t< 0, Func_l::Args_tuple >;
-        std::cout << std::format("{} {}\n", typeid(T1_l).name(), Func_l::n);
+        
+        // https://stackoverflow.com/questions/1198260/how-can-you-iterate-over-the-elements-of-an-stdtuple
+        std::apply([](auto&&... args)
+            {
+                ((std::cout << std::format("{} {}\n", typeid(args).name(), Func_l::n)), ...);
+                //((std::cout << args << '\n'), ...);
+            },
+            Func_l::Args_tuple{}
+        );
+        //std::cout << std::format("{} {}\n", typeid(T1_l).name(), Func_l::n);
+
+
 
         using Func = Func_type_<decltype(foo)>;
         using T0 = Func::Return_type;
