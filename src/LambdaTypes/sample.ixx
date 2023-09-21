@@ -148,6 +148,13 @@ export namespace D
         using Args_tuple = std::tuple< A... >;
     };
 
+    template< class R, class... A >
+    struct Func_type_<auto(A...)noexcept->R>
+    {
+        using Return_type = R;
+        using Args_tuple = std::tuple< A... >;
+    };
+
     void foo(int, double);
 
     void Test()
