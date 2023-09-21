@@ -209,3 +209,7 @@ export namespace D
 }
 
 // See also https://gist.github.com/Naios/86ccea2f577172c9f8b5
+// https://www.scs.stanford.edu/~dm/blog/param-pack.html
+// https://aherrmann.github.io/programming/2016/02/28/unpacking-tuples-in-cpp14/index.html
+// https://stackoverflow.com/questions/57622162/get-function-arguments-type-as-tuple
+// https://stackoverflow.com/questions/9065081/how-do-i-get-the-argument-types-of-a-function-pointer-in-a-variadic-template-cla
