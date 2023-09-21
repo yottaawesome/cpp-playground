@@ -167,3 +167,5 @@ export namespace D
         std::cout << std::format("auto foo({}, {}) -> {}\n", typeid(T1).name(), typeid(T2).name(), typeid(T0).name());
     }
 }
+
+// See also https://gist.github.com/Naios/86ccea2f577172c9f8b5
