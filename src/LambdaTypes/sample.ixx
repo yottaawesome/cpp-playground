@@ -148,6 +148,14 @@ export namespace D
         using Args_tuple = std::tuple< A... >;
     };
 
+    template<class Ret, class T, class... Args>
+    struct Func_type_<Ret(T::*)(Args...) const>
+    {
+        constexpr static int n = sizeof...(Args);
+        using Return_type = Ret;
+        using Args_tuple = std::tuple< Args... >;
+    };
+
     /*template< class R, class... A >
     struct Func_type_<auto(A...)noexcept(std::is_nothrow_invocable_v<R, A...>)->R>
     {
@@ -160,6 +168,12 @@ export namespace D
     void Test()
     {
         std::cout << "\n--- Sample D ---\n";
+        auto x = [](int m) {};
+        using M = decltype(x);
+        using Func_l = Func_type_<decltype(&M::operator())>;
+        using T1_l = std::tuple_element_t< 0, Func_l::Args_tuple >;
+        std::cout << std::format("{}\n", typeid(T1_l).name());
+
         using Func = Func_type_<decltype(foo)>;
         using T0 = Func::Return_type;
         using T1 = std::tuple_element_t< 0, Func::Args_tuple >;
