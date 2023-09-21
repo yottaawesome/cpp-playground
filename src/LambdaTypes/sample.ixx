@@ -168,11 +168,11 @@ export namespace D
     void Test()
     {
         std::cout << "\n--- Sample D ---\n";
-        auto x = [](int m) {};
+        auto x = [](int f) {};
         using M = decltype(x);
         using Func_l = Func_type_<decltype(&M::operator())>;
         using T1_l = std::tuple_element_t< 0, Func_l::Args_tuple >;
-        std::cout << std::format("{}\n", typeid(T1_l).name());
+        std::cout << std::format("{} {}\n", typeid(T1_l).name(), Func_l::n);
 
         using Func = Func_type_<decltype(foo)>;
         using T0 = Func::Return_type;
