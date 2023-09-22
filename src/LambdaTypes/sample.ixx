@@ -213,3 +213,6 @@ export namespace D
 // https://aherrmann.github.io/programming/2016/02/28/unpacking-tuples-in-cpp14/index.html
 // https://stackoverflow.com/questions/57622162/get-function-arguments-type-as-tuple
 // https://stackoverflow.com/questions/9065081/how-do-i-get-the-argument-types-of-a-function-pointer-in-a-variadic-template-cla
+// https://www.sandordargo.com/blog/2021/04/14/how-to-use-type-traits
+// https://stackoverflow.com/questions/7943525/is-it-possible-to-figure-out-the-parameter-type-and-return-type-of-a-lambda
+// https://stackoverflow.com/questions/38067106/c-verify-callable-signature-of-template-type
