@@ -43,7 +43,7 @@ concept IInterface2 = requires(T t)
     // will pass on functions with narrowing narrower types
     requires std::same_as<decltype(&T::Another3), void(T::*)(int)const noexcept>;
     requires std::same_as<decltype(&T::Another3), auto(T::*)(int)const noexcept -> void>;
-    requires SomeTest<auto(T::*)(int)const noexcept -> void>(&T::Another3);
+    requires SomeTest<void(T::*)(int)const noexcept>(&T::Another3);
 };
 
 class SomeClass
