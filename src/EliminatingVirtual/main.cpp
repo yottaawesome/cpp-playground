@@ -30,6 +30,15 @@ concept IInterface = No<T> && requires(T t, const T m, const A a)
     requires std::is_nothrow_invocable_v<decltype(&T::Another2), T, int>;
 };
 
+template<typename T>
+concept IInterface2 = requires(T t)
+{
+    // Exact match on argument parameters, whereas {t.Another3(long long{})} -> ...
+    // will pass on functions with narrowing narrower types
+    requires std::same_as<decltype(&T::Another3), void(T::*)(int)const noexcept>;
+    requires std::same_as<decltype(&T::Another3), auto(T::*)(int)const noexcept -> void>;
+};
+
 class SomeClass
 {
     public:
@@ -38,13 +47,20 @@ class SomeClass
         void Something(A i) {}
         void Another() noexcept { }
         void Another2(int i) noexcept { }
+        void Another3(int i) const noexcept{ }
 };
 
 static_assert(IInterface<SomeClass>, "Must conform to the requirements of the IInterface concept");
+static_assert(IInterface2<SomeClass>, "Must conform to the requirements of the IInterface concept");
 
 void Func(IInterface auto& obj)
 {
     obj.Blah();
+}
+
+void Func2(IInterface2 auto& obj)
+{
+    obj.Another3();
 }
 
 template<typename T, typename... Ts>
