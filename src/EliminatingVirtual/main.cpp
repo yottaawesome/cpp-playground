@@ -31,7 +31,7 @@ concept IInterface = No<T> && requires(T t, const T m, const A a)
 };
 
 template<typename T>
-constexpr bool SomeTest(auto func)
+constexpr bool DoesSignatureMatch(auto func)
 {
     return std::same_as<decltype(func), T>;
 }
@@ -43,7 +43,7 @@ concept IInterface2 = requires(T t)
     // will pass on functions with narrowing narrower types
     requires std::same_as<decltype(&T::Another3), void(T::*)(int)const noexcept>;
     requires std::same_as<decltype(&T::Another3), auto(T::*)(int)const noexcept -> void>;
-    requires SomeTest<void(T::*)(int)const noexcept>(&T::Another3);
+    requires DoesSignatureMatch<void(T::*)(int)const noexcept>(&T::Another3);
 };
 
 class SomeClass

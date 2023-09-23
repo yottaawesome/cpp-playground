@@ -284,7 +284,7 @@ struct Gen
 };
 
 template<typename...Args>
-void SomeTest(Args&&...args)
+void DoesSignatureMatch(Args&&...args)
 {
     auto x = (std::get<sizeof...(args) - 1>(std::tuple{ args... }));
     decltype(x)::Generate2();
@@ -329,7 +329,7 @@ int main()
 
     
     Gen g;
-    SomeTest(g);
+    DoesSignatureMatch(g);
 
     return 0;
 }
