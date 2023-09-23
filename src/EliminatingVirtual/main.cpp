@@ -46,6 +46,23 @@ concept IInterface2 = requires(T t)
     requires DoesSignatureMatch<void(T::*)(int)const noexcept>(&T::Another3);
 };
 
+template <typename T>
+constexpr bool always_false = std::false_type::value;
+
+template<typename T>
+void SomeTest(T t)
+{
+    if constexpr (std::same_as<T, int>)
+    {
+
+    }
+    else
+    {
+        // https://mariusbancila.ro/blog/2022/06/20/requires-expressions-and-requires-clauses-in-cpp20/
+        static_assert(always_false<T>, "Nah");
+    }
+}
+
 class SomeClass
 {
     public:
@@ -128,6 +145,7 @@ class Baz
 
 int main()
 {
+    SomeTest(1);
     SomeClass c;
     Func(c);
 
