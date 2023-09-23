@@ -31,12 +31,19 @@ concept IInterface = No<T> && requires(T t, const T m, const A a)
 };
 
 template<typename T>
+constexpr bool SomeTest(auto func)
+{
+    return std::same_as<decltype(func), T>;
+}
+
+template<typename T>
 concept IInterface2 = requires(T t)
 {
     // Exact match on argument parameters, whereas {t.Another3(long long{})} -> ...
     // will pass on functions with narrowing narrower types
     requires std::same_as<decltype(&T::Another3), void(T::*)(int)const noexcept>;
     requires std::same_as<decltype(&T::Another3), auto(T::*)(int)const noexcept -> void>;
+    requires SomeTest<auto(T::*)(int)const noexcept -> void>(&T::Another3);
 };
 
 class SomeClass
