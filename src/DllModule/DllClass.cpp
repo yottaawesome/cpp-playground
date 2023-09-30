@@ -1,8 +1,7 @@
 module;
 
-#include "pch.h"
-#include "framework.h"
 #include <iostream>
+#include <Windows.h>
 
 module DllModule;
 
