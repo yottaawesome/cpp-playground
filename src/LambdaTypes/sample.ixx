@@ -170,18 +170,16 @@ export namespace D
 
     template<std::size_t I = 0, typename... Tp>
     inline typename std::enable_if<I == sizeof...(Tp), void>::type
-        print(std::tuple<Tp...>& t)
+    print(std::tuple<Tp...>& t)
     { }
 
     template<std::size_t I = 0, typename... Tp>
     inline typename std::enable_if < I < sizeof...(Tp), void>::type
-        print(std::tuple<Tp...>& t)
+    print(std::tuple<Tp...>& t)
     {
         std::cout << std::get<I>(t) << std::endl;
         print<I + 1, Tp...>(t);
     }
-
-
 
     void Test()
     {
@@ -200,8 +198,6 @@ export namespace D
             Func_l::Args_tuple{}
         );
         //std::cout << std::format("{} {}\n", typeid(T1_l).name(), Func_l::n);
-
-
 
         using Func = Func_type_<decltype(foo)>;
         using T0 = Func::Return_type;
