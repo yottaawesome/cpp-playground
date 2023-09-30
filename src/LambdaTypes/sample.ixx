@@ -98,9 +98,12 @@ export namespace B
     {
         std::cout << "\n--- Sample B ---\n";
         auto x = [](int, long, bool) {};
-        std::cout << typeid(function_argument_type< decltype(x), 0 >::type).name() << '\n';
-        std::cout << typeid(function_argument_type< decltype(x), 1 >::type).name() << '\n';
-        std::cout << typeid(function_argument_type< decltype(x), 2 >::type).name() << '\n';
+        std::cout << std::format(
+            "{}\n{}\n{}\n", 
+            typeid(function_argument_type< decltype(x), 0 >::type).name(),
+            typeid(function_argument_type< decltype(x), 1 >::type).name(),
+            typeid(function_argument_type< decltype(x), 2 >::type).name()
+        );
     }
 }
 
