@@ -25,7 +25,7 @@ concept IInterface = No<T> && requires(T t, const T m, const A a)
     {m.AnotherBlah()} -> std::same_as<std::string>; // Same as above
     {t.Something(a)} -> std::same_as<void>;
     //{noexcept(std::declval<T>().Another2())} -> true;
-
+    requires noexcept(t.Another());
     requires noexcept(std::declval<T>().Another2(1));
     requires std::is_nothrow_invocable_v<decltype(&T::Another2), T, int>;
 };
