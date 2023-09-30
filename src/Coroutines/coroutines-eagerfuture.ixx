@@ -9,7 +9,7 @@ export module coroutines:eagerfuture;
 
 // eagerFuture.cpp
 
-export namespace EagerFuture
+export namespace Coroutines::EagerFuture
 {
     template<typename T>
     struct MyFuture {
