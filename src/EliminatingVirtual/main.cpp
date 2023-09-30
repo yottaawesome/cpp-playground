@@ -19,11 +19,13 @@ concept No2 = noexcept(T());
 template<typename T>
 concept IInterface = No<T> && requires(T t, const T m, const A a)
 {
+    typename T::IsType;
     {t.Blah()} -> std::same_as<int>;
     {t.AnotherBlah()} -> std::same_as<std::string>;
     //{std::declval<const T&>().AnotherBlah()} -> std::same_as<std::string>;
     {m.AnotherBlah()} -> std::same_as<std::string>; // Same as above
     {t.Something(a)} -> std::same_as<void>;
+    {m.Another3(1)} noexcept -> std::same_as<void>;
     //{noexcept(std::declval<T>().Another2())} -> true;
     requires noexcept(t.Another());
     requires noexcept(std::declval<T>().Another2(1));
@@ -66,6 +68,7 @@ void SomeTest(T t)
 class SomeClass
 {
     public:
+        using IsType = int;
         int Blah() { return 1; }
         std::string AnotherBlah() const { return "Blah"; }
         void Something(A i) {}
