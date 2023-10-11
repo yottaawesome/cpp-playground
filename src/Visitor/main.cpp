@@ -20,7 +20,7 @@ struct overloaded : Ts... { using Ts::operator()...; };
 template<class... Ts>
 overloaded(Ts...) -> overloaded<Ts...>;
 
-int main()
+int main(int argc, char* argv[], char* envp[])
 {
     std::vector<var_t> vec = { 10, 15l, 1.5, "hello" };
 
