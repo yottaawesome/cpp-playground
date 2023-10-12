@@ -6,14 +6,14 @@ export module win32;
 
 export namespace Win32
 {
+	using ::HANDLE;
 	using ::WaitForSingleObject;
 	using ::WaitForSingleObjectEx;
 	using ::WaitForMultipleObjects;
 	using ::WaitForMultipleObjectsEx;
 	using ::CreateEvent;
-	using ::HANDLE;
-	constexpr auto WaitInfinite = INFINITE;
 	using ::SetEvent;
+	using ::CloseHandle;
 
 	namespace WaitResult
 	{
@@ -23,4 +23,7 @@ export namespace Win32
 		constexpr auto Timeout = WAIT_TIMEOUT;
 		constexpr auto Failed = WAIT_FAILED;
 	}
+
+	constexpr auto WaitInfinite = INFINITE;
+	constexpr auto MaxWaitObjects = MAXIMUM_WAIT_OBJECTS;
 }
