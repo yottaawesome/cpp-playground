@@ -152,6 +152,11 @@ int main()
     SomeClass c;
     Func(c);
 
+    if (true xor false)
+    {
+
+    }
+
     Bar<SomeClass> bar(c);
     static_assert(No<SomeClass>);
 
