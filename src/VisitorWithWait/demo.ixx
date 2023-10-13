@@ -118,7 +118,7 @@ export namespace WithTuple
 		);
 		if (not h_b)
 			return 2;
-		HandlePtr ptr_b(h_a, &Win32::CloseHandle);
+		HandlePtr ptr_b(h_b, &Win32::CloseHandle);
 
 		EventA a{
 			.Handle = h_a
