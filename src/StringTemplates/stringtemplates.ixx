@@ -196,3 +196,23 @@ export namespace FixedStrings2
 		std::cout << std::boolalpha << (str == "foo bar") << std::endl;
 	}
 }
+
+export namespace FixedString3
+{
+	template <size_t N>
+	struct FixedString
+	{
+		wchar_t buf[N]{};
+		constexpr FixedString(const wchar_t(&arg)[N]) noexcept
+		{
+			std::copy_n(arg, N, buf);
+		}
+
+		constexpr operator const wchar_t* () const noexcept
+		{
+			return buf;
+		}
+	};
+	template<size_t N>
+	FixedString(wchar_t const (&)[N]) -> FixedString<N>;
+}
