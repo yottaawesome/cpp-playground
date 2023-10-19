@@ -110,6 +110,8 @@ export namespace FixedStrings1
 
 		FixedString s = "AA";
 		FixedString2 s2 = "AA";
+		char b[] = "Am";
+		FixedString c = b;
 
 		Foo2<"P"> p;
 		Foo2<"O"> o;
