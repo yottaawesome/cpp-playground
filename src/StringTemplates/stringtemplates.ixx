@@ -203,14 +203,23 @@ export namespace FixedString3
 	struct FixedString
 	{
 		wchar_t buf[N]{};
-		constexpr FixedString(const wchar_t(&arg)[N]) noexcept
+		consteval FixedString(const wchar_t(&arg)[N]) noexcept
 		{
 			std::copy_n(arg, N, buf);
 		}
 
-		constexpr operator const wchar_t* () const noexcept
+		consteval operator const wchar_t* () const noexcept
 		{
 			return buf;
+		}
+
+		template<std::size_t N2>
+		consteval FixedString<N + N2 - 1> operator+(const FixedString<N2> str) const 
+		{
+			char newchar[N + N2 - 1]{};
+			std::copy_n(buf, N - 1, newchar);
+			std::copy_n(str.buf, N2, newchar + N - 1);
+			return newchar;
 		}
 	};
 	template<size_t N>
