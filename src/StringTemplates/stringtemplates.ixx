@@ -199,6 +199,7 @@ export namespace FixedStrings2
 
 export namespace FixedString3
 {
+
 	template <size_t N>
 	struct FixedString
 	{

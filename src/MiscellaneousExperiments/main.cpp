@@ -90,9 +90,19 @@ namespace Timing
             return std::chrono::duration_cast<std::chrono::nanoseconds>(diff);
         }
 
+        template<typename TDuration>
+        inline TDuration To() const noexcept
+        {
+            return std::chrono::duration_cast<TDuration>(diff);
+        }
+
         private:
             std::chrono::high_resolution_clock::duration diff;
     };
+
+    void SomeFunc() {}
+    using Blah = TimedScope<SomeFunc>; // with C++23's static operator(), it may be possible to alias functions this way
+    Blah X;
 
     void TestTimedScope()
     {
@@ -122,12 +132,30 @@ namespace Timing
             ts.ToNanoseconds().count()
         );
     }
+
+    void TestTimedScopeThrowingLambda()
+    {
+        constexpr auto func = 
+            []{
+                throw std::runtime_error("Some error");
+            };
+
+        TimedScope<func, false> ts;
+        ts();
+        std::cout << std::format(
+            "Throwing call took {} microseconds = {} nanoseconds\n",
+            ts.ToMicroseconds().count(),
+            ts.ToNanoseconds().count()
+        );
+    }
 }
 
 int main()
 {
+    Timing::X();
     Timing::TestTimedScope();
     Timing::TestTimedScopeLambda();
+    Timing::TestTimedScopeThrowingLambda();
     //Timing::TimeFunctionCallStd();
     //Timing::NanoSecondIntervals();
     //Timing::TimeFunctionCallsWindows();
