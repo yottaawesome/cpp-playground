@@ -61,18 +61,18 @@ namespace Timing
         inline void operator()(auto&&...args) noexcept
             requires not ThrowErrors
         {
+            std::chrono::high_resolution_clock::time_point end;
             const auto begin = std::chrono::high_resolution_clock::now();
             try
             {
                 T(std::forward<decltype(args)>(args)...);
-                const auto end = std::chrono::high_resolution_clock::now();
-                diff = end - begin;
+                end = std::chrono::high_resolution_clock::now();
             }
             catch (...)
             {
-                const auto end = std::chrono::high_resolution_clock::now();
-                diff = end - begin;
+                end = std::chrono::high_resolution_clock::now();
             }
+            diff = end - begin;
         }
 
         inline std::chrono::high_resolution_clock::duration Get() const noexcept
