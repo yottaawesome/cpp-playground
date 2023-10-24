@@ -45,13 +45,68 @@ namespace Timing
         HundredNanoSecondIntervals converted = std::chrono::duration_cast<HundredNanoSecondIntervals>(twoSeconds);
         std::cout << std::format("{} 100-ns intervals in {} seconds", converted.count(), twoSeconds.count());
     }
+
+    template<auto T>
+    struct TimedScope
+    {
+        std::chrono::high_resolution_clock::duration diff;
+
+        inline void operator()(auto&&...args)
+        {
+            const auto begin = std::chrono::high_resolution_clock::now();
+            T(std::forward<decltype(args)>(args)...);
+            const auto end = std::chrono::high_resolution_clock::now();
+            diff = end - begin;
+        }
+
+        inline std::chrono::microseconds ToMicroseconds() const noexcept
+        {
+            return std::chrono::duration_cast<std::chrono::microseconds>(diff);
+        }
+
+        inline std::chrono::nanoseconds ToNanoseconds() const noexcept
+        {
+            return std::chrono::duration_cast<std::chrono::nanoseconds>(diff);
+        }
+    };
+
+    void TestTimedScope()
+    {
+        SYSTEMTIME st{ 0 };
+        TimedScope<GetSystemTime> ts;
+        ts(&st);
+        std::cout << std::format(
+            "Call took {} microseconds = {} nanoseconds\n",
+            ts.ToMicroseconds().count(),
+            ts.ToNanoseconds().count()
+        );
+    }
+
+    void TestTimedScopeLambda()
+    {
+        constexpr auto func = []
+            {
+                SYSTEMTIME st{ 0 };
+                GetSystemTime(&st);
+            };
+        
+        TimedScope<func> ts;
+        ts();
+        std::cout << std::format(
+            "Call took {} microseconds = {} nanoseconds\n",
+            ts.ToMicroseconds().count(),
+            ts.ToNanoseconds().count()
+        );
+    }
 }
 
 int main()
 {
+    Timing::TestTimedScope();
+    Timing::TestTimedScopeLambda();
     //Timing::TimeFunctionCallStd();
     //Timing::NanoSecondIntervals();
-    Timing::TimeFunctionCallsWindows();
+    //Timing::TimeFunctionCallsWindows();
 
     return 0;
 }
