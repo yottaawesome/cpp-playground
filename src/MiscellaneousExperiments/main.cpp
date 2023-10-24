@@ -46,17 +46,38 @@ namespace Timing
         std::cout << std::format("{} 100-ns intervals in {} seconds", converted.count(), twoSeconds.count());
     }
 
-    template<auto T>
+    template<auto T, bool ThrowErrors = true>
     struct TimedScope
     {
-        std::chrono::high_resolution_clock::duration diff;
-
         inline void operator()(auto&&...args)
+            requires ThrowErrors
         {
             const auto begin = std::chrono::high_resolution_clock::now();
             T(std::forward<decltype(args)>(args)...);
             const auto end = std::chrono::high_resolution_clock::now();
             diff = end - begin;
+        }
+
+        inline void operator()(auto&&...args) noexcept
+            requires not ThrowErrors
+        {
+            const auto begin = std::chrono::high_resolution_clock::now();
+            try
+            {
+                T(std::forward<decltype(args)>(args)...);
+                const auto end = std::chrono::high_resolution_clock::now();
+                diff = end - begin;
+            }
+            catch (...)
+            {
+                const auto end = std::chrono::high_resolution_clock::now();
+                diff = end - begin;
+            }
+        }
+
+        inline std::chrono::high_resolution_clock::duration Get() const noexcept
+        {
+            return diff;
         }
 
         inline std::chrono::microseconds ToMicroseconds() const noexcept
@@ -68,6 +89,9 @@ namespace Timing
         {
             return std::chrono::duration_cast<std::chrono::nanoseconds>(diff);
         }
+
+        private:
+            std::chrono::high_resolution_clock::duration diff;
     };
 
     void TestTimedScope()
