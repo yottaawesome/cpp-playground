@@ -4,6 +4,29 @@ import std.compat;
 
 namespace Timing
 {
+    namespace CheckDuration
+    {
+        // Adapted from https://stackoverflow.com/a/41851068/7448661
+        template<class T>
+        struct is_duration : std::false_type {};
+
+        template<class Rep, class Period>
+        struct is_duration<std::chrono::duration<Rep, Period>> : std::true_type {};
+
+        template<typename T>
+        concept Duration = is_duration<T>::value;
+
+        void SomeFunctionThatAcceptsDurations(Duration auto s)
+        {
+            static_assert(is_duration<decltype(s)>::value);
+        }
+
+        void Check()
+        {
+            SomeFunctionThatAcceptsDurations(std::chrono::milliseconds(2));
+        }
+    }
+
     void TimeFunctionCallStd()
     {
         auto someLambda = 
