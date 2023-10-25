@@ -199,7 +199,6 @@ export namespace FixedStrings2
 
 export namespace FixedString3
 {
-
 	template <size_t N>
 	struct FixedString
 	{
@@ -222,7 +221,24 @@ export namespace FixedString3
 			std::copy_n(str.buf, N2, newchar + N - 1);
 			return newchar;
 		}
+
+		consteval bool Empty() const noexcept
+		{
+			return N == 1;
+		}
+
+		consteval const char* Data() const noexcept
+		{
+			return buf;
+		}
 	};
 	template<size_t N>
 	FixedString(wchar_t const (&)[N]) -> FixedString<N>;
+
+	// MSVC explodes
+	/*template<uint_least32_t LINE = __builtin_LINE(), auto FILE = __builtin_FILE()>
+	class M
+	{
+
+	};*/
 }

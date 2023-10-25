@@ -69,33 +69,92 @@ namespace Timing
         std::cout << std::format("{} 100-ns intervals in {} seconds", converted.count(), twoSeconds.count());
     }
 
-    template<auto T, bool ThrowErrors = true>
+    template <size_t N>
+    struct FixedString
+    {
+        char buf[N]{};
+        //consteval FixedString(char const* arg) noexcept
+        consteval FixedString(const char(&arg)[N]) noexcept
+        {
+            for (unsigned i = 0; i < N; i++)
+                buf[i] = arg[i];
+            //std::copy_n(arg, N, buf);
+        }
+
+        constexpr operator const char* () const noexcept // returns a random pointer when consteval, probable msvc bug
+        {
+            return buf;
+        }
+
+        consteval size_t Size() const noexcept { return N; }
+
+        consteval bool Empty() const noexcept
+        {
+            return N == 1;
+        }
+
+        constexpr const char* Data() const noexcept
+        {
+            return buf;
+        }
+
+        consteval std::string_view View() const noexcept { return { buf, N }; }
+    };
+    template<size_t N>
+    FixedString(char const (&)[N]) -> FixedString<N>;
+    //template<size_t N>
+    //FixedString(char const (&)[N]) -> FixedString<N-1>;
+
+    template<auto T, bool Enabled = true, bool ThrowErrors = true, FixedString FSComment = "">
     struct TimedScope
     {
         inline void operator()(auto&&...args)
             requires ThrowErrors
         {
-            const auto begin = std::chrono::high_resolution_clock::now();
-            T(std::forward<decltype(args)>(args)...);
-            const auto end = std::chrono::high_resolution_clock::now();
-            diff = end - begin;
-        }
-
-        inline void operator()(auto&&...args) noexcept
-            requires not ThrowErrors
-        {
-            std::chrono::high_resolution_clock::time_point end;
-            const auto begin = std::chrono::high_resolution_clock::now();
-            try
+            if constexpr (Enabled)
+            {
+                const auto begin = std::chrono::high_resolution_clock::now();
+                T(std::forward<decltype(args)>(args)...);
+                const auto end = std::chrono::high_resolution_clock::now();
+                diff = end - begin;
+                if (not FSComment.Empty())
+                {
+                    std::cout << std::format(FSComment.Data(), ToMicroseconds().count());
+                }
+            }
+            else
             {
                 T(std::forward<decltype(args)>(args)...);
-                end = std::chrono::high_resolution_clock::now();
             }
-            catch (...)
+        }
+
+        inline void operator()(auto&&...args) noexcept(Enabled) // don't inadvertently swallow exceptions when test is disabled
+            requires not ThrowErrors
+        {
+            if constexpr (Enabled)
             {
-                end = std::chrono::high_resolution_clock::now();
+                std::chrono::high_resolution_clock::time_point end;
+                const auto begin = std::chrono::high_resolution_clock::now();
+                try
+                {
+                    T(std::forward<decltype(args)>(args)...);
+                    end = std::chrono::high_resolution_clock::now();
+                }
+                catch (...)
+                {
+                    end = std::chrono::high_resolution_clock::now();
+                }
+                diff = end - begin;
+                if (not FSComment.Empty())
+                {
+                    std::string_view v{ FSComment.Data(), FSComment.Size() };
+                    std::cout << std::format("{}, Microseconds: {}\n", (const char*)FSComment, ToMicroseconds().count());
+                }
             }
-            diff = end - begin;
+            else
+            {
+                T(std::forward<decltype(args)>(args)...);
+            }
         }
 
         inline std::chrono::high_resolution_clock::duration Get() const noexcept
@@ -163,7 +222,7 @@ namespace Timing
                 throw std::runtime_error("Some error");
             };
 
-        TimedScope<func, false> ts;
+        TimedScope<func, true, false, "Throwing call is"> ts;
         ts();
         std::cout << std::format(
             "Throwing call took {} microseconds = {} nanoseconds\n",
@@ -175,9 +234,9 @@ namespace Timing
 
 int main()
 {
-    Timing::X();
-    Timing::TestTimedScope();
-    Timing::TestTimedScopeLambda();
+    //Timing::X();
+    //Timing::TestTimedScope();
+    //Timing::TestTimedScopeLambda();
     Timing::TestTimedScopeThrowingLambda();
     //Timing::TimeFunctionCallStd();
     //Timing::NanoSecondIntervals();
