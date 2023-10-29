@@ -130,6 +130,10 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="module\strongtypes-crtp.ixx" />
+    <ClCompile Include="module\strongtypes-functionalities.ixx" />
+    <ClCompile Include="module\strongtypes-impl.ixx" />
+    <ClCompile Include="module\strongtypes.ixx" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\crtp.hpp" />
