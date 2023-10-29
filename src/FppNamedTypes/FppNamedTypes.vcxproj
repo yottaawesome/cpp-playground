@@ -132,10 +132,10 @@
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="crtp.hpp" />
-    <ClInclude Include="named_type.hpp" />
-    <ClInclude Include="named_type_impl.hpp" />
-    <ClInclude Include="underlying_functionalities.hpp" />
+    <ClInclude Include="include\crtp.hpp" />
+    <ClInclude Include="include\named_type.hpp" />
+    <ClInclude Include="include\named_type_impl.hpp" />
+    <ClInclude Include="include\underlying_functionalities.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
