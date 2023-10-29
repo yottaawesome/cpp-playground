@@ -230,10 +230,25 @@ namespace Timing
             ts.ToNanoseconds().count()
         );
     }
+
+    struct ConstTest
+    {
+        constexpr ConstTest(int s) : S(s)
+        {
+
+        }
+
+        constexpr int Get() const noexcept { return S; }
+
+        int S;
+    };
 }
 
 int main()
 {
+    constexpr Timing::ConstTest t(9);
+    constexpr int m = t.Get();
+
     //Timing::X();
     //Timing::TestTimedScope();
     //Timing::TestTimedScopeLambda();
