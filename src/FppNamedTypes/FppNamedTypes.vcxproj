@@ -130,7 +130,10 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="module\strongtypes-crtp.ixx" />
+    <ClCompile Include="module\strongtypes-crtp.cpp">
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">CompileAsCppModuleInternalPartition</CompileAs>
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">CompileAsCppModuleInternalPartition</CompileAs>
+    </ClCompile>
     <ClCompile Include="module\strongtypes-functionalities.ixx" />
     <ClCompile Include="module\strongtypes-impl.ixx" />
     <ClCompile Include="module\strongtypes.ixx" />

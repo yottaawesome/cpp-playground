@@ -1,4 +1,4 @@
-export module strongtypes:crtp;
+module strongtypes:crtp;
 
 namespace StrongTypes
 {
