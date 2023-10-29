@@ -1,45 +1,8 @@
-#ifndef named_type_impl_h
-#define named_type_impl_h
+#pragma once
 
 #include <tuple>
 #include <type_traits>
 #include <utility>
-
-// C++17 detection
-#if defined(_MSC_VER) && (defined(_HAS_CXX17) && _HAS_CXX17)
-#    define FLUENT_CPP17_PRESENT 1
-#elif __cplusplus >= 201703L
-#    define FLUENT_CPP17_PRESENT 1
-#else
-#    define FLUENT_CPP17_PRESENT 0
-#endif
-
-#if defined(__STDC_HOSTED__)
-#    define FLUENT_HOSTED 1
-#else
-#    define FLUENT_HOSTED 0
-#endif
-
-// Use [[nodiscard]] if available
-#ifndef FLUENT_NODISCARD_PRESENT
-#    define FLUENT_NODISCARD_PRESENT FLUENT_CPP17_PRESENT
-#endif
-
-// Enable empty base class optimization with multiple inheritance on Visual Studio.
-#if defined(_MSC_VER) && _MSC_VER >= 1910
-#    define FLUENT_EBCO __declspec(empty_bases)
-#else
-#    define FLUENT_EBCO
-#endif
-
-#if defined(__clang__) || defined(__GNUC__)
-#   define IGNORE_SHOULD_RETURN_REFERENCE_TO_THIS_BEGIN                                                                \
-    _Pragma("GCC diagnostic push") _Pragma("GCC diagnostic ignored \"-Weffc++\"")
-#   define IGNORE_SHOULD_RETURN_REFERENCE_TO_THIS_END _Pragma("GCC diagnostic pop")
-#else
-#   define IGNORE_SHOULD_RETURN_REFERENCE_TO_THIS_BEGIN /* Nothing */
-#   define IGNORE_SHOULD_RETURN_REFERENCE_TO_THIS_END   /* Nothing */
-#endif
 
 namespace fluent
 {
@@ -48,7 +11,7 @@ template <typename T>
 using IsNotReference = typename std::enable_if<!std::is_reference<T>::value, void>::type;
 
 template <typename T, typename Parameter, template <typename> class... Skills>
-class FLUENT_EBCO NamedType : public Skills<NamedType<T, Parameter, Skills...>>...
+class __declspec(empty_bases) NamedType : public Skills<NamedType<T, Parameter, Skills...>>...
 {
 public:
     using UnderlyingType = T;
@@ -88,20 +51,12 @@ public:
     {
        NamedType operator=(T&& value) const
        {
-           IGNORE_SHOULD_RETURN_REFERENCE_TO_THIS_BEGIN
-
            return NamedType(std::forward<T>(value));
-
-           IGNORE_SHOULD_RETURN_REFERENCE_TO_THIS_END
        }
         template <typename U>
         NamedType operator=(U&& value) const
         {
-            IGNORE_SHOULD_RETURN_REFERENCE_TO_THIS_BEGIN
-
             return NamedType(std::forward<U>(value));
-
-            IGNORE_SHOULD_RETURN_REFERENCE_TO_THIS_END
         }
 
         argument() = default;
@@ -142,5 +97,3 @@ auto make_named_arg_function(F&& f)
    return details::AnyOrderCallable<F, Args...>{std::forward<F>(f)};
 }
 } // namespace fluent
-
-#endif /* named_type_impl_h */

@@ -136,7 +136,6 @@
     <ClInclude Include="named_type.hpp" />
     <ClInclude Include="named_type_impl.hpp" />
     <ClInclude Include="underlying_functionalities.hpp" />
-    <ClInclude Include="version.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -1,22 +1,10 @@
-#ifndef UNDERLYING_FUNCTIONALITIES_HPP
-#define UNDERLYING_FUNCTIONALITIES_HPP
+#pragma once
 
 #include "crtp.hpp"
 #include "named_type_impl.hpp"
-
 #include <functional>
 #include <memory>
-
-#if FLUENT_HOSTED == 1
-#   include <iostream>
-#endif
-
-// C++17 constexpr additions
-#if FLUENT_CPP17_PRESENT
-#    define FLUENT_CONSTEXPR17 constexpr
-#else
-#    define FLUENT_CONSTEXPR17 
-#endif
+#include <iostream>
 
 namespace fluent
 {
@@ -24,55 +12,39 @@ namespace fluent
 template <typename T>
 struct PreIncrementable : crtp<T, PreIncrementable>
 {
-    IGNORE_SHOULD_RETURN_REFERENCE_TO_THIS_BEGIN
-
-    FLUENT_CONSTEXPR17 T& operator++()
+    constexpr T& operator++()
     {
         ++this->underlying().get();
         return this->underlying();
     }
-
-    IGNORE_SHOULD_RETURN_REFERENCE_TO_THIS_END
 };
 
 template <typename T>
 struct PostIncrementable : crtp<T, PostIncrementable>
 {
-    IGNORE_SHOULD_RETURN_REFERENCE_TO_THIS_BEGIN
-
-    FLUENT_CONSTEXPR17 T operator++(int)
+    constexpr T operator++(int)
     {
         return T(this->underlying().get()++);
     }
-
-    IGNORE_SHOULD_RETURN_REFERENCE_TO_THIS_END
 };
 
 template <typename T>
 struct PreDecrementable : crtp<T, PreDecrementable>
 {
-    IGNORE_SHOULD_RETURN_REFERENCE_TO_THIS_BEGIN
-
-    FLUENT_CONSTEXPR17 T& operator--()
+    constexpr T& operator--()
     {
         --this->underlying().get();
         return this->underlying();
     }
-
-    IGNORE_SHOULD_RETURN_REFERENCE_TO_THIS_END
 };
 
 template <typename T>
 struct PostDecrementable : crtp<T, PostDecrementable>
 {
-    IGNORE_SHOULD_RETURN_REFERENCE_TO_THIS_BEGIN
-
-    FLUENT_CONSTEXPR17 T operator--(int)
+    constexpr T operator--(int)
     {
         return T( this->underlying().get()-- );
     }
-
-    IGNORE_SHOULD_RETURN_REFERENCE_TO_THIS_END
 };
 
 template <typename T>
@@ -82,7 +54,7 @@ struct BinaryAddable : crtp<T, BinaryAddable>
     {
         return T(this->underlying().get() + other.get());
     }
-    FLUENT_CONSTEXPR17 T& operator+=(T const& other)
+    constexpr T& operator+=(T const& other)
     {
         this->underlying().get() += other.get();
         return this->underlying();
@@ -99,7 +71,7 @@ struct UnaryAddable : crtp<T, UnaryAddable>
 };
 
 template <typename T>
-struct FLUENT_EBCO Addable
+struct __declspec(empty_bases) Addable
     : BinaryAddable<T>
     , UnaryAddable<T>
 {
@@ -114,7 +86,7 @@ struct BinarySubtractable : crtp<T, BinarySubtractable>
     {
         return T(this->underlying().get() - other.get());
     }
-    FLUENT_CONSTEXPR17 T& operator-=(T const& other)
+    constexpr T& operator-=(T const& other)
     {
         this->underlying().get() -= other.get();
         return this->underlying();
@@ -131,7 +103,7 @@ struct UnarySubtractable : crtp<T, UnarySubtractable>
 };
 
 template <typename T>
-struct FLUENT_EBCO Subtractable
+struct __declspec(empty_bases) Subtractable
     : BinarySubtractable<T>
     , UnarySubtractable<T>
 {
@@ -146,7 +118,7 @@ struct Multiplicable : crtp<T, Multiplicable>
     {
         return T(this->underlying().get() * other.get());
     }
-    FLUENT_CONSTEXPR17 T& operator*=(T const& other)
+    constexpr T& operator*=(T const& other)
     {
         this->underlying().get() *= other.get();
         return this->underlying();
@@ -160,7 +132,7 @@ struct Divisible : crtp<T, Divisible>
     {
         return T(this->underlying().get() / other.get());
     }
-    FLUENT_CONSTEXPR17 T& operator/=(T const& other)
+    constexpr T& operator/=(T const& other)
     {
         this->underlying().get() /= other.get();
         return this->underlying();
@@ -174,7 +146,7 @@ struct Modulable : crtp<T, Modulable>
     {
         return T(this->underlying().get() % other.get());
     }
-    FLUENT_CONSTEXPR17 T& operator%=(T const& other)
+    constexpr T& operator%=(T const& other)
     {
         this->underlying().get() %= other.get();
         return this->underlying();
@@ -197,7 +169,7 @@ struct BitWiseAndable : crtp<T, BitWiseAndable>
     {
         return T(this->underlying().get() & other.get());
     }
-    FLUENT_CONSTEXPR17 T& operator&=(T const& other)
+    constexpr T& operator&=(T const& other)
     {
         this->underlying().get() &= other.get();
         return this->underlying();
@@ -211,7 +183,7 @@ struct BitWiseOrable : crtp<T, BitWiseOrable>
     {
         return T(this->underlying().get() | other.get());
     }
-    FLUENT_CONSTEXPR17 T& operator|=(T const& other)
+    constexpr T& operator|=(T const& other)
     {
         this->underlying().get() |= other.get();
         return this->underlying();
@@ -225,7 +197,7 @@ struct BitWiseXorable : crtp<T, BitWiseXorable>
     {
         return T(this->underlying().get() ^ other.get());
     }
-    FLUENT_CONSTEXPR17 T& operator^=(T const& other)
+    constexpr T& operator^=(T const& other)
     {
         this->underlying().get() ^= other.get();
         return this->underlying();
@@ -239,7 +211,7 @@ struct BitWiseLeftShiftable : crtp<T, BitWiseLeftShiftable>
     {
         return T(this->underlying().get() << other.get());
     }
-    FLUENT_CONSTEXPR17 T& operator<<=(T const& other)
+    constexpr T& operator<<=(T const& other)
     {
         this->underlying().get() <<= other.get();
         return this->underlying();
@@ -253,7 +225,7 @@ struct BitWiseRightShiftable : crtp<T, BitWiseRightShiftable>
     {
         return T(this->underlying().get() >> other.get());
     }
-    FLUENT_CONSTEXPR17 T& operator>>=(T const& other)
+    constexpr T& operator>>=(T const& other)
     {
         this->underlying().get() >>= other.get();
         return this->underlying();
@@ -329,15 +301,13 @@ struct Printable : crtp<T, Printable>
     }
 };
 
-#if FLUENT_HOSTED == 1
-    template <typename T, typename Parameter, template <typename> class... Skills>
-    typename std::enable_if<NamedType<T, Parameter, Skills...>::is_printable, std::ostream&>::type
-    operator<<(std::ostream& os, NamedType<T, Parameter, Skills...> const& object)
-    {
-        object.print(os);
-        return os;
-    }
-#endif
+template <typename T, typename Parameter, template <typename> class... Skills>
+typename std::enable_if<NamedType<T, Parameter, Skills...>::is_printable, std::ostream&>::type
+operator<<(std::ostream& os, NamedType<T, Parameter, Skills...> const& object)
+{
+    object.print(os);
+    return os;
+}
 
 template <typename T>
 struct Hashable
@@ -367,25 +337,25 @@ struct MethodCallable;
 template <typename T, typename Parameter, template <typename> class... Skills>
 struct MethodCallable<NamedType<T, Parameter, Skills...>> : crtp<NamedType<T, Parameter, Skills...>, MethodCallable>
 {
-    [[nodiscard]] FLUENT_CONSTEXPR17 std::remove_reference_t<T> const* operator->() const
+    [[nodiscard]] constexpr std::remove_reference_t<T> const* operator->() const
     {
         return std::addressof(this->underlying().get());
     }
-    [[nodiscard]] FLUENT_CONSTEXPR17 std::remove_reference_t<T>* operator->()
+    [[nodiscard]] constexpr std::remove_reference_t<T>* operator->()
     {
         return std::addressof(this->underlying().get());
     }
 };
 
 template <typename NamedType_>
-struct FLUENT_EBCO Callable
+struct __declspec(empty_bases) Callable
     : FunctionCallable<NamedType_>
     , MethodCallable<NamedType_>
 {
 };
 
 template <typename T>
-struct FLUENT_EBCO Incrementable
+struct __declspec(empty_bases) Incrementable
     : PreIncrementable<T>
     , PostIncrementable<T>
 {
@@ -394,7 +364,7 @@ struct FLUENT_EBCO Incrementable
 };
 
 template <typename T>
-struct FLUENT_EBCO Decrementable
+struct __declspec(empty_bases) Decrementable
     : PreDecrementable<T>
     , PostDecrementable<T>
 {
@@ -403,7 +373,7 @@ struct FLUENT_EBCO Decrementable
 };
 
 template <typename T>
-struct FLUENT_EBCO Arithmetic
+struct __declspec(empty_bases) Arithmetic
     : Incrementable<T>
     , Decrementable<T>
     , Addable<T>
@@ -442,5 +412,3 @@ struct hash<fluent::NamedType<T, Parameter, Skills...>>
 };
 
 } // namespace std
-
-#endif
