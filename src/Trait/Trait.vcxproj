@@ -21,8 +21,8 @@
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
-    <ProjectGuid>{4ffa3b90-baae-46ee-9cbe-697a033bc8b3}</ProjectGuid>
-    <RootNamespace>FppNamedTypes</RootNamespace>
+    <ProjectGuid>{ea87fa2c-8c65-4b01-ba52-7ae40734030b}</ProjectGuid>
+    <RootNamespace>Trait</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -132,19 +132,6 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="module\strongtypes-crtp.cpp">
-      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">CompileAsCppModuleInternalPartition</CompileAs>
-      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">CompileAsCppModuleInternalPartition</CompileAs>
-    </ClCompile>
-    <ClCompile Include="module\strongtypes-functionalities.ixx" />
-    <ClCompile Include="module\strongtypes-impl.ixx" />
-    <ClCompile Include="module\strongtypes.ixx" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="include\crtp.hpp" />
-    <ClInclude Include="include\named_type.hpp" />
-    <ClInclude Include="include\named_type_impl.hpp" />
-    <ClInclude Include="include\underlying_functionalities.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
