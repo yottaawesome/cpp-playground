@@ -1,4 +1,4 @@
-export module Module1;
+export module module1;
 import std;
 import std.compat;
 import module2;

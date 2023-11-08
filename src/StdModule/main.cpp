@@ -2,6 +2,8 @@
 // Headers #including the standard headers are probably also going
 // to cause this to fail.
 import std;
+import module1;
+import module2;
 
 int main()
 {
