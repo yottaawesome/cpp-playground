@@ -38,8 +38,23 @@ class M
     }
 };
 
+struct Non
+{
+    Non() = default;
+    Non(const Non&) = delete;
+    Non operator=(const Non&) = delete;
+
+    Non(Non&&) noexcept = default;
+};
+
 int main()
 {
+    //Non n;
+    //std::vector<Non> nv;
+    //nv.emplace_back();
+    //std::vector<Non> nv2;
+    //nv2 = nv;
+
     M m;
     Q<M> qm(m);
     return 0;
