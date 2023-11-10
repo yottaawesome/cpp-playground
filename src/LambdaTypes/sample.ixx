@@ -72,27 +72,29 @@ export namespace A
 // Based off https://stackoverflow.com/a/19149751/7448661
 export namespace B
 {
-    template< typename t, std::size_t n, typename = void >
+    template<typename t, std::size_t n, typename = void>
     struct function_argument_type;
 
-    template< typename r, typename ... a, std::size_t n >
-    struct function_argument_type< r(*)(a ...), n >
+    template<typename r, typename ... a, std::size_t n>
+    struct function_argument_type< r(*)(a ...), n>
     {
         typedef typename std::tuple_element< n, std::tuple< a ... > >::type type;
     };
 
-    template< typename r, typename c, typename ... a, std::size_t n >
-    struct function_argument_type< r(c::*)(a ...), n >
-        : function_argument_type< r(*)(a ...), n > {};
+    template<typename r, typename c, typename ... a, std::size_t n>
+    struct function_argument_type< r(c::*)(a ...), n>
+        : function_argument_type< r(*)(a ...), n > 
+    {};
 
-    template< typename r, typename c, typename ... a, std::size_t n >
-    struct function_argument_type< r(c::*)(a ...) const, n >
-        : function_argument_type< r(c::*)(a ...), n > {};
+    template<typename r, typename c, typename ... a, std::size_t n>
+    struct function_argument_type<r(c::*)(a ...) const, n >
+        : function_argument_type<r(c::*)(a ...), n> 
+    {};
 
-    template< typename ftor, std::size_t n >
-    struct function_argument_type< ftor, n,
-        typename std::conditional< false, decltype(&ftor::operator ()), void >::type >
-        : function_argument_type< decltype(&ftor::operator ()), n > {};
+    template<typename ftor, std::size_t n>
+    struct function_argument_type<ftor, n, typename std::conditional<false, decltype(&ftor::operator ()), void>::type>
+        : function_argument_type<decltype(&ftor::operator ()), n> 
+    {};
 
     void Test() 
     {

@@ -7,6 +7,7 @@ import module2;
 // the presence of old header-based components. We use 
 // other modules to export the header contents, which 
 // allows us to use the standard module.
+
 export namespace Other
 {
 	void SomeFunction()

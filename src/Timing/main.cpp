@@ -247,6 +247,85 @@ namespace Timing
     };
 }
 
+namespace Alias
+{
+    template<int ...> struct seq {};
+
+    template<int N, int ...S> struct gens : gens<N - 1, N - 1, S...> { };
+
+    template<int ...S> struct gens<0, S...> { typedef seq<S...> type; };
+
+    template< class R, class... A >
+    struct Func_type_;
+
+    // reference variant
+    template< class R, class... A >
+    struct Func_type_<auto(A...)->R> 
+    {
+        using Return_type = R;
+        using Args_tuple = std::tuple< A... >;
+    };
+
+    // func pointer variant
+    template< class R, class... A >
+    struct Func_type_<auto(*)(A...)->R> 
+        : Func_type_<auto(A...)->R>
+    { };
+
+    template<class Ret, class T, class... Args>
+    struct Func_type_<Ret(T::*)(Args...) const>
+    {
+        constexpr static int n = sizeof...(Args);
+        using Return_type = Ret;
+        using Args_tuple = std::tuple< Args... >;
+    };
+
+    int Blah(int, int) { return 1; };
+
+    template<auto F, typename TT = decltype(F)>
+    struct AliasedFunction
+    {
+        using ArgsT = Func_type_<decltype(F)>::Args_tuple;
+
+        template<typename...Args>
+        auto operator()(Args&&...args) const
+            //requires requires (Args&&...args) { F(args...); }
+        {
+            static_assert(std::is_invocable_v<TT, Args...>, "Parameter types don't appear to match for this aliased function.");
+            return std::invoke(F, std::forward<Args>(args)...);
+        }
+
+        static auto Invoke(auto&&...args)
+            requires requires () { 
+                F(args...); 
+                std::is_invocable_v<TT, decltype(args)...>; 
+            }
+        {
+            static_assert(std::is_invocable_v<TT, decltype(args)...>, "Parameter types don't appear to match for this aliased function.");
+            return std::invoke(F, std::forward<decltype(args)>(args)...);
+        }
+    };
+
+    using Alias = AliasedFunction<Blah>;
+
+    constexpr Alias AliasedInstance;
+
+    void Run()
+    {
+        using x = Func_type_<decltype(Blah)>::Args_tuple;
+        AliasedFunction<Blah> alias;
+        int f = alias(1, 1);
+        Alias::Invoke(1, 1);
+        AliasedInstance(1, 1);
+        //alias(1);
+    }
+
+    using S1 = decltype(&Sleep);
+    constexpr S1 s1 = &Sleep;
+
+    constexpr auto s2 = Sleep;
+}
+
 int main()
 {
     constexpr Timing::ConstTest t(9);
