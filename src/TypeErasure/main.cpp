@@ -17,6 +17,7 @@ class Object // (2)
             return object->getName();
         }
 
+    private:
         struct Concept // (5)
         {
             virtual ~Concept() = default;
