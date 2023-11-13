@@ -1,3 +1,6 @@
+// A port of Jeremy Ong's code located here https://www.jeremyong.com/cpp/2021/01/04/cpp20-coroutines-a-minimal-async-framework/
+// with various modifications to fix errors and make it compile.
+// See also the author's coroutine lib: https://github.com/jeremyong/coop
 module;
 
 #include <Windows.h>
