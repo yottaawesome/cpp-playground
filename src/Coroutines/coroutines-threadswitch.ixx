@@ -1,13 +1,6 @@
 // Sample from https://en.cppreference.com/w/cpp/language/coroutines
-module;
-
-#include <coroutine>
-#include <iostream>
-#include <stdexcept>
-#include <thread>
-#include <format>
-
 export module coroutines:threadswitch;
+import std;
 
 export namespace Coroutines::ThreadSwitch
 {

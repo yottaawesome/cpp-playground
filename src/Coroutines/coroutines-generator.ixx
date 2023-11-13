@@ -1,10 +1,6 @@
 // Sample adapted from https://www.scs.stanford.edu/~dm/blog/c++-coroutines.html
-module;
-
-#include <iostream>
-#include <coroutine>
-
 export module coroutines:generator;
+import std;
 
 export namespace Coroutines::Generator
 {

@@ -1,11 +1,6 @@
-module;
-
-#include <coroutine>
-#include <iostream>
-#include <memory>
-
 // Adapted from https://www.modernescpp.com/index.php/implementing-futures-with-coroutines
 export module coroutines:eagerfuture;
+import std;
 
 // eagerFuture.cpp
 
