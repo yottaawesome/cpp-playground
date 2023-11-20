@@ -79,6 +79,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Timing", "Timing\Timing.vcx
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Trait", "Trait\Trait.vcxproj", "{EA87FA2C-8C65-4B01-BA52-7AE40734030B}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "LValueOrRValue", "LValueOrRValue\LValueOrRValue.vcxproj", "{BCB5A584-E87A-45B9-8305-C84B03AD069B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -383,6 +385,14 @@ Global
 		{EA87FA2C-8C65-4B01-BA52-7AE40734030B}.Release|x64.Build.0 = Release|x64
 		{EA87FA2C-8C65-4B01-BA52-7AE40734030B}.Release|x86.ActiveCfg = Release|Win32
 		{EA87FA2C-8C65-4B01-BA52-7AE40734030B}.Release|x86.Build.0 = Release|Win32
+		{BCB5A584-E87A-45B9-8305-C84B03AD069B}.Debug|x64.ActiveCfg = Debug|x64
+		{BCB5A584-E87A-45B9-8305-C84B03AD069B}.Debug|x64.Build.0 = Debug|x64
+		{BCB5A584-E87A-45B9-8305-C84B03AD069B}.Debug|x86.ActiveCfg = Debug|Win32
+		{BCB5A584-E87A-45B9-8305-C84B03AD069B}.Debug|x86.Build.0 = Debug|Win32
+		{BCB5A584-E87A-45B9-8305-C84B03AD069B}.Release|x64.ActiveCfg = Release|x64
+		{BCB5A584-E87A-45B9-8305-C84B03AD069B}.Release|x64.Build.0 = Release|x64
+		{BCB5A584-E87A-45B9-8305-C84B03AD069B}.Release|x86.ActiveCfg = Release|Win32
+		{BCB5A584-E87A-45B9-8305-C84B03AD069B}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
