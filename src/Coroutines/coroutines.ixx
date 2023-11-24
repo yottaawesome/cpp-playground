@@ -4,3 +4,4 @@ export import :threadswitch2;
 export import :generator;
 export import :eagerfuture;
 export import :minimalasyncframework;
+export import :taskscheduler;
