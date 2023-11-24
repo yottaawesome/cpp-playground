@@ -145,6 +145,98 @@ export namespace ParamPacks
         }
     };
 
+    namespace LoopOverElements
+    {
+        void Do(auto&& x)
+        {
+            std::cout << typeid(x).name() << std::endl;
+        }
+
+        void Run()
+        {
+            std::tuple t{ 1, false };
+            std::apply(
+                []<typename...T>(T&&...args)
+                {
+                    (Do(std::forward<T>(args)), ...);
+                },
+                std::forward<decltype(t)>(t)
+            );
+        }
+    }
+
+    namespace LoopOverTypes
+    {
+        struct A
+        {
+            int operator()()
+            {
+                return 1;
+            }
+        };
+        struct B
+        {
+            int operator()(int i)
+            {
+                return i + 1;
+            }
+        };
+
+        template<typename T>
+        auto Do()
+        {
+            std::cout << typeid(T).name() << std::endl;
+        }
+
+        void Run()
+        {
+            std::tuple t{ 1, false };
+            std::apply(
+                []<typename...T>(T&&...args)
+                {
+                    (Do<decltype(args)>(), ...);
+                },
+                std::forward<decltype(t)>(t)
+            );
+        }
+    }
+
+    namespace Chained
+    {
+        // https://codereview.stackexchange.com/questions/274003/functor-chaining-function-for-c20
+        // https://github.com/user1095108/generic/blob/master/invoke.hpp
+        // https://github.com/user1095108/generic/blob/master/invoke.cpp
+        auto const inc = [](const int i) noexcept
+        {
+            return i + 1;
+        };
+
+        auto const first = []() noexcept
+        {
+            return 0;
+        };
+
+        auto ChainApply(auto&& a, auto&& f, auto&& ...fs)
+        {
+            if constexpr (sizeof...(fs))
+                return ChainApply(std::apply(f, std::forward_as_tuple(a)), std::forward<decltype(fs)>(fs)...);
+            else
+                return std::apply(f, std::forward_as_tuple(a));
+        }
+
+        void Run()
+        {
+            /*std::cout << std::format(
+                "{}\n",
+                ChainApply(0, inc, inc, inc)
+            );*/
+            std::cout << std::format(
+                "{}\n",
+                ChainApply(0, inc, inc, inc)
+            );
+        }
+    }
+
     int main5()
     {
         M<1> m1; m1.A();

@@ -18,6 +18,7 @@
 
 import std;
 import messageandloc;
+import tupletoparameterpack;
 
 template <typename... Args>
 std::vector<std::string> toStringVector(Args... args) {
@@ -72,7 +73,7 @@ void test(Args...) { std::cout << "istring\n"; }
 //
 //}
 
-int main()
+void Print()
 {
 	//BlahBlah(1, 2);
 
@@ -88,6 +89,12 @@ int main()
 	}
 
 	auto m = Convert(1, 2, 3, "a");
+}
+
+int main()
+{
+	ParamPacks::LoopOverTypes::Run();
+	ParamPacks::Chained::Run();
 
     return 0;
 }
