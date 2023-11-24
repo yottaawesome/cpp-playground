@@ -95,6 +95,7 @@ int main()
 {
 	ParamPacks::LoopOverTypes::Run();
 	ParamPacks::Chained::Run();
+	ParamPacks::LoopOverLambdas::Run();
 
     return 0;
 }

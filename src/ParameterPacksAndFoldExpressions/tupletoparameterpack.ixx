@@ -201,6 +201,26 @@ export namespace ParamPacks
         }
     }
 
+    namespace LoopOverLambdas
+    {
+        auto Do(auto&& lambda)
+        {
+            std::invoke(lambda);
+        }
+
+        void Run()
+        {
+            std::tuple t{ [] { std::cout << "Hello, one!\n"; }, [] { std::cout << "Hello, two!\n"; } };
+            std::apply(
+                []<typename...T>(T&&...args)
+                {
+                    (Do(args), ...);
+                },
+                std::forward<decltype(t)>(t)
+            );
+        }
+    }
+
     namespace Chained
     {
         // https://codereview.stackexchange.com/questions/274003/functor-chaining-function-for-c20
