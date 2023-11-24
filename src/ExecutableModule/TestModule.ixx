@@ -37,6 +37,7 @@ export namespace TestModule
 	// The following do not work.
 	// using namespace Internal;
 	// using Internal;
+	// namespace X = TestModule::Internal;
 }
 
 // This doesn't export the symbols.
