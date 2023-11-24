@@ -124,7 +124,7 @@ namespace QueueScheduler
         std::coroutine_handle<promise_type> handle;
     };
 
-    class Scheduler 
+    class Scheduler
     {
         std::queue<std::coroutine_handle<>> _tasks;
 
