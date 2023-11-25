@@ -10,6 +10,8 @@
 #include <Windows.h>
 #endif
 
+import nativeapi;
+
 inline constexpr bool IsLinux() noexcept
 {
 #ifdef __LINUX__
@@ -28,31 +30,31 @@ constexpr const char* Get() noexcept
 #endif
 }
 
-void XPlatformSleep(const std::chrono::milliseconds ms)
-{
-#ifdef __LINUX__
-
-	std::chrono::seconds remS = std::chrono::duration_cast<std::chrono::seconds>(ms);
-	std::chrono::milliseconds remMs = ms - std::chrono::duration_cast<std::chrono::milliseconds>(remS);
-	std::chrono::nanoseconds remNs = std::chrono::duration_cast<std::chrono::nanoseconds>(remMs);
-
-	struct timespec request { 
-		.tv_sec = remS.count(),
-		.tv_nsec = remNs.count()
-	};
-	//struct timespec remaining { 0 };
-	if (nanosleep(&request, nullptr))
-		throw std::runtime_error("Sleep failed");
-#else
-	Sleep(static_cast<DWORD>(ms.count()));
-#endif
-}
+//void XPlatformSleep(const std::chrono::milliseconds ms)
+//{
+//#ifdef __LINUX__
+//
+//	std::chrono::seconds remS = std::chrono::duration_cast<std::chrono::seconds>(ms);
+//	std::chrono::milliseconds remMs = ms - std::chrono::duration_cast<std::chrono::milliseconds>(remS);
+//	std::chrono::nanoseconds remNs = std::chrono::duration_cast<std::chrono::nanoseconds>(remMs);
+//
+//	struct timespec request { 
+//		.tv_sec = remS.count(),
+//		.tv_nsec = remNs.count()
+//	};
+//	//struct timespec remaining { 0 };
+//	if (nanosleep(&request, nullptr))
+//		throw std::runtime_error("Sleep failed");
+//#else
+//	Sleep(static_cast<DWORD>(ms.count()));
+//#endif
+//}
 
 int main(int argc, char* argv[]) try
 {
 	const std::chrono::milliseconds ms{ 1000 };
 	std::cout << std::format("Sleeping for {} ms\n!", ms.count());
-	XPlatformSleep(ms);
+	//NativeAPI::XPlatformSleep(ms);
 	std::cout << std::format("Hello, {}!\n", Get());
 	return 0;
 }

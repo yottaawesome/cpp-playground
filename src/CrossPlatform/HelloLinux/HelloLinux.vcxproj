@@ -36,6 +36,8 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\main.cpp" />
+    <ClCompile Include="..\src\nativeapi.ixx" />
+    <ClCompile Include="..\src\nativeapi.linux.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{cb7ea0bd-5748-4d57-aef0-9f6a3377a117}</ProjectGuid>
@@ -78,13 +80,14 @@
   <ImportGroup Label="PropertySheets" />
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <RemoteCppCompileToolExe>/usr/bin/gcc-13</RemoteCppCompileToolExe>
+    <RemoteCppCompileToolExe>/usr/bin/g++-13</RemoteCppCompileToolExe>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
       <CppLanguageStandard>c++20</CppLanguageStandard>
       <AdditionalOptions>-fmodules-ts %(AdditionalOptions)</AdditionalOptions>
       <PreprocessorDefinitions>__LINUX__</PreprocessorDefinitions>
+      <Verbose>true</Verbose>
     </ClCompile>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
