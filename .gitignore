@@ -36,3 +36,4 @@
 *.user
 Debug/
 x64/
+*.pcm

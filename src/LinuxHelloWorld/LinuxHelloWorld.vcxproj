@@ -79,6 +79,7 @@
   </PropertyGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="somemodule.impl.cpp" />
     <ClCompile Include="somemodule.ixx" />
   </ItemGroup>
   <ItemGroup>

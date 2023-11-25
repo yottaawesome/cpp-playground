@@ -53,8 +53,8 @@ constexpr const char* Get() noexcept
 int main(int argc, char* argv[]) try
 {
 	const std::chrono::milliseconds ms{ 1000 };
-	std::cout << std::format("Sleeping for {} ms\n!", ms.count());
-	//NativeAPI::XPlatformSleep(ms);
+	std::cout << std::format("Sleeping for {} ms\n!", (unsigned long)ms.count());
+	NativeAPI::XPlatformSleep(ms.count());
 	std::cout << std::format("Hello, {}!\n", Get());
 	return 0;
 }

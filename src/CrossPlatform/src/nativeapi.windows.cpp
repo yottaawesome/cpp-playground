@@ -7,8 +7,8 @@ module nativeapi;
 
 namespace NativeAPI
 {
-	void XPlatformSleep(const std::chrono::milliseconds ms)
+	void XPlatformSleep(const unsigned long ms)
 	{
-		Sleep(static_cast<DWORD>(ms.count()));
+		Sleep(ms);
 	}
 }
