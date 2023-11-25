@@ -94,6 +94,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{76363D26-C0C
 		CrossPlatform\src\main.cpp = CrossPlatform\src\main.cpp
 	EndProjectSection
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "HelloClangWindows", "CrossPlatform\HelloClangWindows\HelloClangWindows.vcxproj", "{CB061A9E-912A-45F5-B461-8B1763325813}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|ARM = Debug|ARM
@@ -778,6 +780,22 @@ Global
 		{AC6B6CC6-A45C-4A79-98E9-606F19DFAE22}.Release|x64.Build.0 = Release|x64
 		{AC6B6CC6-A45C-4A79-98E9-606F19DFAE22}.Release|x86.ActiveCfg = Release|Win32
 		{AC6B6CC6-A45C-4A79-98E9-606F19DFAE22}.Release|x86.Build.0 = Release|Win32
+		{CB061A9E-912A-45F5-B461-8B1763325813}.Debug|ARM.ActiveCfg = Debug|x64
+		{CB061A9E-912A-45F5-B461-8B1763325813}.Debug|ARM.Build.0 = Debug|x64
+		{CB061A9E-912A-45F5-B461-8B1763325813}.Debug|ARM64.ActiveCfg = Debug|x64
+		{CB061A9E-912A-45F5-B461-8B1763325813}.Debug|ARM64.Build.0 = Debug|x64
+		{CB061A9E-912A-45F5-B461-8B1763325813}.Debug|x64.ActiveCfg = Debug|x64
+		{CB061A9E-912A-45F5-B461-8B1763325813}.Debug|x64.Build.0 = Debug|x64
+		{CB061A9E-912A-45F5-B461-8B1763325813}.Debug|x86.ActiveCfg = Debug|Win32
+		{CB061A9E-912A-45F5-B461-8B1763325813}.Debug|x86.Build.0 = Debug|Win32
+		{CB061A9E-912A-45F5-B461-8B1763325813}.Release|ARM.ActiveCfg = Release|x64
+		{CB061A9E-912A-45F5-B461-8B1763325813}.Release|ARM.Build.0 = Release|x64
+		{CB061A9E-912A-45F5-B461-8B1763325813}.Release|ARM64.ActiveCfg = Release|x64
+		{CB061A9E-912A-45F5-B461-8B1763325813}.Release|ARM64.Build.0 = Release|x64
+		{CB061A9E-912A-45F5-B461-8B1763325813}.Release|x64.ActiveCfg = Release|x64
+		{CB061A9E-912A-45F5-B461-8B1763325813}.Release|x64.Build.0 = Release|x64
+		{CB061A9E-912A-45F5-B461-8B1763325813}.Release|x86.ActiveCfg = Release|Win32
+		{CB061A9E-912A-45F5-B461-8B1763325813}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -792,6 +810,7 @@ Global
 		{CB7EA0BD-5748-4D57-AEF0-9F6A3377A117} = {BEFE0EAD-47AE-4F18-AB91-C76727BA4854}
 		{AC6B6CC6-A45C-4A79-98E9-606F19DFAE22} = {BEFE0EAD-47AE-4F18-AB91-C76727BA4854}
 		{76363D26-C0CC-463F-BE32-52274161C17F} = {BEFE0EAD-47AE-4F18-AB91-C76727BA4854}
+		{CB061A9E-912A-45F5-B461-8B1763325813} = {BEFE0EAD-47AE-4F18-AB91-C76727BA4854}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {19DD61FA-03AE-40FC-9766-C324D9CCDFDB}
