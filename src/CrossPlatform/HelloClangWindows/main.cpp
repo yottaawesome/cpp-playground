@@ -1,3 +1,4 @@
+// Clang in MSVC appears to be completely broken with modules
 //import somemodule;
 
 int main(int argc, char* argv[])
