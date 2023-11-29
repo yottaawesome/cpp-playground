@@ -10,5 +10,5 @@ module TestModule:InternalPartition;
 // Stuff in here is only visible inside the module
 namespace NotExported
 {
-
+	constexpr int Blah = 1;
 }

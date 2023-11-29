@@ -3,6 +3,8 @@ import TestModule;
 
 int main()
 {
+    auto m = NowExported::Blah;
+
     TestModule::TestStruct ts;
     TestModule::Blah ts2;
     TestModule::TestFunc2();

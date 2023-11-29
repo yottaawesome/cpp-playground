@@ -7,6 +7,11 @@ export module TestModule;
 export import :Partition;
 import :InternalPartition;
 
+export namespace NowExported
+{
+	using NotExported::Blah;
+}
+
 // See pre-link event in https://stackoverflow.com/questions/2658215/how-do-i-create-both-a-lib-file-and-an-exe-file-in-visual-c
 export namespace TestModule 
 {
@@ -15,7 +20,6 @@ export namespace TestModule
 
 	class Partial;
 	using PtrPartial2 = std::unique_ptr<TestModule2::Partial2>;
-
 
 	Partial* GetPartial();
 	PtrPartial2 GetPartial2();
