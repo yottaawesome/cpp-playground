@@ -3,6 +3,11 @@ import std.compat;
 
 namespace Test
 {
+    void M(int i) [[std::expects: i > 0]]
+    {
+
+    }
+
     // See https://andreasfertig.blog/2021/01/cpp20-aggregate-pod-trivial-type-standard-layout-class-what-is-what/
     // Standard-layout structs are interoperable with C APIs
     struct TestStruct

@@ -239,3 +239,12 @@ export namespace IfDefined
         constexpr bool v2 = is_type_complete_v<M>;
     }
 }
+
+export namespace Span
+{
+    void Run()
+    {
+        std::vector<int> v{ 1,2,3,4,5 };
+        std::span<int> s{ v.begin(), 2};
+    }
+}
