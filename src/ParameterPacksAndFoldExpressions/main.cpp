@@ -18,7 +18,6 @@
 
 import std;
 import messageandloc;
-import tupletoparameterpack;
 
 template <typename... Args>
 std::vector<std::string> toStringVector(Args... args) {
@@ -93,9 +92,6 @@ void Print()
 
 int main()
 {
-	ParamPacks::LoopOverTypes::Run();
-	ParamPacks::Chained::Run();
-	ParamPacks::LoopOverLambdas::Run();
-
+	Print();
     return 0;
 }
