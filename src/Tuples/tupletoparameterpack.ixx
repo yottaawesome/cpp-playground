@@ -332,6 +332,7 @@ export namespace GetTupleElement
 export namespace InvokeAtImpl
 {
     // https://stackoverflow.com/a/71148253/7448661
+    // Sadly, doesn't work
     template<typename TPred, typename ...Ts, size_t ...Is>
     void invoke_at_impl(std::tuple<Ts...>& tpl, std::index_sequence<Is...>, size_t idx, TPred pred)
     {
@@ -351,14 +352,65 @@ export namespace InvokeAtImpl
         invoke_at_impl(tpl, std::make_index_sequence<sizeof...(Ts)>{}, idx, pred);
     }
 
-    void Something(const std::string& c)
+    bool Something(int&& c)
     {
-        std::string f = c;
+        return true;
+        //std::string f = c;
+    }
+
+    template<typename T>
+    bool Something2(T&& c)
+    {
+        return true;
+        //std::string f = c;
     }
 
     void Run()
     {
         std::tuple t{ 1, std::string{} };
-        //invoke_at(t, 1, Something);
+        invoke_at(t, 1, [](auto&& s) {});
+    }
+}
+
+export namespace InvokeAtImpl2
+{
+    // https://stackoverflow.com/a/65925007/7448661
+    template <typename T>
+    inline constexpr size_t tuple_size_v = std::tuple_size<T>::value;
+
+    template <typename T, typename F, std::size_t... I>
+    constexpr void visit_impl(T& tup, const size_t idx, F fun, std::index_sequence<I...>)
+    {
+        //assert(idx < tuple_size_v<T>);
+        ((I == idx ? fun(std::get<I>(tup)) : void()), ...);
+    }
+
+    template <typename F, typename... Ts, typename Indices = std::make_index_sequence<sizeof...(Ts)>>
+    constexpr void visit_at(std::tuple<Ts...>& tup, const size_t idx, F fun)
+    {
+        visit_impl(tup, idx, fun, Indices{});
+    }
+
+    template <typename F, typename... Ts, typename Indices = std::make_index_sequence<sizeof...(Ts)>>
+    constexpr void visit_at(const std::tuple<Ts...>& tup, const size_t idx, F fun)
+    {
+        visit_impl(tup, idx, fun, Indices{});
+    }
+
+    void Run()
+    {
+        auto tuple = std::tuple{ 1, 2.5, 3, 'Z', std::string{} };
+        // print it to cout
+        for (size_t i = 0; i < tuple_size_v<decltype(tuple)>; ++i) 
+        {
+            visit_at(tuple, i, [](auto&& arg) {
+                using T = std::decay_t<decltype(arg)>;
+                std::cout << *typeid(T).name() << arg << ' ';
+            });
+        }
+
+        visit_at(tuple, 4, [](auto&& arg) {
+
+            });
     }
 }
