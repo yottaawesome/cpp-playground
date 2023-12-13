@@ -259,7 +259,8 @@ export namespace WithTuple2
 		O m_t;
 	};
 
-	template<typename T> struct is_variant : std::false_type {};
+	template<typename T> 
+	struct is_variant : std::false_type {};
 
 	template<typename ...Args>
 	struct is_variant<std::variant<Args...>> : std::true_type {};
@@ -267,36 +268,80 @@ export namespace WithTuple2
 	template<typename T>
 	inline constexpr bool is_variant_v = is_variant<T>::value;
 
-	template<typename V, typename O>
-	struct V2
+	template<typename T>
+	concept IsVariant = is_variant_v<T>;
+
+	template<typename T> 
+	struct is_overloaded : std::false_type {};
+
+	template<typename ...Args>
+	struct is_overloaded<Helper::Overload<Args...>> : std::true_type {};
+
+	template<typename T>
+	inline constexpr bool is_overloaded_v = is_overloaded<T>::value;
+
+	template<typename T>
+	concept IsOverloaded = is_overloaded_v<T>;
+
+	template<IsVariant TVariant, IsOverloaded TOverload>
+	struct VariantOverload
 	{
-		V2(const V& v, const O& t) : m_t(t) 
+		VariantOverload(const TVariant& variant, const TOverload& overload) 
+			: m_overload(overload)
 		{
-			static_assert(is_variant_v<V>, "V must be a variant");
-			static_assert(Check<O, V>(), "Overloaded type must be invocable with all elements of variant");
+			static_assert(
+				Check<TOverload, TVariant>(), 
+				"TOverload type must be invocable with all elements types of TVariant"
+			);
 		}
-		V2(V&& v, O&& t) : m_t(std::move(t)) 
+		VariantOverload(TVariant&& variant, TOverload&& overload)
+			: m_overload(std::move(overload))
 		{ 
-			static_assert(is_variant_v<V>, "V must be a variant");
-			static_assert(Check<O, V>(), "Overloaded type must be invocable with all elements of variant");
+			static_assert(
+				Check<TOverload, TVariant>(), 
+				"TOverload type must be invocable with all element types of TVariant"
+			);
 		}
 
-		V m_v;
-		O m_t;
+		void Visit()
+		{
+			std::visit(m_overload, m_variant);
+		}
+
+		TVariant m_variant;
+		TOverload m_overload;
 	};
 	struct Tag {};
 
+	template<typename T>
+	concept IsVisitable = requires(T t) { t.Visit(); };
+
+	template<bool b>
+	[[nodiscard]] auto Get() -> IsVisitable auto
+	{
+		if constexpr (b)
+		{
+			return VariantOverload(
+				std::variant<Tag>{},
+				Helper::Overload{
+					[](const Tag& tag) { std::cout << "Tag (A)...\n"; }
+				}
+			);
+		}
+		else
+		{
+			return VariantOverload(
+				std::variant<Tag>{},
+				Helper::Overload{
+					[](const Tag& tag) { std::cout << "Tag (B)...\n"; }
+				}
+			);
+		}
+	}
+
 	void Run()
 	{
-		V2 mk2(
-			std::variant<Tag>{},
-			Helper::Overload{
-				[](const Tag& tag)
-				{
-					std::cout << "WaitA...\n";
-				}
-			}
-		);
+		IsVisitable auto vt = Get<true>();
 
 		HandleUniquePtr eventA(Win32::CreateEventW(nullptr, false, false, nullptr));
 		HandleUniquePtr eventB(Win32::CreateEventW(nullptr, false, false, nullptr));
