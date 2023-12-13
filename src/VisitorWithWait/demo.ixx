@@ -134,7 +134,12 @@ export namespace WithTuple2
 	namespace Helper
 	{
 		template<class... Ts> 
-		struct Overload : Ts... { using Ts::operator()...; };
+		struct Overload : Ts... 
+		{
+			using Type = Overload<Ts...>;
+			static constexpr auto Size = sizeof...(Ts);
+			using Ts::operator()...; 
+		};
 	}
 
 	namespace State
@@ -232,8 +237,67 @@ export namespace WithTuple2
 		std::cout << "IOCompletion...\n";
 	}
 
+	template <typename TOverload, typename TVariant, size_t N = 0>
+	constexpr bool Check() noexcept
+	{
+		if constexpr (std::is_invocable_v<TOverload, std::variant_alternative_t<N, TVariant>>)
+			return true;
+		else if constexpr (N + 1 < std::variant_size_v<TVariant>)
+			RuntimeSet<TOverload, TVariant, N + 1>();
+		else 
+			return false;
+	}
+
+	template<typename O, typename...T>
+	struct V1
+	{
+		V1(const O& t) : m_t(t) 
+		{
+		}
+
+		std::variant<T...> m_v;
+		O m_t;
+	};
+
+	template<typename T> struct is_variant : std::false_type {};
+
+	template<typename ...Args>
+	struct is_variant<std::variant<Args...>> : std::true_type {};
+
+	template<typename T>
+	inline constexpr bool is_variant_v = is_variant<T>::value;
+
+	template<typename V, typename O>
+	struct V2
+	{
+		V2(const V& v, const O& t) : m_t(t) 
+		{
+			static_assert(is_variant_v<V>, "V must be a variant");
+			static_assert(Check<O, V>(), "Overloaded type must be invocable with all elements of variant");
+		}
+		V2(V&& v, O&& t) : m_t(std::move(t)) 
+		{ 
+			static_assert(is_variant_v<V>, "V must be a variant");
+			static_assert(Check<O, V>(), "Overloaded type must be invocable with all elements of variant");
+		}
+
+		V m_v;
+		O m_t;
+	};
+	struct Tag {};
+
 	void Run()
 	{
+		V2 mk2(
+			std::variant<Tag>{},
+			Helper::Overload{
+				[](const Tag& tag)
+				{
+					std::cout << "WaitA...\n";
+				}
+			}
+		);
+
 		HandleUniquePtr eventA(Win32::CreateEventW(nullptr, false, false, nullptr));
 		HandleUniquePtr eventB(Win32::CreateEventW(nullptr, false, false, nullptr));
 		if (not eventA or not eventB)
@@ -249,6 +313,7 @@ export namespace WithTuple2
 		std::vector<Win32::HANDLE> handles{ eventA.get(), eventB.get() };
 		WaitOn(state, handles, InfiniteWait);
 
+		// https://en.cppreference.com/w/cpp/utility/variant/visit
 		// Version 1
 		std::visit(
 			[](auto&& arg)
