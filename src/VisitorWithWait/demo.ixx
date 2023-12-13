@@ -237,7 +237,7 @@ export namespace WithTuple2
 		std::cout << "IOCompletion...\n";
 	}
 
-	template <typename TOverload, typename TVariant, size_t N = 0>
+	template <typename TVariant, typename TOverload, size_t N = 0>
 	constexpr bool Check() noexcept
 	{
 		if constexpr (std::is_invocable_v<TOverload, std::variant_alternative_t<N, TVariant>>)
@@ -290,7 +290,7 @@ export namespace WithTuple2
 			: m_overload(overload)
 		{
 			static_assert(
-				Check<TOverload, TVariant>(), 
+				Check<TVariant, TOverload>(),
 				"TOverload type must be invocable with all elements types of TVariant"
 			);
 		}
@@ -298,7 +298,7 @@ export namespace WithTuple2
 			: m_overload(std::move(overload))
 		{ 
 			static_assert(
-				Check<TOverload, TVariant>(), 
+				Check<TVariant, TOverload>(),
 				"TOverload type must be invocable with all element types of TVariant"
 			);
 		}
@@ -311,10 +311,20 @@ export namespace WithTuple2
 		TVariant m_variant;
 		TOverload m_overload;
 	};
-	struct Tag {};
+	struct TestTagA {};
+	struct TestTagB {};
 
 	template<typename T>
 	concept IsVisitable = requires(T t) { t.Visit(); };
+
+	struct TestCallable
+	{
+		std::string Message;
+		void operator()(const TestTagB&)
+		{
+			std::cout << std::format("{}\n", Message);
+		}
+	};
 
 	template<bool b>
 	[[nodiscard]] auto Get() -> IsVisitable auto
@@ -322,18 +332,20 @@ export namespace WithTuple2
 		if constexpr (b)
 		{
 			return VariantOverload(
-				std::variant<Tag>{},
+				std::variant<TestTagA, TestTagB>{},
 				Helper::Overload{
-					[](const Tag& tag) { std::cout << "Tag (A)...\n"; }
+					[](const TestTagA& tag) { std::cout << "Tag A-1...\n"; },
+					[](const TestTagB& tag) { std::cout << "Tag B-1...\n"; }
 				}
 			);
 		}
 		else
 		{
 			return VariantOverload(
-				std::variant<Tag>{},
+				std::variant<TestTagA, TestTagB>{},
 				Helper::Overload{
-					[](const Tag& tag) { std::cout << "Tag (B)...\n"; }
+					TestCallable{ "Tag A-2...\n" },
+					TestCallable{ "Tag B-2...\n" }
 				}
 			);
 		}
