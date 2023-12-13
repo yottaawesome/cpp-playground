@@ -109,9 +109,9 @@ export namespace TupleIteration
     {
         std::apply(
             [&fn]<typename ...T>(T&& ...args) // C++20 template lambda
-        {
-            (fn(std::forward<T>(args)), ...);
-        },
+            {
+                (fn(std::forward<T>(args)), ...);
+            },
             std::forward<TupleT>(tp)
         );
     }
@@ -265,7 +265,7 @@ export namespace GetTupleElement
     // https://stackoverflow.com/a/58674921/7448661
     // Calls your func with tuple element.
     template <class Func, class Tuple, size_t N = 0>
-    void runtime_get(Func func, Tuple& tup, size_t idx) 
+    void RuntimeSet(Func func, Tuple& tup, size_t idx) 
     {
         if (N == idx) 
         {
@@ -278,23 +278,24 @@ export namespace GetTupleElement
 
         if constexpr (N + 1 < std::tuple_size_v<Tuple>) 
         {
-            return runtime_get<Func, Tuple, N + 1>(func, tup, idx);
+            return RuntimeSet<Func, Tuple, N + 1>(func, tup, idx);
         }
     }
 
-    template <class Func, class Tuple, size_t N = 0>
-    auto runtime_get2(Func func, Tuple& tup, size_t idx)
+    template <class RType, class Func, class Tuple, size_t N = 0>
+    RType runtime_get2(Func func, Tuple& tup, size_t idx)
     {
         if (N == idx)
         {
             if constexpr (std::is_invocable_v<Func, decltype(std::get<N>(tup))>)
                 return std::invoke(func, std::get<N>(tup));
-            else
-                throw std::runtime_error("");
+            return {};
         }
 
         if constexpr (N + 1 < std::tuple_size_v<Tuple>)
-            return runtime_get2<Func, Tuple, N + 1>(func, tup, idx);
+            return runtime_get2<RType, Func, Tuple, N + 1>(func, tup, idx);
+
+        return {};
     }
 
     // Calls your func with a pointer to the type.
@@ -321,11 +322,17 @@ export namespace GetTupleElement
         return f;
     }
 
+    int Something2(const int& c)
+    {
+        return c;
+    }
+
     void Run()
     {
         std::tuple t{ 1, std::string{} };
-        runtime_get(Something, t, 1);
-        std::string s = runtime_get2(Something, t, 1);
+        RuntimeSet(Something, t, 1);
+        std::string s = runtime_get2<std::string>(Something, t, 1);
+        int s2 = runtime_get2<int>(Something2, t, 0);
     }
 }
 

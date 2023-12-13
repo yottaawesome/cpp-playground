@@ -259,10 +259,13 @@ namespace PriorityScheduler
 	{
 		std::cout << '\n';
 
+		std::string taskA = "TaskA";
+		std::string taskB = "TaskB";
+
 		Scheduler scheduler1;
 
-		scheduler1.emplace(0, createTask("TaskA").get_handle());
-		scheduler1.emplace(1, createTask("  TaskB").get_handle());
+		scheduler1.emplace(0, createTask(taskA).get_handle());
+		scheduler1.emplace(1, createTask(taskB).get_handle());
 
 		scheduler1.schedule();
 
@@ -270,8 +273,8 @@ namespace PriorityScheduler
 
 		Scheduler scheduler2;
 
-		scheduler2.emplace(1, createTask("TaskA").get_handle());
-		scheduler2.emplace(0, createTask("  TaskB").get_handle());
+		scheduler2.emplace(1, createTask(taskA).get_handle());
+		scheduler2.emplace(0, createTask(taskB).get_handle());
 
 		scheduler2.schedule();
 
@@ -282,6 +285,7 @@ namespace PriorityScheduler
 namespace AdvancedPriorityScheduler
 {
 	// https://www.modernescpp.com/index.php/an-advanced-priority-scheduler-for-coroutines/
+	// https://www.modernescpp.com/index.php/a-bug-in-the-priority-scheduler-for-coroutines/
 	struct Task 
 	{
 		struct promise_type 
@@ -354,11 +358,15 @@ namespace AdvancedPriorityScheduler
 	{
 		std::cout << '\n';
 
+		std::string taskA = "TaskA";                    // (1)
+		std::string taskB = "  TaskB";                  // (2)
+		std::string taskC = "    TaskC";                // (3)
+
 		Scheduler scheduler1;                                               // (6)
 
-		scheduler1.emplace(0, createTask("TaskA").get_handle());
-		scheduler1.emplace(1, createTask("  TaskB").get_handle());
-		scheduler1.emplace(2, createTask("    TaskC").get_handle());
+		scheduler1.emplace(0, createTask(taskA).get_handle());
+		scheduler1.emplace(1, createTask(taskB).get_handle());
+		scheduler1.emplace(2, createTask(taskC).get_handle());
 
 		scheduler1.schedule();
 
@@ -366,9 +374,9 @@ namespace AdvancedPriorityScheduler
 
 		Scheduler<decltype([](int a) { return a - 1; }) > scheduler2;        // (7)
 
-		scheduler2.emplace(0, createTask("TaskA").get_handle());
-		scheduler2.emplace(1, createTask("  TaskB").get_handle());
-		scheduler2.emplace(2, createTask("    TaskC").get_handle());
+		scheduler2.emplace(0, createTask(taskA).get_handle());
+		scheduler2.emplace(1, createTask(taskB).get_handle());
+		scheduler2.emplace(2, createTask(taskC).get_handle());
 
 		scheduler2.schedule();
 

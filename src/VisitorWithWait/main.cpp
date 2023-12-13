@@ -4,6 +4,7 @@ import demo;
 
 int main()
 {
-    WithTuple::Run();
+    //WithTuple::Run();
+    WithTuple2::Run();
     return 0;
 }

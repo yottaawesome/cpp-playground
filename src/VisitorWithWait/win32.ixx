@@ -7,6 +7,7 @@ export module win32;
 export namespace Win32
 {
 	using ::HANDLE;
+	using ::DWORD;
 	using ::WaitForSingleObject;
 	using ::WaitForSingleObjectEx;
 	using ::WaitForMultipleObjects;

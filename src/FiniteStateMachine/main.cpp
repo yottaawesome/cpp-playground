@@ -11,17 +11,34 @@ namespace helper
 namespace state 
 {
     struct Idle { };
-    struct AmountEntered { int amount{ 0 }; int availableChange{ 0 }; };
-    struct ItemSelected { std::string item; int availableChange{ 0 }; };
-    struct ChangeDispensed { int change{ 0 }; };
+    struct AmountEntered 
+    { 
+        int amount{ 0 }; 
+        int availableChange{ 0 }; 
+    };
+    struct ItemSelected 
+    { 
+        std::string item; 
+        int availableChange{ 0 }; 
+    };
+    struct ChangeDispensed 
+    { 
+        int change{ 0 }; 
+    };
 }
 
 using VendingState = std::variant<state::Idle, state::AmountEntered, state::ItemSelected, state::ChangeDispensed>;
 
 namespace event 
 {
-    struct EnterAmount { int amount{ 0 }; };
-    struct SelectItem { std::string item; };
+    struct EnterAmount 
+    { 
+        int amount{ 0 }; 
+    };
+    struct SelectItem 
+    { 
+        std::string item; 
+    };
     struct DispenseChange { };
     struct Reset { };
 }
@@ -30,7 +47,12 @@ using PossibleEvent = std::variant<event::EnterAmount, event::SelectItem, event:
 
 class VendingMachine 
 {
-    struct Item { std::string name; unsigned quantity{ 0 }; int price{ 0 }; };
+    struct Item 
+    { 
+        std::string name; 
+        unsigned quantity{ 0 }; 
+        int price{ 0 }; 
+    };
 
     public:
         void processEvent(const PossibleEvent& event) 

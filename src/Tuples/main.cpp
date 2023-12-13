@@ -1,5 +1,6 @@
 import std;
 import tupletoparameterpack;
+import variantmadness;
 
 int main()
 {

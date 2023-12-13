@@ -89,16 +89,8 @@ export namespace WithTuple
 			std::array<Win32::HANDLE, sizeof...(E)> m_winhandles;
 	};
 
-	void func(int x, int y)
-	{
-
-	}
-
 	int Run()
 	{
-		std::tuple sometup{ 1,2 };
-		std::apply(func, sometup);
-
 		Win32::HANDLE h_a = Win32::CreateEventW(
 			nullptr,
 			false,
@@ -134,5 +126,167 @@ export namespace WithTuple
 		e.Wait();
 
 		return 0;
+	}
+}
+
+export namespace WithTuple2
+{
+	namespace Helper
+	{
+		template<class... Ts> 
+		struct Overload : Ts... { using Ts::operator()...; };
+	}
+
+	namespace State
+	{
+		struct WaitA {};
+		struct WaitB {};
+		struct Timeout {};
+		struct Failed {};
+		struct Abandoned {};
+		struct IOCompletion {};
+	}
+
+	using WaitState = std::variant<
+		State::WaitA, 
+		State::WaitB, 
+		State::Timeout,
+		State::Failed,
+		State::Abandoned,
+		State::IOCompletion
+	>;
+
+	struct HandleDeleter
+	{
+		void operator()(Win32::HANDLE h)
+		{
+			Win32::CloseHandle(h);
+		}
+	};
+	using HandleUniquePtr = std::unique_ptr<std::remove_pointer_t<Win32::HANDLE>, HandleDeleter>;
+
+	template <typename TVariant, size_t N = 0>
+	void RuntimeSet(TVariant& tup, size_t idx)
+	{
+		if (N == idx)
+			tup = std::variant_alternative_t<N, TVariant>{};
+		if constexpr (N + 1 < std::variant_size_v<TVariant>)
+			RuntimeSet<TVariant, N + 1>(tup, idx);
+	}
+
+	constexpr std::chrono::milliseconds InfiniteWait{Win32::WaitInfinite};
+
+	void WaitOn(
+		WaitState& state, 
+		const std::vector<Win32::HANDLE>& handles,
+		const std::chrono::milliseconds waitTime
+	)
+	{
+		Win32::DWORD index = Win32::WaitForMultipleObjects(
+			static_cast<Win32::DWORD>(handles.size()), 
+			handles.data(), 
+			false, 
+			static_cast<Win32::DWORD>(waitTime.count())
+		);
+		switch (index)
+		{
+			case Win32::WaitResult::Abandoned:
+				state = State::Abandoned{};
+				break;
+			case Win32::WaitResult::IoCompletion:
+				state = State::IOCompletion{};
+				break;
+			case Win32::WaitResult::Timeout:
+				state = State::Timeout{};
+				break;
+			case Win32::WaitResult::Failed:
+				state = State::Failed{};
+				break;
+			default:
+				RuntimeSet(state, index);
+		}
+	}
+
+	void Do(const State::WaitA& tag)
+	{
+		std::cout << "WaitA...\n";
+	}
+	void Do(const State::WaitB& tag)
+	{
+		std::cout << "WaitB...\n";
+	}
+	void Do(const State::Timeout& tag)
+	{
+		std::cout << "Timeout...\n";
+	}
+	void Do(const State::Failed& tag)
+	{
+		std::cout << "Failed...\n";
+	}
+	void Do(const State::Abandoned& tag)
+	{
+		std::cout << "Abandoned...\n";
+	}
+	void Do(const State::IOCompletion& tag)
+	{
+		std::cout << "IOCompletion...\n";
+	}
+
+	void Run()
+	{
+		HandleUniquePtr eventA(Win32::CreateEventW(nullptr, false, false, nullptr));
+		HandleUniquePtr eventB(Win32::CreateEventW(nullptr, false, false, nullptr));
+		if (not eventA or not eventB)
+			std::terminate();
+
+		std::jthread t(
+			[&]{
+				std::this_thread::sleep_for(std::chrono::seconds{ 3 });
+				Win32::SetEvent(eventB.get());
+			});
+
+		WaitState state{};
+		std::vector<Win32::HANDLE> handles{ eventA.get(), eventB.get() };
+		WaitOn(state, handles, InfiniteWait);
+
+		// Version 1
+		std::visit(
+			[](auto&& arg)
+			{
+				Do(arg);
+			},
+			state
+		);
+
+		// Version 2
+		std::visit(
+			Helper::Overload{
+				[](const State::WaitA& tag)
+				{
+					std::cout << "WaitA...\n";
+				},
+				[](const State::WaitB& tag)
+				{
+					std::cout << "WaitB...\n";
+				},
+				[](const State::Timeout& tag)
+				{
+					std::cout << "TagC...\n";
+				},
+				[](const State::Failed& tag)
+				{
+					std::cout << "TagC...\n";
+				},
+				[](const State::Abandoned& tag)
+				{
+					std::cout << "Abandoned...\n";
+				},
+				[](const State::IOCompletion& tag)
+				{
+					std::cout << "IOCompletion...\n";
+				}
+			},
+			state
+		);
 	}
 }
