@@ -421,3 +421,48 @@ export namespace InvokeAtImpl2
             });
     }
 }
+
+export namespace TupleFunc
+{
+    // Adapted from https://www.foonathan.net/2020/05/fold-tricks/
+    template <class Tuple, class F>
+    constexpr decltype(auto) for_each(Tuple&& tuple, F&& f)
+    {
+        return []<std::size_t... I>(Tuple && tuple, F&& f, std::index_sequence<I...>)
+        {
+            (f(std::get<I>(tuple)), ...);
+            return f;
+        }(
+            std::forward<Tuple>(tuple), std::forward<F>(f),
+            std::make_index_sequence<std::tuple_size<std::remove_reference_t<Tuple>>::value>{}
+        );
+    }
+
+    template<typename F, typename A>
+    void run_if_possible(F&& f, A&& a)
+    {
+        if constexpr (std::is_invocable_v<F, A>)
+            std::invoke(f, a);
+    }
+
+    template <class Tuple, class F>
+    constexpr decltype(auto) conditional_for_each(Tuple&& tuple, F&& f)
+    {
+        return[]<std::size_t... I>(Tuple && tuple, F&& f, std::index_sequence<I...>)
+        {
+            (run_if_possible(f, std::get<I>(tuple)), ...);
+            //((std::is_invocable_v<F, decltype(std::get<I>(tuple))> ? (f(std::get<I>(tuple))) : false) && ...);
+            return f;
+        }(
+            std::forward<Tuple>(tuple), 
+            std::forward<F>(f),
+            std::make_index_sequence<std::tuple_size<std::remove_reference_t<Tuple>>::value>{}
+        );
+    }
+
+    void Run()
+    {
+        std::tuple t{ 1, std::string{"a"} };
+        conditional_for_each(t, [](std::string&& s) {});
+    }
+}
