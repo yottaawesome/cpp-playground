@@ -439,10 +439,10 @@ export namespace TupleFunc
     }
 
     template<typename F, typename A>
-    void run_if_possible(F&& f, A&& a)
+    auto run_if_possible(F&& f, A&& a)
     {
         if constexpr (std::is_invocable_v<F, A>)
-            std::invoke(f, a);
+            return std::invoke(f, a);
     }
 
     template <class Tuple, class F>
@@ -460,9 +460,24 @@ export namespace TupleFunc
         );
     }
 
+    template <class Tuple, class F>
+    constexpr decltype(auto) do_at(Tuple&& tuple, F&& f, const size_t index)
+    {
+        return[index]<std::size_t... I>(Tuple && tuple, F && f, std::index_sequence<I...>)
+        {
+            ((I == index ? run_if_possible(f, std::get<I>(tuple)) : void()), ...);
+            return f;
+        }(
+            std::forward<Tuple>(tuple),
+            std::forward<F>(f),
+            std::make_index_sequence<std::tuple_size<std::remove_reference_t<Tuple>>::value>{}
+        );
+    }
+
     void Run()
     {
         std::tuple t{ 1, std::string{"a"} };
-        conditional_for_each(t, [](std::string&& s) {});
+        conditional_for_each(t, [](const std::string& s) {std::cout << "Hello1\n"; });
+        do_at(t, [](const std::string& s) { std::cout << "Hello2\n"; }, 1);
     }
 }

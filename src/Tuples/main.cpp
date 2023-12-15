@@ -8,6 +8,7 @@ int main()
 	//Chained::Run();
 	//LoopOverLambdas::Run();
 	GetTupleElement::Run();
+	TupleFunc::Run();
 
 	return 0;
 }
