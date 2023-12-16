@@ -451,7 +451,6 @@ export namespace TupleFunc
         return[]<std::size_t... I>(Tuple && tuple, F&& f, std::index_sequence<I...>)
         {
             (run_if_possible(f, std::get<I>(tuple)), ...);
-            //((std::is_invocable_v<F, decltype(std::get<I>(tuple))> ? (f(std::get<I>(tuple))) : false) && ...);
             return f;
         }(
             std::forward<Tuple>(tuple), 
@@ -463,7 +462,7 @@ export namespace TupleFunc
     template <class Tuple, class F>
     constexpr decltype(auto) do_at(Tuple&& tuple, F&& f, const size_t index)
     {
-        return[index]<std::size_t... I>(Tuple && tuple, F && f, std::index_sequence<I...>)
+        return[index]<std::size_t... I>(Tuple && tuple, F&& f, std::index_sequence<I...>)
         {
             ((I == index ? run_if_possible(f, std::get<I>(tuple)) : void()), ...);
             return f;
@@ -474,10 +473,29 @@ export namespace TupleFunc
         );
     }
 
+    template <class TTuple, class TPredFn>
+    constexpr decltype(auto) index_of(TTuple&& tuple, TPredFn&& f)
+    {
+        size_t index = std::numeric_limits<size_t>::max();
+        [&index]<std::size_t... I>(TTuple && tuple, TPredFn&& f, std::index_sequence<I...>)
+        {
+            ((f(std::get<I>(tuple)) ? index = I : index), ...);
+        }(
+            std::forward<TTuple>(tuple),
+            std::forward<TPredFn>(f),
+            std::make_index_sequence<std::tuple_size<std::remove_reference_t<TTuple>>::value>{}
+        );
+        return index;
+    }
+
     void Run()
     {
-        std::tuple t{ 1, std::string{"a"} };
+        std::tuple t{ 1, std::string{"a"}, 2 };
         conditional_for_each(t, [](const std::string& s) {std::cout << "Hello1\n"; });
         do_at(t, [](const std::string& s) { std::cout << "Hello2\n"; }, 1);
+        std::cout << std::format(
+            "{}\n",
+            index_of(t, [](auto&& v) { return std::same_as<std::remove_cvref_t<decltype(v)>, std::string>; })
+        );
     }
 }
