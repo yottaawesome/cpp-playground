@@ -23,6 +23,7 @@ export namespace FoldsWithConcepts
 
 export namespace PackToVector
 {
+	// Adapted from https://gist.github.com/alepez/de533a78acf5a1079a04
 	template <typename... Args>
 	std::vector<std::string> toStringVector(Args... args) 
 	{
