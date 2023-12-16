@@ -18,20 +18,69 @@ export namespace FoldsWithConcepts
 	// https://stackoverflow.com/questions/70035099/how-to-extract-requires-clause-with-a-parameter-pack-whose-parameters-are-relate
 	template <typename... Args>
 		requires (std::is_convertible_v<Args, int> && ...)
-	void test(Args...) { std::cout << "int\n"; }
+	void test1(Args...) { std::cout << "int\n"; }
 
 	template <typename... Args>
-	concept Istring =
+	concept Istring = (
 		(
-			(
-				std::is_convertible_v<Args, int> or
-				std::is_convertible_v<Args, std::string>
-			) and ...
-		)
-		and (std::is_convertible_v<Args, std::string> or ...); // at least one string
+			std::is_convertible_v<Args, int>
+			or std::is_convertible_v<Args, std::string>
+		) and ...
+	) and (std::is_convertible_v<Args, std::string> or ...); // at least one string
 
-	template <Istring... Args>
-	void test(Args...) { std::cout << "istring\n"; }
+	template <typename... Args>
+		requires Istring<Args...> // need to do this to check all parameters
+	void test2(Args...) { std::cout << "istring\n"; }
+
+	void Run()
+	{
+
+		test2(1, std::string{});
+	}
+}
+
+export namespace Formats
+{
+	// https://stackoverflow.com/a/77635205/7448661
+	template<typename... Args>
+	inline auto lazy_format(std::format_string<Args...> fmt, Args&&... args)
+	{
+		return 
+			[fmt, args_tuple = std::tuple<Args...>(std::forward<Args>(args)...)]() mutable 
+			{
+				return std::apply(
+					[fmt](auto&... args) 
+					{
+						return std::format(fmt, std::forward<Args>(args)...); 
+					},
+					args_tuple
+				);
+			};
+	}
+
+	// Constant expression, can use regular format
+	template<typename... Args>
+	inline std::string DoFormat1(std::format_string<Args...> fmt, Args&&... args)
+	{
+		return std::format(fmt, std::forward<Args>(args)...);
+	}
+
+	// Not a constant expression, requires vformat
+	template<typename... Args>
+	inline std::string DoFormat2(std::string_view fmt, Args&&... args)
+	{
+		return std::format(fmt, std::forward<Args>(args)...);
+	}
+
+	void str(std::string s)
+	{
+		DoFormat1("Hey {}", s);
+	}
+
+	void Run()
+	{
+		str("Haha");
+	}
 }
 
 export namespace PackToVector
