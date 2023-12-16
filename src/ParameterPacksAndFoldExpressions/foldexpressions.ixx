@@ -149,6 +149,7 @@ export namespace NiftyExpressions
 
 export namespace MoreNiftyFolds
 {
+	// Adapted from https://www.modernescpp.com/index.php/from-variadic-templates-to-fold-expressions
 	template<typename ... Args>
 	void printMe(Args&& ... args) 
 	{
