@@ -230,8 +230,10 @@ export namespace SomeBullshitFormatting
 	struct Container
 	{
 		std::format_string<Args...> m_fmt;
-		constexpr Container(std::format_string<Args...> fmt)
-			: m_fmt(fmt)
+		constexpr Container(
+			std::format_string<Args...> fmt,
+			std::source_location l = std::source_location::current()
+		) : m_fmt(fmt)
 		{
 
 		}
@@ -257,25 +259,19 @@ export namespace SomeBullshitFormatting
 		Formatted&& msg,
 		const std::source_location& loc = std::source_location::current()
 	)
-	{
+	{ }
 
-	}
-
-	void Fmt21(MessageAndLocation2 msg)
+	void Fmt2(MessageAndLocation2 msg)
 	{
 		std::cout << msg.location.line() << std::endl;
 	}
 
 	void Run()
 	{
-
 		Fmt1({ "{}", 1 });
 		MessageAndLocation2({ "{}" }, 1);
-		//Fmt2();
-
-		//Test("");
+		Fmt2({ {"{}"}, 1 });
 		Formatted("{}", 1);
-		//Test<int>(MessageAndLocation(std::format_string("{}")), 1);
 	}
 }
 
