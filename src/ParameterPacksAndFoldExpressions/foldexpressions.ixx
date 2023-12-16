@@ -149,7 +149,7 @@ export namespace NiftyExpressions
 
 export namespace MoreNiftyFolds
 {
-	// Adapted from https://www.modernescpp.com/index.php/from-variadic-templates-to-fold-expressions
+	// Adapted from https://www.modernescpp.com/index.php/smart-tricks-with-fold-expressions/
 	template<typename ... Args>
 	void printMe(Args&& ... args) 
 	{
@@ -168,6 +168,52 @@ export namespace MoreNiftyFolds
 		using Ts::operator() ...;
 	};
 
+	// https://www.modernescpp.com/index.php/from-variadic-templates-to-fold-expressions
+	bool allVar()
+	{
+		return true;
+	}
+
+	template<typename T, typename ...Ts>
+	bool allVar(T t, Ts ... ts) 
+	{
+		return t && allVar(ts...);
+	}
+
+	template<typename... Args>
+	bool all(Args... args) 
+	{ 
+		return (... && args); 
+	}
+
+	// diffL1(1, 2, 3) -> (1 - 2) - 3
+	template<typename... Args>
+	auto diffL1(Args const&... args) 
+	{
+		return (... - args);
+	}
+
+	// diffR1(1, 2, 3) -> 1 - (2 - 3)
+	template<typename... Args>
+	auto diffR1(Args const&... args) 
+	{
+		return (args - ...);
+	}
+
+	// diffL(10, 1, 2, 3) -> ((10 - 1) - 2) - 3
+	template<typename Init, typename... Args>
+	auto diffL(Init init, Args const&... args) 
+	{
+		return (init - ... - args);
+	}
+
+	// diffR(10, 1, 2, 3) -> 1 - (2 - (3 - 10))
+	template<typename Init, typename... Args>
+	auto diffR(Init init, Args const&... args) 
+	{
+		return (args - ... - init);
+	}
+
 	void Run()
 	{
 		auto TypeOfIntegral = Overload
@@ -185,5 +231,37 @@ export namespace MoreNiftyFolds
 			[&TypeOfIntegral](auto&& t) { std::cout << TypeOfIntegral(t); }, 
 			std::forward_as_tuple(t)
 		);
+	}
+}
+
+export namespace AllTheSameType
+{
+	// https://www.fluentcpp.com/2019/01/25/variadic-number-function-parameters-type/
+	// https://www.fluentcpp.com/2019/01/29/how-to-define-a-variadic-number-of-arguments-of-the-same-type-part-2/
+	// https://www.fluentcpp.com/2019/02/05/how-to-define-a-variadic-number-of-arguments-of-the-same-type-part-3/
+	// https://www.fluentcpp.com/2020/01/07/how-to-define-a-variadic-number-of-arguments-of-the-same-type-part-4/
+	// https://www.fluentcpp.com/2021/06/07/how-to-define-a-variadic-number-of-arguments-of-the-same-type-part-5/
+	// https://www.fluentcpp.com/2021/03/12/cpp-fold-expressions/
+	template<typename T, typename... Ts>
+	using AllSame = std::enable_if_t<std::conjunction_v<std::is_same<T, Ts>...>>;
+
+	template<typename T, typename... Ts, typename = AllSame<T, Ts...>>
+	void f1(T const& value, const Ts&... values) {}
+
+	// Better way of doing the above
+	// With folds (not necessary)
+	template<typename T, typename...TArgs>
+	concept AllTheSame1 = (std::is_same_v<TArgs, T> and ...);
+
+	// Without folds
+	template<typename T, typename TArgs>
+	concept AllTheSame2 = std::is_same_v<TArgs, T>;
+
+	// AllTheSame1 and AllTheSame2 both work
+	void f2(AllTheSame2<std::string> auto&&... args) {}
+
+	void Run()
+	{
+		f2(std::string{}, std::string{});
 	}
 }
