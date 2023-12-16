@@ -266,8 +266,27 @@ export namespace SomeBullshitFormatting
 		std::cout << msg.location.line() << std::endl;
 	}
 
+	template<typename... Args>
+	inline auto Formatter(std::format_string<Args...> fmt, Args&&... args)
+	{
+		return
+			[fmt, args_tuple = std::tuple<Args...>(std::forward<Args>(args)...)](
+				const std::source_location& l = std::source_location::current()
+			) mutable
+			{
+				return std::apply(
+					[fmt](auto&... args)
+					{
+						return std::format(fmt, std::forward<Args>(args)...);
+					},
+					args_tuple
+				);
+			};
+	}
+
 	void Run()
 	{
+		Formatter("A {}", 1)();
 		Fmt1({ "{}", 1 });
 		MessageAndLocation2({ "{}" }, 1);
 		Fmt2({ {"{}"}, 1 });
