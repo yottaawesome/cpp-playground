@@ -3,6 +3,19 @@ import std;
 
 export namespace FoldsWithConcepts
 {
+	// https://stackoverflow.com/a/46809861/7448661
+	template <class... Args>
+	constexpr bool all_equal(Args const&... args) {
+		if constexpr (sizeof...(Args) == 0)
+			return true;
+		else return 
+			[](auto const& a0, auto const&... rest) 
+			{
+				return ((a0 == rest) && ...);
+			}(args...);
+	}
+
+	// https://stackoverflow.com/questions/70035099/how-to-extract-requires-clause-with-a-parameter-pack-whose-parameters-are-relate
 	template <typename... Args>
 		requires (std::is_convertible_v<Args, int> && ...)
 	void test(Args...) { std::cout << "int\n"; }
@@ -131,5 +144,45 @@ export namespace NiftyExpressions
 	{
 		NiftyExpressions::CallFunctionWithEachElement(1, 2);
 		NiftyExpressions::CallFunctionWithEachElementReverse(1, 2);
+	}
+}
+
+export namespace MoreNiftyFolds
+{
+	template<typename ... Args>
+	void printMe(Args&& ... args) 
+	{
+		(std::cout << ... << std::forward<Args>(args)) << '\n';
+	}
+
+	template<typename T, typename... Args>
+	void myPushBack(std::vector<T>& v, Args&&... args) 
+	{
+		(v.push_back(args), ...);
+	}
+
+	template<typename ... Ts>
+	struct Overload : Ts ... 
+	{
+		using Ts::operator() ...;
+	};
+
+	void Run()
+	{
+		auto TypeOfIntegral = Overload
+		{
+			[](int)				{ return "int"; },
+			[](unsigned int)	{ return "unsigned int"; },
+			[](long int)		{ return "long int"; },
+			[](long long int)	{ return "long long int"; },
+			[](auto)			{ return "unknown type"; },
+		};
+
+		std::tuple t{ 1, 1.f };
+
+		std::apply(
+			[&TypeOfIntegral](auto&& t) { std::cout << TypeOfIntegral(t); }, 
+			std::forward_as_tuple(t)
+		);
 	}
 }
