@@ -18,80 +18,10 @@
 
 import std;
 import messageandloc;
-
-template <typename... Args>
-std::vector<std::string> toStringVector(Args... args) {
-	std::vector<std::string> result;
-	auto initList = { args... };
-	using T = typename decltype(initList)::value_type;
-	std::vector<T> expanded{initList};
-	result.resize(expanded.size());
-	std::transform(expanded.begin(), expanded.end(), result.begin(), [](T value) { return std::to_string(value); });
-	return result;
-}
-
-template<typename...Args>
-auto Convert(const Args&... args)
-{
-	bool x = (std::is_convertible_v<Args&, std::string_view> || ...);
-	return std::tuple(args...);
-}
-
-template <typename... Args>
-	requires (std::is_convertible_v<Args, int> && ...)
-void test(Args...) { std::cout << "int\n"; }
-
-template <typename... Args>
-concept Istring =
-	(
-		(	
-			std::is_convertible_v<Args, int> ||
-			std::is_convertible_v<Args, std::string>
-		) && ...
-	)
-	&& (
-		std::is_convertible_v<Args, std::string> || ...
-	);
-
-template <Istring... Args>
-void test(Args...) { std::cout << "istring\n"; }
-
-
-//template<typename>
-//struct strip;
-//
-//template<typename ...T>
-//struct strip<std::tuple<T...>>
-//{
-//	using type = vct<T...>;
-//};
-//
-//template<typename ...T>
-//void BlahBlah(T&&... args)
-//{
-//
-//}
-
-void Print()
-{
-	//BlahBlah(1, 2);
-
-	if constexpr (true)
-	{
-		std::wstring something = L"IO";
-		Formatting::TestPrint("Blah {} {} {} {}", 1, "A", L"A", something);
-	}
-	else
-	{
-		std::string something = "IO";
-		Formatting::TestPrint(L"Blah {} {} {} {}", 1, "A", L"A", something);
-	}
-
-	auto m = Convert(1, 2, 3, "a");
-}
+import foldexpressions;
 
 int main()
 {
-	Print();
+	Formatting::Print();
     return 0;
 }

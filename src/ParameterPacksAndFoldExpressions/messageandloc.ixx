@@ -188,4 +188,27 @@ export namespace Formatting
 				))
 			<< std::endl;
 	}
+
+	template<typename...Args>
+	auto Convert(const Args&... args)
+	{
+		bool x = (std::is_convertible_v<Args&, std::string_view> || ...);
+		return std::tuple(args...);
+	}
+
+	void Print()
+	{
+		if constexpr (true)
+		{
+			std::wstring something = L"IO";
+			Formatting::TestPrint("Blah {} {} {} {}", 1, "A", L"A", something);
+		}
+		else
+		{
+			std::string something = "IO";
+			Formatting::TestPrint(L"Blah {} {} {} {}", 1, "A", L"A", something);
+		}
+
+		auto m = Convert(1, 2, 3, "a");
+	}
 }
