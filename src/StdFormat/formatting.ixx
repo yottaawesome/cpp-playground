@@ -1,6 +1,51 @@
 export module formatting;
 import std;
 
+export namespace Formats
+{
+	// https://stackoverflow.com/a/77635205/7448661
+	template<typename... Args>
+	inline auto lazy_format(std::format_string<Args...> fmt, Args&&... args)
+	{
+		return
+			[fmt, args_tuple = std::tuple<Args...>(std::forward<Args>(args)...)]() mutable
+			{
+				return std::apply(
+					[fmt](auto&... args)
+					{
+						return std::format(fmt, std::forward<Args>(args)...);
+					},
+					args_tuple
+				);
+			};
+	}
+
+	// Constant expression, can use regular format
+	template<typename... Args>
+	inline std::string DoFormat1(std::format_string<Args...> fmt, Args&&... args)
+	{
+		return std::format(fmt, std::forward<Args>(args)...);
+	}
+
+	// Not a constant expression, requires vformat
+	template<typename... Args>
+	inline std::string DoFormat2(std::string_view fmt, Args&&... args)
+	{
+		return std::format(fmt, std::forward<Args>(args)...);
+	}
+
+	void str(std::string s)
+	{
+		DoFormat1("Hey {}", s);
+		DoFormat1("Hey");
+	}
+
+	void Run()
+	{
+		str("Haha");
+	}
+}
+
 // Adapted from https://www.cppstories.com/2023/fun-print-tables-format/
 export namespace PrintTables
 {
@@ -159,8 +204,82 @@ export namespace CustomTypesCpp20
 	}
 }
 
-// See also https://www.cppstories.com/2020/02/extra-format-cpp20.html/
+export namespace SomeBullshitFormatting
+{
+	struct Formatted
+	{
+		template<typename...Args>
+		Formatted(
+			std::format_string<Args...> fmt,
+			Args&&...args
+		) : message{ std::format(fmt, std::forward<Args>(args)...) }
+		{ }
 
+		std::string message;
+	};
+
+	struct Loc
+	{
+		std::source_location loc;
+		Loc(const std::source_location l = std::source_location::current())
+			: loc(l)
+		{ }
+	};
+
+	template<typename...Args>
+	struct Container
+	{
+		std::format_string<Args...> m_fmt;
+		constexpr Container(std::format_string<Args...> fmt)
+			: m_fmt(fmt)
+		{
+
+		}
+	};
+
+	struct MessageAndLocation2
+	{
+		std::string message;
+		std::source_location location = std::source_location::current();
+
+		template<typename...Args>
+		constexpr MessageAndLocation2(
+			Container<Args...> fmt,
+			Args&&...args
+		) : message{ std::format(fmt.m_fmt, std::forward<Args>(args)...) }
+		{
+			//message = fmt.get();
+		}
+	};
+
+	template<typename...Args>
+	void Fmt1(
+		Formatted&& msg,
+		const std::source_location& loc = std::source_location::current()
+	)
+	{
+
+	}
+
+	void Fmt21(MessageAndLocation2 msg)
+	{
+		std::cout << msg.location.line() << std::endl;
+	}
+
+	void Run()
+	{
+
+		Fmt1({ "{}", 1 });
+		MessageAndLocation2({ "{}" }, 1);
+		//Fmt2();
+
+		//Test("");
+		Formatted("{}", 1);
+		//Test<int>(MessageAndLocation(std::format_string("{}")), 1);
+	}
+}
+
+// See also https://www.cppstories.com/2020/02/extra-format-cpp20.html/
 export namespace FormattingTo
 {
 	template<typename...TArgs>

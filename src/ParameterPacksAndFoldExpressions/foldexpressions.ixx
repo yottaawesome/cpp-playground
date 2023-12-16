@@ -39,50 +39,6 @@ export namespace FoldsWithConcepts
 	}
 }
 
-export namespace Formats
-{
-	// https://stackoverflow.com/a/77635205/7448661
-	template<typename... Args>
-	inline auto lazy_format(std::format_string<Args...> fmt, Args&&... args)
-	{
-		return 
-			[fmt, args_tuple = std::tuple<Args...>(std::forward<Args>(args)...)]() mutable 
-			{
-				return std::apply(
-					[fmt](auto&... args) 
-					{
-						return std::format(fmt, std::forward<Args>(args)...); 
-					},
-					args_tuple
-				);
-			};
-	}
-
-	// Constant expression, can use regular format
-	template<typename... Args>
-	inline std::string DoFormat1(std::format_string<Args...> fmt, Args&&... args)
-	{
-		return std::format(fmt, std::forward<Args>(args)...);
-	}
-
-	// Not a constant expression, requires vformat
-	template<typename... Args>
-	inline std::string DoFormat2(std::string_view fmt, Args&&... args)
-	{
-		return std::format(fmt, std::forward<Args>(args)...);
-	}
-
-	void str(std::string s)
-	{
-		DoFormat1("Hey {}", s);
-	}
-
-	void Run()
-	{
-		str("Haha");
-	}
-}
-
 export namespace PackToVector
 {
 	// Adapted from https://gist.github.com/alepez/de533a78acf5a1079a04
