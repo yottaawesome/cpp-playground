@@ -1,7 +1,6 @@
 /*
 * Useful references:
 * https://www.modernescpp.com/index.php/smart-tricks-with-fold-expressions
-* https://www.foonathan.net/2020/05/fold-tricks/
 * https://subscription.packtpub.com/book/programming/9781787120495/1/ch01lvl1sec16/implementing-handy-helper-functions-with-fold-expressions
 * https://stackoverflow.com/questions/46806239/test-if-all-elements-are-equal-with-c17-fold-expression
 * https://www.fluentcpp.com/2019/01/25/variadic-number-function-parameters-type/
