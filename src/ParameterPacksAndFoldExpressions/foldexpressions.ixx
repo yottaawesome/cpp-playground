@@ -58,6 +58,11 @@ export namespace PackToVector
 		);
 		return result;
 	}
+
+	void Run()
+	{
+		toStringVector(1, 1, 1);
+	}
 }
 
 export namespace NiftyExpressions

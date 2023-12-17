@@ -267,7 +267,7 @@ export namespace SomeBullshitFormatting
 	}
 
 	template<typename... Args>
-	inline auto Formatter(std::format_string<Args...> fmt, Args&&... args)
+	[[no_discard]] inline auto Formatter(std::format_string<Args...> fmt, Args&&... args)
 	{
 		return
 			[fmt, args_tuple = std::tuple<Args...>(std::forward<Args>(args)...)](
@@ -284,8 +284,30 @@ export namespace SomeBullshitFormatting
 			};
 	}
 
+	template<typename F, typename... Args>
+	[[nodiscard]] inline auto Deferred(F func, Args&&... args)
+	{
+		return
+			[func, args_tuple = std::tuple<Args...>(std::forward<Args>(args)...)](
+				const std::source_location& l = std::source_location::current()
+			) mutable
+			{
+				return std::apply(
+					func,
+					args_tuple
+				);
+			};
+	}
+
+	void SomeFunction(int i)
+	{
+
+	}
+
 	void Run()
 	{
+		Deferred(SomeFunction, 1)();
+
 		Formatter("A {}", 1)();
 		Fmt1({ "{}", 1 });
 		MessageAndLocation2({ "{}" }, 1);
