@@ -34,7 +34,6 @@ export namespace FoldsWithConcepts
 
 	void Run()
 	{
-
 		test2(1, std::string{});
 	}
 }
