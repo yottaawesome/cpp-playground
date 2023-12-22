@@ -1,5 +1,6 @@
 export module tupletoparameterpack;
 import std;
+import std.compat;
 
 // See https://stackoverflow.com/questions/36612596/tuple-to-parameter-pack
 // And https://www.cppstories.com/2022/tuple-iteration-apply/
@@ -48,7 +49,10 @@ export namespace DelayedDispatch
 
 export namespace BlabBlah
 {
-    void BlahBlah(auto&&...args) { }
+    void BlahBlah(auto&&...args) 
+    {
+        (std::println("{}", args), ...);
+    }
 
     template<typename...T>
     void BlahBlahCaller(T&&...t)
@@ -63,7 +67,7 @@ export namespace BlabBlah
         void operator()(T&&...args) { }
     };
 
-    int main2()
+    int Run()
     {
         BlahBlahCaller(1, 2);
         std::apply(BlahBlah<int, int>, std::make_tuple(1, 2));
@@ -105,7 +109,7 @@ export namespace TupleIteration
 {
     // From https://www.cppstories.com/2022/tuple-iteration-apply/
     template <typename TupleT, typename Fn>
-    void for_each_tuple2(TupleT&& tp, Fn&& fn)
+    void for_each_tuple(TupleT&& tp, Fn&& fn)
     {
         std::apply(
             [&fn]<typename ...T>(T&& ...args) // C++20 template lambda
@@ -120,7 +124,7 @@ export namespace TupleIteration
 
     int main4()
     {
-        for_each_tuple2(
+        for_each_tuple(
             std::make_tuple(1, 2),
             [](auto&& x)
             {
@@ -428,7 +432,7 @@ export namespace TupleFunc
     template <class Tuple, class F>
     constexpr decltype(auto) for_each(Tuple&& tuple, F&& f)
     {
-        return []<std::size_t... I>(Tuple && tuple, F&& f, std::index_sequence<I...>)
+        return[]<std::size_t... I>(Tuple && tuple, F && f, std::index_sequence<I...>)
         {
             (f(std::get<I>(tuple)), ...);
             return f;
@@ -448,12 +452,12 @@ export namespace TupleFunc
     template <class Tuple, class F>
     constexpr decltype(auto) conditional_for_each(Tuple&& tuple, F&& f)
     {
-        return[]<std::size_t... I>(Tuple && tuple, F&& f, std::index_sequence<I...>)
+        return[]<std::size_t... I>(Tuple && tuple, F && f, std::index_sequence<I...>)
         {
             (run_if_possible(f, std::get<I>(tuple)), ...);
             return f;
         }(
-            std::forward<Tuple>(tuple), 
+            std::forward<Tuple>(tuple),
             std::forward<F>(f),
             std::make_index_sequence<std::tuple_size<std::remove_reference_t<Tuple>>::value>{}
         );
@@ -462,7 +466,7 @@ export namespace TupleFunc
     template <class Tuple, class F>
     constexpr decltype(auto) do_at(Tuple&& tuple, F&& f, const size_t index)
     {
-        return[index]<std::size_t... I>(Tuple && tuple, F&& f, std::index_sequence<I...>)
+        return[index]<std::size_t... I>(Tuple && tuple, F && f, std::index_sequence<I...>)
         {
             ((I == index ? run_if_possible(f, std::get<I>(tuple)) : void()), ...);
             return f;
@@ -477,7 +481,7 @@ export namespace TupleFunc
     constexpr decltype(auto) index_of(TTuple&& tuple, TPredFn&& f)
     {
         size_t index = std::numeric_limits<size_t>::max();
-        [&index]<std::size_t... I>(TTuple && tuple, TPredFn&& f, std::index_sequence<I...>)
+        [&index] <std::size_t... I>(TTuple && tuple, TPredFn && f, std::index_sequence<I...>)
         {
             ((f(std::get<I>(tuple)) ? index = I : index), ...);
         }(
@@ -491,11 +495,100 @@ export namespace TupleFunc
     void Run()
     {
         std::tuple t{ 1, std::string{"a"}, 2 };
-        conditional_for_each(t, [](const std::string& s) {std::cout << "Hello1\n"; });
-        do_at(t, [](const std::string& s) { std::cout << "Hello2\n"; }, 1);
-        std::cout << std::format(
-            "{}\n",
+        conditional_for_each(t, [](const std::string& s) { std::println("Hello1"); });
+        do_at(t, [](const std::string& s) { std::println("Hello2"); }, 1);
+        std::println(
+            "{}",
             index_of(t, [](auto&& v) { return std::same_as<std::remove_cvref_t<decltype(v)>, std::string>; })
         );
+    }
+}
+
+export namespace TupleToVector
+{
+    template <class Tuple, class T = std::decay_t<std::tuple_element_t<0, std::decay_t<Tuple>>>>
+    std::vector<T> to_vector(Tuple&& tuple)
+    {
+        return std::apply(
+            [](auto&&... elems)
+            {
+                return std::vector<T>{std::forward<decltype(elems)>(elems)...};
+            }, 
+            std::forward<Tuple>(tuple)
+        );
+    }
+}
+
+export namespace TupleConcatenation
+{
+    void Run()
+    {
+        std::tuple t1{ 1,2 };
+        std::tuple t2{ 3,4 };
+        std::tuple t3 = std::tuple_cat(t1, t2);
+    }
+}
+
+export namespace Waiting
+{
+    using native_handle = void*; // Basically a Windows HANDLE
+
+    // Functor type to execute when the associated handle is signaled
+    struct WaitFunctionOne
+    {
+        native_handle handle = nullptr; // would point to a valid handle
+        void operator()() { /* implementation here; */ }
+    };
+
+    // Functor type to execute when the associated handle is signaled
+    struct WaitFunctionTwo
+    {
+        native_handle handle = nullptr; // would point to a valid handle
+        void operator()() { /* implementation here; */ }
+    };
+
+    // Helper template to convert a tuple to vector of native_handles
+    template <typename TReturn, typename TTuple, typename TTransform>
+    std::vector<TReturn> ToVector(TTuple&& tuple, TTransform&& transform)
+    {
+        return std::apply(
+            [&transform](auto&&... elems) -> std::vector<TReturn>
+            {
+                return {transform(elems)...};
+            },
+            std::forward<TTuple>(tuple)
+        );
+    }
+
+    template<typename TTuple>
+    void Wait(TTuple&& tuple)
+    {
+        std::vector<native_handle> waits = ToVector<native_handle>(
+            tuple, 
+            [](auto&& c) { return c.handle; }
+        );
+
+        // Do some kind of wait that gives us an index of the fired event
+        unsigned long index = 1;
+
+        // Invokes the functor in the tuple at the fired index
+        []<std::size_t... I>(TTuple& tuple, size_t idx, std::index_sequence<I...>)
+        {
+            (((idx == I) ? std::get<I>(tuple)() : void()), ...);
+        }(
+            tuple,
+            index,
+            std::make_index_sequence<std::tuple_size<std::remove_cvref_t<TTuple>>::value>{}
+        );
+    }
+
+    void Run()
+    {
+        std::tuple waitables{
+            WaitFunctionOne{},
+            WaitFunctionTwo{}
+        };
+
+        Wait(waitables);
     }
 }
