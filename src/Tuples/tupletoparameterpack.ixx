@@ -574,7 +574,8 @@ export namespace Waiting
         // Invokes the functor in the tuple at the fired index
         []<std::size_t... I>(TTuple& tuple, size_t idx, std::index_sequence<I...>)
         {
-            (((idx == I) ? std::get<I>(tuple)() : void()), ...);
+            (((idx == I) ? (std::get<I>(tuple)(), false) : (void(), true)) and ...);
+            // alternative (((idx == I) ? std::get<I>(tuple)() : void()), ...);
             //(([](size_t s) { std::println("Index is {}", s); }(I)), ...);
         }(
             tuple,
