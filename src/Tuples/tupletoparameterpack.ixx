@@ -575,6 +575,7 @@ export namespace Waiting
         []<std::size_t... I>(TTuple& tuple, size_t idx, std::index_sequence<I...>)
         {
             (((idx == I) ? std::get<I>(tuple)() : void()), ...);
+            //(([](size_t s) { std::println("Index is {}", s); }(I)), ...);
         }(
             tuple,
             index,
