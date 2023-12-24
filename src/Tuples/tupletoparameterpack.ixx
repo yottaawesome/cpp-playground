@@ -236,9 +236,9 @@ export namespace LoopOverTypes
         std::tuple t{ 1, false };
         std::apply(
             []<typename...T>(T&&...args)
-        {
-            (Do<decltype(args)>(), ...);
-        },
+            {
+                (Do<decltype(args)>(), ...);
+            },
             std::forward<decltype(t)>(t)
         );
     }
