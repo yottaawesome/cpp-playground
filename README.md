@@ -20,4 +20,4 @@ You'll need the latest version of Visual Studio 2022 with _Desktop C++ Developme
 * [Andreas Fertig's blog](https://andreasfertig.blog/)
 * [Marius Bancila's blog](https://mariusbancila.ro/blog/)
 * [Sandor Dargo's site](https://www.sandordargo.com/)
-* [vector-of-bool](https://vector-of-bool.github.io/)
+* [vector-of-bool's blog](https://vector-of-bool.github.io/)
