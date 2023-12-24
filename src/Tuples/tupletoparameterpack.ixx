@@ -506,6 +506,7 @@ export namespace TupleFunc
 
 export namespace TupleToVector
 {
+    // Adapted from https://stackoverflow.com/a/42495119/7448661
     template <class Tuple, class T = std::decay_t<std::tuple_element_t<0, std::decay_t<Tuple>>>>
     std::vector<T> to_vector(Tuple&& tuple)
     {
@@ -513,6 +514,22 @@ export namespace TupleToVector
             [](auto&&... elems)
             {
                 return std::vector<T>{std::forward<decltype(elems)>(elems)...};
+            }, 
+            std::forward<Tuple>(tuple)
+        );
+    }
+
+    // Adapted from https://stackoverflow.com/a/42495119/7448661
+    template <class Tuple, class T = std::decay_t<std::tuple_element_t<0, std::decay_t<Tuple>>>>
+    std::vector<T> to_vector_no_copies(Tuple&& tuple)
+    {
+        return std::apply(
+            []<typename...T>(T&&... elems) 
+            {
+                std::vector<T> result;
+                result.reserve(sizeof...(elems));
+                (result.push_back(std::forward<T>(elems)), ...);
+                return result;
             }, 
             std::forward<Tuple>(tuple)
         );
