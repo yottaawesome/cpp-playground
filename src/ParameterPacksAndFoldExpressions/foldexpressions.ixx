@@ -296,3 +296,7 @@ export namespace NestedFold
 	{	
 	}
 }
+
+// https://stackoverflow.com/a/53398815/7448661
+template<typename... input_t>
+using tuple_cat_t = decltype(std::tuple_cat(std::declval<input_t>()...));
