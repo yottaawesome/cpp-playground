@@ -11,6 +11,13 @@ You'll need the latest version of Visual Studio 2022 with _Desktop C++ Developme
 ## Additional resources
 
 * [ISO C++](https://isocpp.org/)
+* [cppreference.com](cppreference.com)
+* [CPlusPlus.com](https://cplusplus.com/)
 * [Rainer Grimm's Modernes C++](https://www.modernescpp.com)
 * [Jonathan Boccara's Fluent C++](https://www.fluentcpp.com/)
 * [Bartlomiej Filipek's C++ Stories](https://www.cppstories.com/p/start-here/)
+* [Jason Turner's C++ Weekly](https://www.youtube.com/@cppweekly)
+* [Andreas Fertig's blog](https://andreasfertig.blog/)
+* [Marius Bancila's blog](https://mariusbancila.ro/blog/)
+* [Sandor Dargo's site](https://www.sandordargo.com/)
+* [vector-of-bool's blog](https://vector-of-bool.github.io/)
