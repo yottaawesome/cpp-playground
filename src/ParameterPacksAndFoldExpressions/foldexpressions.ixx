@@ -38,6 +38,24 @@ export namespace FoldsWithConcepts
 	}
 }
 
+export namespace Forward
+{
+	// https://stackoverflow.com/a/31410880/7448661
+	struct testClass
+	{
+		testClass() = default;
+		testClass(const testClass& other) { std::cout << "COPY C" << std::endl; }
+		testClass& operator=(const testClass& other) { std::cout << "COPY A" << std::endl; }
+	};
+
+	template<class T>
+	void testFunc(T&& t)
+	{
+		[test = std::conditional_t<std::is_lvalue_reference<T>::value, std::reference_wrapper<std::remove_reference_t<T>>, T>{ std::forward<T>(t) }]() 
+			{}();
+	}
+}
+
 export namespace PackToVector
 {
 	// Adapted from https://gist.github.com/alepez/de533a78acf5a1079a04
@@ -123,6 +141,25 @@ export namespace NiftyExpressions
 		std::common_type_t<decltype(ts)...> result;
 		std::size_t i = 0;
 		((i++ == n ? (result = ts, true) : false) || ...);
+	}
+
+	struct P {};
+	void GetNthElement(int n, auto& result, auto&&... ts)
+	{
+		std::size_t i = 0;
+		constexpr auto Get = []<typename T, typename V>(T& out, V&& val)
+		{
+			static_assert(std::is_same_v<std::remove_cvref_t<T>, std::remove_cvref_t<V>>);
+			out = val;
+		};
+		((i++ == n ? (Get(result, ts), true) : false) || ...);
+	}
+
+	void TestNth()
+	{
+		P p{};
+		int i = 0;
+		GetNthElement(1, i, 1, 1);
 	}
 
 	void GetFirstElement(auto&&... ts)

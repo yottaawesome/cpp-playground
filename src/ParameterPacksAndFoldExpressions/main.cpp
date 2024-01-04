@@ -11,5 +11,6 @@ import foldexpressions;
 int main()
 {
 	Formatting::Print();
+	NiftyExpressions::TestNth();
     return 0;
 }
