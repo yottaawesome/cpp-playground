@@ -311,3 +311,29 @@ export namespace AllTheSameType
 		f2(std::string{}, std::string{});
 	}
 }
+
+export namespace NestedFold
+{
+	// Adapted from https://stackoverflow.com/a/72992410/7448661
+	template<class FirstTuple, class... RestTuples>
+	void concatenate(FirstTuple& first, const RestTuples&... rest) {
+		constexpr auto N = std::tuple_size_v<FirstTuple>;
+		static_assert(((N == std::tuple_size_v<RestTuples>) && ...));
+		[&] <std::size_t... Is>(std::index_sequence<Is...>) {
+			([&](const auto& other) {
+				(std::get<Is>(first).insert(
+					std::get<Is>(first).end(),
+					std::get<Is>(other).begin(),
+					std::get<Is>(other).end()), ...);
+				}(rest), ...);
+		}(std::make_index_sequence<N>{});
+	}
+
+	void Run()
+	{	
+	}
+}
+
+// https://stackoverflow.com/a/53398815/7448661
+template<typename... input_t>
+using tuple_cat_t = decltype(std::tuple_cat(std::declval<input_t>()...));
