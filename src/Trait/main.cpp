@@ -3,7 +3,7 @@ import std.compat;
 
 namespace Test
 {
-    void M(int i) [[std::expects: i > 0]]
+    void M(int i) //[[std::expects: i > 0]]
     {
 
     }
