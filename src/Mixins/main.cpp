@@ -96,6 +96,7 @@ namespace ExampleB
     }
 }
 
+// https://stackoverflow.com/a/18775236/7448661
 namespace ExampleC
 {
     using namespace std;
