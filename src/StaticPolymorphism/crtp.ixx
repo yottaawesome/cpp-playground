@@ -1,11 +1,8 @@
-module;
-
-#include <iostream>
-
 export module crtp;
+import std;
 
 // Adapted from https://www.modernescpp.com/index.php/c-is-still-lazy
-// See also https://en.cppreference.com/w/cpp/language/crtp
+
 // crtp.cpp
 export namespace CRTP
 {

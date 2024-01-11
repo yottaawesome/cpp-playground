@@ -1,9 +1,5 @@
 module;
-
-#include <iostream>
-#include <tuple>
-#include <utility>
-#include <type_traits>
+import std;
 
 export module sample;
 
