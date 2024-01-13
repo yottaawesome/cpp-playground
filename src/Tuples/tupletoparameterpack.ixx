@@ -200,9 +200,9 @@ export namespace LoopOverElements
         std::tuple t{ 1, false };
         std::apply(
             []<typename...T>(T&&...args)
-        {
-            (Do(std::forward<T>(args)), ...);
-        },
+            {
+                (Do(std::forward<T>(args)), ...);
+            },
             std::forward<decltype(t)>(t)
         );
     }

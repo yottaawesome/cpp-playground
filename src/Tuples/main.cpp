@@ -27,9 +27,9 @@ int main()
 	//LoopOverTypes::Run();
 	//Chained::Run();
 	//LoopOverLambdas::Run();
-	GetTupleElement::Run();
-	TupleFunc::Run();
-
+	//GetTupleElement::Run();
+	//TupleFunc::Run();
+	SomeTest::Run();
 
 	
 
