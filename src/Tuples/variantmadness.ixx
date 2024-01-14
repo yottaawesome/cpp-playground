@@ -291,3 +291,58 @@ export namespace RuntimeSetting
 		);
 	}
 }
+
+namespace ReadLineLoop
+{
+	std::tuple events
+	{
+		[]() { std::println("You entered 0..."); },
+		[]() { std::println("You entered 1..."); },
+		[]() { std::println("You entered 2..."); }
+	};
+
+	bool LoopRun()
+	{
+		std::println("Please enter a number or e to quit.");
+		std::string line;
+		std::getline(std::cin, line);
+		if (line == "e")
+			return false;
+
+		using events_t = decltype(events);
+		const int value = std::stoi(line);
+		if (value < 0)
+		{
+			std::println("Invalid negative index {}", value);
+			return true;
+		}
+
+		const bool found = []<size_t...I>(auto&& tuple, size_t index, std::index_sequence<I...>)
+		{
+			return ((I == index ? (std::get<I>(tuple)(), true) : (void(), false)) or ...);
+		}(
+			std::forward<events_t>(events),
+			value,
+			std::make_index_sequence<std::tuple_size_v<events_t>>{}
+		);
+		if (not found)
+			std::println("Didn't find an entry for index {}...", value);
+
+		return true;
+	}
+
+	export void Run()
+	{
+		while (true) try
+		{
+			if (not LoopRun())
+				break;
+		}
+		catch (const std::exception& ex)
+		{
+			std::println("Error: {}", ex.what());
+		}
+
+		std::println("Goodbye...");
+	}
+}

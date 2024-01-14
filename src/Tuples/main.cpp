@@ -29,9 +29,8 @@ int main()
 	//LoopOverLambdas::Run();
 	//GetTupleElement::Run();
 	//TupleFunc::Run();
-	SomeTest::Run();
-
+	//SomeTest::Run();
+	ReadLineLoop::Run();
 	
-
 	return 0;
 }
