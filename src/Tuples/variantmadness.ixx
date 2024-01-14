@@ -351,6 +351,47 @@ namespace ReadLineLoop
 		return true;
 	}
 
+	auto make(auto& callable, auto&&...args)
+	{
+		return [callable, ...args = std::forward<decltype(args)>(args)] { return callable(args...); };
+	}
+
+	auto make_safe(auto& callable, auto&&...args)
+	{
+		return [callable, ...args = std::forward<decltype(args)>(args)]
+		{
+			try
+			{
+				callable(args...);
+				return true;
+			}
+			catch (...)
+			{
+				return false;
+			}
+		};
+	}
+
+	auto make_retry_safe(auto& callable, unsigned retries, auto&&...args)
+	{
+		return [callable, retries, ...args = std::forward<decltype(args)>(args)] 
+		{
+			for (int i = 0; i < retries; ++i)
+			{
+				try
+				{
+					callable(args...);
+					return true;
+				}
+				catch (...)
+				{
+					std::this_thread::sleep_for(std::chrono::seconds{ i * 2 });
+				}
+			}
+			return false;
+		};
+	}
+
 	export void Run()
 	{
 		while (true) try
