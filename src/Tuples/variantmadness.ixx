@@ -376,7 +376,7 @@ namespace ReadLineLoop
 	{
 		return [callable, retries, ...args = std::forward<decltype(args)>(args)] 
 		{
-			for (int i = 0; i < retries; ++i)
+			for (int i = 1; i <= retries; ++i)
 			{
 				try
 				{
