@@ -294,6 +294,21 @@ export namespace RuntimeSetting
 
 namespace ReadLineLoop
 {
+	template<typename T>
+	struct IsTupleLike : std::false_type {};
+
+	template<typename...T>
+	struct IsTupleLike<std::tuple<T...>> : std::true_type {};
+
+	template<typename T, size_t I>
+	struct IsTupleLike<std::array<T, I>> : std::true_type {};
+
+	template<typename T>
+	constexpr bool IsTupleLikeV = IsTupleLike<T>::value;
+
+	template<typename T>
+	concept TupleLike = IsTupleLike<T>::value;
+
 	std::tuple events
 	{
 		[]() { std::println("You entered 0..."); },
@@ -303,13 +318,13 @@ namespace ReadLineLoop
 
 	bool LoopRun()
 	{
-		std::println("Please enter a number or e to quit.");
+		using events_t = decltype(events);
+		std::println("Please enter a number between 0 and less than {} or e to quit.", std::tuple_size_v<events_t>);
 		std::string line;
 		std::getline(std::cin, line);
 		if (line == "e")
 			return false;
 
-		using events_t = decltype(events);
 		const int value = std::stoi(line);
 		if (value < 0)
 		{
@@ -317,9 +332,14 @@ namespace ReadLineLoop
 			return true;
 		}
 
-		const bool found = []<size_t...I>(auto&& tuple, size_t index, std::index_sequence<I...>)
+		const bool found = []<size_t...I>(TupleLike auto&& tuple, size_t index, std::index_sequence<I...>, auto&&...args)
 		{
-			return ((I == index ? (std::get<I>(tuple)(), true) : (void(), false)) or ...);
+			return (
+				(I == index 
+					? (std::get<I>(tuple)(std::forward<decltype(args)>(args)...), true) 
+					: (void(), false)
+				) or ...
+			);
 		}(
 			std::forward<events_t>(events),
 			value,
