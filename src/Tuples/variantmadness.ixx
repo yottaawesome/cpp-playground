@@ -56,7 +56,40 @@ export namespace SomeTest
 	}
 }
 
-namespace MoreTesting
+export namespace IsTuple
+{
+	template<typename T>
+	struct is_tuple : std::false_type {};
+
+	template<typename...T>
+	struct is_tuple<std::tuple<T...>> : std::true_type {};
+
+	template<typename...T>
+	constexpr bool is_tuple_v = is_tuple<T...>::value;
+
+	template<typename T>
+	concept tuple_like = is_tuple_v<T>;
+
+	std::tuple t{ 1, 2 };
+	static_assert(tuple_like<decltype(t)>);
+
+	template<typename T>
+	struct is_variant : std::false_type {};
+
+	template<typename...T>
+	struct is_variant<std::variant<T...>> : std::true_type {};
+
+	template<typename...T>
+	constexpr bool is_variant_v = is_variant<T...>::value;
+
+	template<typename T>
+	concept variant_like = is_variant_v<T>;
+
+	std::variant<int, std::string> v{};
+	static_assert(variant_like<decltype(v)>);
+}
+
+export namespace MoreTesting
 {
 	// See https://stackoverflow.com/questions/46450054/retrieve-value-out-of-cascading-ifs-fold-expression
 	struct A { void blah() {} };
@@ -86,30 +119,22 @@ namespace MoreTesting
 			};
 	}
 
-	A DoA() { return A{}; }
-	B DoB() { return B{}; }
-
-	template<size_t N, typename Tuple>
-	void SomeTest(Tuple& t)
+	void Wait()
 	{
-
-	}
-
-	template<Blah... T>
-	void Wait(size_t index = 0)
-	{
-		std::tuple t{
+		std::tuple events{
 			[]() { return A{}; },
 			[]() { return B{}; }
 		};
 
-		[]<typename Tuple, std::size_t... I>(Tuple && t, size_t idx, std::index_sequence<I...>)
+		size_t index = 0;
+
+		[]<typename Tuple, size_t...I>(Tuple&& t, size_t idx, std::index_sequence<I...>)
 		{
 			return ((I == idx ? (std::get<I>(t)(), false) : (void(), true)) and ...);
 		}(
-			std::forward<decltype(t)>(t),
+			std::forward<decltype(events)>(events),
 			index,
-			std::make_index_sequence<sizeof...(T)>{}
+			std::make_index_sequence<std::tuple_size_v<decltype(events)>>{}
 		);
 	}
 
@@ -156,7 +181,7 @@ namespace MoreTesting
 	{
 		detail::makeFoo(1, std::index_sequence<E::BB>{});
 		size_t index = 1;
-		Wait<A, B>(index);
+		Wait();
 	}
 }
 
@@ -184,9 +209,10 @@ export namespace SetVariantFromTupleDynamically
 	};
 
 	template<size_t Index, typename TTuple, typename TVariant>
-	void instantiate(TTuple& tuple, TVariant& variant)
+	auto instantiate(TTuple& tuple, TVariant& variant)
 	{
 		variant = std::get<Index>(tuple)();
+		//return std::get<Index>(tuple)();
 	}
 
 	void Run()
@@ -202,7 +228,7 @@ export namespace SetVariantFromTupleDynamically
 
 		[]<typename TTuple, typename TVariant, size_t...Is>(TTuple& tuple, TVariant& variant, size_t idx, std::index_sequence<Is...>)
 		{
-			(((Is == idx) ? (instantiate<Is>(tuple, variant), false) : (void(), true)) and ...);
+			return (((Is == idx) ? (instantiate<Is>(tuple, variant), false) : (void(), true)) and ...);
 		}(
 			factories,
 			variants,
