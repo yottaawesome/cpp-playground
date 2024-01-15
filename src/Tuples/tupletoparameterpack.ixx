@@ -256,9 +256,9 @@ export namespace LoopOverLambdas
         std::tuple t{ [] { std::cout << "Hello, one!\n"; }, [] { std::cout << "Hello, two!\n"; } };
         std::apply(
             []<typename...T>(T&&...args)
-        {
-            (Do(args), ...);
-        },
+            {
+                (Do(args), ...);
+            },
             std::forward<decltype(t)>(t)
         );
     }

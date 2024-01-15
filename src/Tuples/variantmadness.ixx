@@ -292,6 +292,68 @@ export namespace RuntimeSetting
 	}
 }
 
+namespace MakeSafe
+{
+	auto make(auto&& callable, auto&&...args)
+	{
+		return [callable, ...args = std::forward<decltype(args)>(args)] { return std::invoke(callable, args...); };
+	}
+
+	auto make_safe(auto&& callable, auto&&...args)
+	{
+		return [callable, ...args = std::forward<decltype(args)>(args)]
+		{
+			try
+			{
+				std::invoke(callable, args...);
+				return true;
+			}
+			catch (...)
+			{
+				return false;
+			}
+		};
+	}
+
+	auto make_retry_safe(auto&& callable, unsigned retries, auto&&...args)
+	{
+		return [callable, retries, ...args = std::forward<decltype(args)>(args)]
+		{
+			for (int i = 1; i <= retries; ++i)
+			{
+				try
+				{
+					std::invoke(callable, args...);
+					return true;
+				}
+				catch (...)
+				{
+					std::this_thread::sleep_for(std::chrono::seconds{ i * 2 });
+				}
+			}
+			return false;
+		};
+	}
+
+	struct A { void blah() const {} };
+
+	void SomeFunc(const A& a) { a.blah(); }
+	void SomeFunc2(int a) {  }
+	void SomeFunc3() {  }
+
+	auto F1() -> auto
+	{
+		// ICE
+		//return make_safe(SomeFunc, A{});
+	}
+
+	void Run()
+	{
+		A a{};
+		make_safe(SomeFunc, std::ref(a));
+	}
+}
+
 namespace ReadLineLoop
 {
 	template<typename T>
@@ -349,47 +411,6 @@ namespace ReadLineLoop
 			std::println("Didn't find an entry for index {}...", value);
 
 		return true;
-	}
-
-	auto make(auto& callable, auto&&...args)
-	{
-		return [callable, ...args = std::forward<decltype(args)>(args)] { return callable(args...); };
-	}
-
-	auto make_safe(auto& callable, auto&&...args)
-	{
-		return [callable, ...args = std::forward<decltype(args)>(args)]
-		{
-			try
-			{
-				callable(std::forward<decltype(args)>(args)...);
-				return true;
-			}
-			catch (...)
-			{
-				return false;
-			}
-		};
-	}
-
-	auto make_retry_safe(auto& callable, unsigned retries, auto&&...args)
-	{
-		return [callable, retries, ...args = std::forward<decltype(args)>(args)] 
-		{
-			for (int i = 1; i <= retries; ++i)
-			{
-				try
-				{
-					callable(std::forward<decltype(args)>(args)...);
-					return true;
-				}
-				catch (...)
-				{
-					std::this_thread::sleep_for(std::chrono::seconds{ i * 2 });
-				}
-			}
-			return false;
-		};
 	}
 
 	export void Run()
