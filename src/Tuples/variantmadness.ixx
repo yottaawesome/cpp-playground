@@ -362,7 +362,7 @@ namespace ReadLineLoop
 		{
 			try
 			{
-				callable(args...);
+				callable(std::forward<decltype(args)>(args)...);
 				return true;
 			}
 			catch (...)
@@ -380,7 +380,7 @@ namespace ReadLineLoop
 			{
 				try
 				{
-					callable(args...);
+					callable(std::forward<decltype(args)>(args)...);
 					return true;
 				}
 				catch (...)
