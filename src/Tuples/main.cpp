@@ -24,6 +24,7 @@ auto make(Args&&...args) -> std::tuple<Args...>
 
 int main()
 {
+	MakeSafe::Run();
 	//LoopOverTypes::Run();
 	//Chained::Run();
 	LoopOverLambdas::Run();

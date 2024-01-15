@@ -292,7 +292,7 @@ export namespace RuntimeSetting
 	}
 }
 
-namespace MakeSafe
+export namespace MakeSafe
 {
 	auto make(auto&& callable, auto&&...args)
 	{
@@ -350,7 +350,7 @@ namespace MakeSafe
 	void Run()
 	{
 		A a{};
-		make_safe(SomeFunc, std::ref(a));
+		make_safe(SomeFunc, std::ref(a))();
 	}
 }
 
