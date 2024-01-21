@@ -231,7 +231,7 @@ export namespace SetVariantFromTupleDynamically
 	struct D { void dos() {} };
 	struct F { void dos() {} };
 
-	GG auto m = []() -> GG auto
+	constinit GG auto m = []() -> GG auto
 		{
 			return D{};
 		}();
