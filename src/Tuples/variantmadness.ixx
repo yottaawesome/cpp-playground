@@ -215,6 +215,27 @@ export namespace SetVariantFromTupleDynamically
 		//return std::get<Index>(tuple)();
 	}
 
+	template<auto...Ts>
+	struct H
+	{
+		std::tuple<decltype(Ts)...> Tuple;
+		std::variant<std::invoke_result_t<decltype(Ts)>...> Variant;
+	};
+
+	auto j() { return file_writer{}; };
+	auto i() { return socket_writer{}; };
+
+	template<typename T>
+	concept GG = requires(T t) { t.dos(); };
+
+	struct D { void dos() {} };
+	struct F { void dos() {} };
+
+	GG auto m = []() -> GG auto
+		{
+			return D{};
+		}();
+
 	void Run()
 	{
 		std::tuple factories{
@@ -222,12 +243,24 @@ export namespace SetVariantFromTupleDynamically
 			[] { return socket_writer{}; }
 		};
 
+		H<j, i> ll{ .Tuple{j,i} };
+
 		std::variant<file_writer, socket_writer> variants;
 
 		size_t index = 0;
 
 		[]<typename TTuple, typename TVariant, size_t...Is>(TTuple& tuple, TVariant& variant, size_t idx, std::index_sequence<Is...>)
 		{
+			([](TTuple& tuple, TVariant& variant, size_t idx)
+			{
+				if (idx == Is)
+				{
+					variant = std::get<Is>(tuple)();
+					return true;
+				}
+				return false;
+			}(tuple, variant, idx) or ...);
+
 			return (((Is == idx) ? (instantiate<Is>(tuple, variant), false) : (void(), true)) and ...);
 		}(
 			factories,
@@ -243,6 +276,55 @@ export namespace SetVariantFromTupleDynamically
 			},
 			variants
 		);
+	}
+}
+
+export namespace SomeOtherTest
+{
+	struct A {};
+	struct B {};
+	struct C {};
+
+	template<typename T>
+	struct b_type
+	{
+		T Value = {};
+		bool Found = false;
+		operator bool() { return Found; }
+	};
+
+	void Run()
+	{
+		std::tuple t{ A{}, B{}, C{} };
+
+		std::variant<A, B, C> v{};
+		bool b = holds_alternative<A>(v);
+		v = B{};
+
+		auto index = v.index();
+
+		using m = std::variant_alternative_t<0, decltype(v)>;
+
+		auto item = []<size_t...Is>(auto& variant, size_t index, std::index_sequence<Is...>)
+		{
+			return (
+				[]<size_t I = Is>(size_t index, auto&& variant)
+				{
+					using type = std::variant_alternative_t<I, std::remove_cvref_t<decltype(variant)>>;
+					if (I == index)
+					{
+						return std::get<I>(variant);
+					}
+					return type{};
+				}(index, std::forward<decltype(variant)>(variant)), ...
+			);
+		}(
+			v,
+			index,
+			std::make_index_sequence<std::variant_size_v<decltype(v)>>{}
+		);
+
+		//std::println("{}", typeid(item).name());
 	}
 }
 
