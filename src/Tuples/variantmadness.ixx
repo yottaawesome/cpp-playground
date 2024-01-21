@@ -231,10 +231,24 @@ export namespace SetVariantFromTupleDynamically
 	struct D { void dos() {} };
 	struct F { void dos() {} };
 
-	constinit GG auto m = []() -> GG auto
-		{
-			return D{};
-		}();
+	constinit GG auto m = []() -> GG auto { return D{}; }();
+
+
+	struct B { virtual ~B() = default; constexpr B() = default; virtual constexpr int Get() const { return 0; } };
+	struct C : public B { constexpr C() = default; virtual constexpr int Get() const override { return 1; } };
+
+
+
+	/*template<size_t I, size_t M>
+	auto K(size_t index, auto& tuple)
+	{
+		if (index == M)
+			return std::get<I>(tuple);
+		else
+			if constexpr (I +1 < M)
+				return K<I + 1, M>(index, tuple);
+		throw std::runtime_error("");
+	}*/
 
 	void Run()
 	{
@@ -242,6 +256,11 @@ export namespace SetVariantFromTupleDynamically
 			[] { return file_writer{}; },
 			[] { return socket_writer{}; }
 		};
+
+		const B& b = C();
+		//std::get<b->Get()>(factories);
+
+		//K<0, 2>(1, factories);
 
 		H<j, i> ll{ .Tuple{j,i} };
 
@@ -565,5 +584,286 @@ export namespace InvertedFind
 
 		// error: type appears more than once in tuple
 		//constexpr std::size_t index = tuple_element_index_v<int, std::tuple<char, int, int>>;
+	}
+}
+
+export namespace RandomStuff
+{
+	std::integral_constant<int, 1> t1;
+	std::integral_constant<int, 2> t2;
+
+	struct V
+	{
+		void operator()(std::integral_constant<int, 1>)
+		{
+		}
+
+		void operator()(std::integral_constant<int, 2>)
+		{
+		}
+	};
+
+	template<typename...Args>
+	auto make(Args&&...args) -> std::tuple<Args...>
+	{
+		return { args... };
+	}
+
+	struct db { void save() {} void get() {} };
+	struct file { void save() {} void get() {} };
+
+	template<typename T>
+	concept sinkable = requires(T t)
+	{
+		t.get();
+		t.save();
+	};
+
+	struct saver
+	{
+		saver(int x)
+		{
+			if (x == 1)
+				sinks = db{};
+			else
+				sinks = file{};
+		}
+
+		auto save()
+		{
+			return std::visit(
+				[](sinkable auto&& t) { return t.save(); },
+				sinks
+			);
+			//sinks.visit([](sinkable auto&& t) { t.save(); });
+		}
+
+		void get()
+		{
+			std::visit(
+				[](sinkable auto&& t) { return t.get(); },
+				sinks
+			);
+		}
+
+		std::variant<db, file> sinks;
+	};
+
+	struct A {};
+	struct B {};
+
+	void Get()
+	{
+		int x = 1;
+		std::vector v{ 0,1,2,3,4 };
+		auto f = []<size_t...I>(size_t index, std::index_sequence<I...>) -> decltype(auto)
+		{
+			//return ((index == I ? [] {} : [] {}) and ...);
+			//return ((index == I ? [] {return A{}; }() : [] { return B{}; }()), ...);
+			//return ((index == I ? A{} : (B{})) and ...);
+
+			return ([]<size_t T = I>()
+			{
+				if constexpr (T == 1)
+				{
+					return A{};
+				}
+				else
+				{
+					return B{};
+				}
+			}(), ...);
+		}(x, std::make_index_sequence<2>{});
+
+		std::cout << typeid(f).name() << std::endl;
+	}
+}
+
+export namespace OtherStuff
+{
+	// https://stackoverflow.com/questions/77070107/templated-way-to-match-stdvariant-index-to-type-at-runtime
+	template<std::size_t I>
+	using index_t = std::integral_constant<std::size_t, I>;
+
+	template<std::size_t I>
+	constexpr index_t<I> index_v{};
+
+	template<std::size_t...Is>
+	using indexes_t = std::variant<index_t<Is>...>;
+
+	template<std::size_t...Is>
+	constexpr indexes_t<Is...> get_index(std::index_sequence<Is...>, std::size_t I) {
+		constexpr indexes_t<Is...> retvals[] = {
+		  index_v<Is>...
+		};
+		return retvals[I];
+	}
+
+	template<std::size_t N>
+	constexpr auto get_index(std::size_t I) {
+		return get_index(std::make_index_sequence<N>{}, I);
+	}
+
+	template<size_t I, size_t M>
+	auto Q(auto&& tuple)
+	{
+		using t = std::remove_cvref_t<decltype(tuple)>;
+		std::variant v = std::apply([](auto...T) {return std::variant<decltype(T)...>{}; }, tuple);
+
+		//std::variant v{ std::forward_as_tuple<t>(tuple) };
+		if constexpr (I == M)
+			return tuple;
+		else
+			return Q<I + 1, M>(std::tuple_cat(tuple, std::tuple{ std::make_index_sequence<I>{} }));
+	}
+
+	void Run()
+	{
+		std::tuple<int> ttt;
+		auto vvv = Q<1, 5>(std::forward<decltype(ttt)>(ttt));
+		std::cout << typeid(vvv).name() << "\n";
+		std::variant<int, float, double > v;
+		using M = decltype(v);
+		auto r = std::visit(
+			[&](auto I)
+			{
+				auto T = std::variant_alternative_t<I, M>{};
+				//return std::get<T>(v);
+				return sizeof(char[I + 1]); // +1 is needed, as arrays of size 0 are illegal
+			},
+			get_index<3>(1)
+		);
+		std::cout << r << "\n";
+
+		auto i = get_index<3>(1);
+		std::cout << typeid(i).name() << "\n";
+		/*[](auto I)
+		{
+			auto T = std::variant_alternative_t<I, M>{};
+		}(get_index<3>(1));*/
+	}
+}
+
+export namespace EvenMoreFunnyStuff
+{
+	template<class... Ts>
+	struct overload : Ts... { using Ts::operator()...; };
+
+	struct A
+	{
+		virtual ~A() = default;
+		virtual int Blah() = 0;
+	};
+	struct B final : public A { int Blah() override { return std::rand() % 50; } };
+	struct C final : public A { int Blah() override { return std::rand() % 50; } };
+	struct D final : public A { int Blah() override { return std::rand() % 50; } };
+	struct E final { int Blah() { return std::rand() % 50; } };
+
+	template<typename T>
+	concept IsInterface = requires(T t)
+	{
+		t.Blah();
+	};
+
+	void Run()
+	{
+		std::variant<B, C, D> v = B{};
+
+		constexpr int i = 1;
+
+		if constexpr (i == 1)
+		{
+			IsInterface auto a = E{};
+			auto n = std::chrono::high_resolution_clock::now();
+			for (int i = 0; i < 5000000; i++)
+				int x = a.Blah();
+			std::println("{}", std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - n));
+		}
+		else if constexpr (i == 2)
+		{
+			A* a2 = new B();
+			auto n = std::chrono::high_resolution_clock::now();
+			for (int i = 0; i < 5000000; i++)
+				int x = a2->Blah();
+			std::println("{}", std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - n));
+		}
+		else if constexpr (i == 3)
+		{
+			IsInterface auto& a = std::visit(
+				overload{
+					[](B& a) -> A& { return a; },
+					[](C& a) -> A& { return a; },
+					[](D& a) -> A& { return a; }
+				},
+				v
+			);
+
+			auto n = std::chrono::high_resolution_clock::now();
+			for (int i = 0; i < 5000000; i++)
+				int x = a.Blah();
+			std::println("{}", std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - n));
+		}
+	}
+}
+
+export namespace MoreStuff
+{
+	template <typename ... Ts, std::size_t ... Is>
+	std::variant<Ts...> get_impl(std::size_t index, std::index_sequence<Is...>, const std::tuple<Ts...>& t)
+	{
+		using getter_type = std::variant<Ts...>(*)(const std::tuple<Ts...>&);
+		getter_type funcs[] = {
+			+[](const std::tuple<Ts...>& tuple) -> std::variant<Ts...>
+			{
+				return std::get<Is>(tuple);
+			}...
+		};
+
+		return funcs[index](t);
+	}
+
+	template <typename ... Ts>
+	std::variant<Ts...> get(std::size_t index, const std::tuple<Ts...>& t)
+	{
+		return get_impl(index, std::index_sequence_for<Ts...>(), t);
+	}
+
+	template<typename...TArgs>
+	struct overloaded : public TArgs...
+	{
+		using TArgs::operator()...;
+	};
+
+	struct A
+	{
+		A() = default;
+		A(int, std::string) {}
+	};
+	struct B
+	{
+		B() = default;
+		B(int) {}
+	};
+	struct C {};
+
+	void Run()
+	{
+		int argA1 = 1;
+		std::string argA2 = "a";
+		int argB1 = 2;
+		// ...
+
+		using type_tuple = std::tuple<A, B, C>;
+		type_tuple t{};
+		int i = 0;
+
+		auto obj = std::visit(
+			overloaded{
+				[&](const A&) -> std::variant<A, B, C> { return A(argA1, argA2); },
+				[&](const B&) -> std::variant<A, B, C> { return B(argB1); },
+				[&](const C&) -> std::variant<A, B, C> { return C(); },
+			},
+			get(i, t)
+			);
 	}
 }
