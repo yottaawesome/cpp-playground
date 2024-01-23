@@ -59,9 +59,24 @@ export namespace TypeErasureA
             return "Foo";
         }
     };
+    
+    template<typename T>
+    concept IsT = requires(T t) { true; };
+
+    template<int I>
+    auto Man(int i)
+    {
+        if (I == i)
+        {
+            return Foo{};
+        }
+        else 
+            return Bar{};
+    }
 
     void Run()
     {
+        Man<1>(2);
         std::print("\n");
         std::vector<Object> vec{ Object(Foo()), Object(Bar()) };  // (1)
         printName(vec);
