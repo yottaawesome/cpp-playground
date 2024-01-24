@@ -1,3 +1,8 @@
+module;
+
+#define WIN32_LEAN_AND_MEAN
+#include <Windows.h>
+
 export module tupletoparameterpack;
 import std;
 import std.compat;
@@ -478,15 +483,15 @@ export namespace TupleFunc
     }
 
     template <class TTuple, class TPredFn>
-    constexpr decltype(auto) index_of(TTuple&& tuple, TPredFn&& f)
+    constexpr decltype(auto) index_of(TTuple&& tuple, TPredFn&& predicate)
     {
-        size_t index = std::numeric_limits<size_t>::max();
-        [&index] <std::size_t... I>(TTuple && tuple, TPredFn && f, std::index_sequence<I...>)
+        size_t index = (std::numeric_limits<size_t>::max)(); // workaround for Microsoft's shitty MAX macro
+        [&index]<std::size_t... I>(TTuple&& tuple, TPredFn&& predicate, std::index_sequence<I...>)
         {
-            ((f(std::get<I>(tuple)) ? index = I : index), ...);
+            ((predicate(std::get<I>(tuple)) ? (index = I, true) : (index, false)) or ...);
         }(
             std::forward<TTuple>(tuple),
-            std::forward<TPredFn>(f),
+            std::forward<TPredFn>(predicate),
             std::make_index_sequence<std::tuple_size<std::remove_reference_t<TTuple>>::value>{}
         );
         return index;
@@ -609,5 +614,151 @@ export namespace Waiting
         };
 
         Wait(waitables);
+    }
+}
+
+export namespace WaitingB
+{
+    template<class T>
+    struct is_duration : std::false_type {};
+
+    template<class Rep, class Period>
+    struct is_duration<std::chrono::duration<Rep, Period>> : std::true_type {};
+
+    template<typename T>
+    concept duration = is_duration<T>::value;
+
+    template<typename T>
+    concept waitable =
+        not std::is_null_pointer_v<T>
+        and (
+            std::same_as<std::remove_cvref_t<T>, void*>
+            or requires(const T t)
+    {
+        {t.get_handle()} noexcept -> std::same_as<void*>;
+    }
+    );
+
+    template<typename TDummy>
+    struct handle_t
+    {
+        ~handle_t() { close(); }
+
+        handle_t() noexcept = default;
+
+        handle_t(const handle_t&) = delete;
+        handle_t operator=(const handle_t&) = delete;
+        handle_t(handle_t&& other) { move(other); }
+        handle_t operator=(handle_t&& other) { move(other); }
+
+        void close() noexcept
+        {
+            if (not m_handle)
+                return;
+            CloseHandle(m_handle);
+            m_handle = nullptr;
+        }
+
+        void move(handle_t& other) noexcept
+        {
+            close();
+            m_handle = other.m_handle;
+            other.m_handle = nullptr;
+        }
+
+        void* get_handle() const noexcept { return m_handle; }
+
+        void* m_handle =
+            []() noexcept 
+            {
+                void* handle = CreateEvent(nullptr, true, false, nullptr);
+                if (not handle)
+                    __fastfail(1);
+                return handle;
+            }();
+    };
+
+    using handle_a = handle_t<struct handle_a_d>;
+    using handle_b = handle_t<struct handle_b_d>;
+    static_assert(waitable<handle_b> and waitable<handle_a>);
+
+    template<typename T>
+    struct false_type : std::false_type {};
+
+    template<waitable T>
+    constexpr auto convert(T&& item)
+    {
+        using TU = std::remove_cvref_t<T>;
+        if constexpr (std::same_as<TU, void*>)
+            return item;
+        else
+            return item.get_handle();
+    }
+
+    unsigned wait_on(
+        const bool wait_for_all,
+        const bool is_interruptible_wait,
+        const duration auto timespan,
+        waitable auto&&... waitables
+    )
+    {
+        static_assert(sizeof...(waitables) > 0, "Must pass at least one waitable.");
+        const auto waitableArray = std::array<void*, sizeof...(waitables)>{ convert(waitables)... };
+        if (std::any_of(waitableArray.begin(), waitableArray.end(), [](auto&& h) { return h == nullptr; }))
+            throw std::runtime_error("Unexpected nullptr for handle");
+
+        const unsigned result = WaitForMultipleObjectsEx(
+            static_cast<unsigned>(waitableArray.size()),
+            waitableArray.data(),
+            wait_for_all,
+            static_cast<unsigned>(std::chrono::duration_cast<std::chrono::milliseconds>(timespan).count()),
+            is_interruptible_wait
+        );
+        if (result == WAIT_ABANDONED)
+            throw std::runtime_error("The wait was unexpectedly abandoned");
+        if (result == WAIT_FAILED)
+            throw std::runtime_error("The wait unexpectedly failed");
+        return result;
+    }
+
+    void Random()
+    {
+        std::index_sequence<3> arr[3];
+
+        auto x = []<size_t...Is>(std::index_sequence<Is...>)
+        {
+            return (
+                []<size_t I = Is>()
+                {
+                    if constexpr (I == 1)
+                    {
+
+                    }
+                }(), ...
+            );
+        };
+        x(std::make_index_sequence<3>{});
+    }
+
+    void Run()
+    {
+        __fastfail(1);
+        handle_a a{};
+        handle_b b{};
+        std::jthread t(
+            [](handle_a& a) 
+            {
+                std::this_thread::sleep_for(std::chrono::seconds{ 1 });
+                std::println("Event signaled succesfully");
+                SetEvent(a.get_handle());
+            },
+            std::ref(a)
+        );
+
+        unsigned result = wait_on(false, false, std::chrono::seconds{ 5 }, a, b);
+        if (result == WAIT_TIMEOUT)
+            std::println("Timed out");
+        else if (result == 0)
+            std::println("Wait one succeeded");
     }
 }

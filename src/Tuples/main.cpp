@@ -5,25 +5,8 @@ import variantmadness;
 
 int main()
 {
-	std::index_sequence<3> arr[3];
-
-	auto x = []<size_t...Is>(std::index_sequence<Is...>)
-	{
-		return (
-			[]<size_t I = Is>()
-			{
-				if constexpr (I == 1)
-				{
-
-				}
-			}(), ...
-		);
-	};
-
-	x(std::make_index_sequence<3>{});
-
-	EvenMoreFunnyStuff::Run();
-	return 0;
+	WaitingB::Run();
+	TimingPerformance::Run();
 	OtherStuff::Run();
 	SomeOtherTest::Run();
 	MoreStuff::Run();

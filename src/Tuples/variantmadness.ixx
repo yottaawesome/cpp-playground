@@ -744,7 +744,7 @@ export namespace OtherStuff
 	}
 }
 
-export namespace EvenMoreFunnyStuff
+export namespace TimingPerformance
 {
 	template<class... Ts>
 	struct overload : Ts... { using Ts::operator()...; };
@@ -808,6 +808,7 @@ export namespace EvenMoreFunnyStuff
 
 export namespace MoreStuff
 {
+	// https://stackoverflow.com/questions/60003707/run-time-indexing-of-tuple
 	template <typename ... Ts, std::size_t ... Is>
 	std::variant<Ts...> get_impl(std::size_t index, std::index_sequence<Is...>, const std::tuple<Ts...>& t)
 	{
