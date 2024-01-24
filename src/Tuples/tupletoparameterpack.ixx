@@ -619,6 +619,21 @@ export namespace Waiting
 
 export namespace WaitingB
 {
+    template<typename T>
+    struct is_array : std::false_type {};
+
+    template<typename T, size_t N>
+    struct is_array<std::array<T, N>> : std::true_type {};
+
+    template<typename T, size_t N>
+    constexpr bool is_array_v = is_array<T, N>;
+
+    template<typename T>
+    concept array_like = is_array<std::remove_cvref_t<T>>::value;
+
+    constexpr auto a = std::array<int, 3>{1, 2, 3};
+    static_assert(array_like<decltype(a)>);
+
     template<class T>
     struct is_duration : std::false_type {};
 
@@ -633,49 +648,56 @@ export namespace WaitingB
         not std::is_null_pointer_v<T>
         and (
             std::same_as<std::remove_cvref_t<T>, void*>
+            //or array_like<T>
             or requires(const T t)
-    {
-        {t.get_handle()} noexcept -> std::same_as<void*>;
-    }
-    );
+            {
+                {t.get_handle()} noexcept -> std::same_as<void*>;
+            }
+        );
+
+    
 
     template<typename TDummy>
-    struct handle_t
+    class handle_t final
     {
-        ~handle_t() { close(); }
+        public:
+            ~handle_t() { close(); }
 
-        handle_t() noexcept = default;
+            handle_t() noexcept = default;
 
-        handle_t(const handle_t&) = delete;
-        handle_t operator=(const handle_t&) = delete;
-        handle_t(handle_t&& other) { move(other); }
-        handle_t operator=(handle_t&& other) { move(other); }
+            handle_t(const handle_t&) = delete;
+            handle_t operator=(const handle_t&) = delete;
+            handle_t(handle_t&& other) { move(other); }
+            handle_t operator=(handle_t&& other) { move(other); }
 
-        void close() noexcept
-        {
-            if (not m_handle)
-                return;
-            CloseHandle(m_handle);
-            m_handle = nullptr;
-        }
+        public:
+            void* get_handle() const noexcept { return m_handle; }
 
-        void move(handle_t& other) noexcept
-        {
-            close();
-            m_handle = other.m_handle;
-            other.m_handle = nullptr;
-        }
-
-        void* get_handle() const noexcept { return m_handle; }
-
-        void* m_handle =
-            []() noexcept 
+        private:
+            void close() noexcept
             {
-                void* handle = CreateEvent(nullptr, true, false, nullptr);
-                if (not handle)
-                    __fastfail(1);
-                return handle;
-            }();
+                if (not m_handle)
+                    return;
+                CloseHandle(m_handle);
+                m_handle = nullptr;
+            }
+
+            void move(handle_t& other) noexcept
+            {
+                close();
+                m_handle = other.m_handle;
+                other.m_handle = nullptr;
+            }
+
+        private:
+            void* m_handle =
+                []() noexcept 
+                {
+                    void* handle = CreateEvent(nullptr, true, false, nullptr);
+                    if (not handle)
+                        __fastfail(FAST_FAIL_FATAL_APP_EXIT);
+                    return handle;
+                }();
     };
 
     using handle_a = handle_t<struct handle_a_d>;
@@ -686,13 +708,23 @@ export namespace WaitingB
     struct false_type : std::false_type {};
 
     template<waitable T>
-    constexpr auto convert(T&& item)
+    constexpr auto to_handle(T&& item)
     {
         using TU = std::remove_cvref_t<T>;
         if constexpr (std::same_as<TU, void*>)
             return item;
+        else if constexpr (array_like<TU>)
+            return item;
         else
             return item.get_handle();
+    }
+
+    auto create_array(auto&&...args)
+    {
+        /*if constexpr (sizeof...(args) ==  1)
+        {
+            static_assert()
+        }*/
     }
 
     unsigned wait_on(
@@ -703,7 +735,9 @@ export namespace WaitingB
     )
     {
         static_assert(sizeof...(waitables) > 0, "Must pass at least one waitable.");
-        const auto waitable_array = std::array<void*, sizeof...(waitables)>{ convert(waitables)... };
+        static_assert(sizeof...(waitables) <= MAXIMUM_WAIT_OBJECTS, "Cannot wait on more than MAXIMUM_WAIT_OBJECTS objects.");
+
+        const auto waitable_array = std::array<void*, sizeof...(waitables)>{ to_handle(waitables)... };
         if (std::any_of(waitable_array.begin(), waitable_array.end(), [](auto&& h) { return h == nullptr; }))
             throw std::runtime_error("Unexpected nullptr for handle");
 
@@ -719,7 +753,34 @@ export namespace WaitingB
             throw std::runtime_error("The wait was unexpectedly abandoned");
         if (result == WAIT_FAILED)
             throw std::runtime_error("The wait unexpectedly failed");
+
         return result;
+    }
+
+    template<typename T, size_t N>
+    auto array_to_tuple(const std::array<T, N>& arr)
+    {
+        // std::tuple_size_v<std::remove_cvref_t<decltype(arr)>> works too
+        return []<size_t...Is>(const std::array<T, N>& arr, std::index_sequence<Is...>)
+        {
+            return std::tuple{ arr[Is]... };
+        }(arr, std::make_index_sequence<N>{});
+    }
+
+    unsigned wait_on(
+        const bool wait_for_all,
+        const bool is_interruptible_wait,
+        const duration auto timespan,
+        array_like auto&& waitables
+    )
+    {
+        return std::apply(
+            [wait_for_all, is_interruptible_wait, timespan]<typename...T>(T&&...n)
+            {
+                return wait_on(wait_for_all, is_interruptible_wait, timespan, std::forward<T>(n)...); 
+            },
+            waitables
+        );
     }
 
     void Random()
@@ -743,7 +804,6 @@ export namespace WaitingB
 
     void Run()
     {
-        __fastfail(1);
         handle_a a{};
         handle_b b{};
         std::jthread t(
@@ -757,6 +817,7 @@ export namespace WaitingB
         );
 
         unsigned result = wait_on(false, false, std::chrono::seconds{ 5 }, a, b);
+        unsigned result2 = wait_on(false, false, std::chrono::seconds{ 5 }, std::array<void*, 2>{nullptr, nullptr});
         if (result == WAIT_TIMEOUT)
             std::println("Timed out");
         else if (result == 0)
