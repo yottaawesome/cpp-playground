@@ -904,20 +904,34 @@ export namespace AnotherWait
     template<typename T>
     constexpr bool not_array(T&& t)
     {
-        static_assert(not arraylike<std::remove_cvref_t<T>>);
+        return not arraylike<std::remove_cvref_t<T>>;
     }
 
-    void not_array_one(auto&&...waitables)
+    constexpr bool not_array_one(auto&&...waitables)
     {
-        if constexpr (sizeof...(waitables) > 0)
+        if constexpr (sizeof...(waitables) > 1)
         {
-            []<size_t...Is, typename TTuple>(std::index_sequence<Is...>, TTuple&& args)
+            constexpr bool b = []<size_t...Is, typename TTuple>(std::index_sequence<Is...>, TTuple&& args)
             {
-                (not_array(std::get<Is>(args)), ...);
+                return (not_array(std::get<Is>(args)) and ...);
             }(
                 std::make_index_sequence<sizeof...(waitables)>{},
                 std::forward_as_tuple(waitables...)
             );
+            static_assert(b);
+            return b;
+        }
+        else
+        {
+            return true;
+        }
+    }
+
+    void T()
+    {
+        if constexpr (not_array(std::array{ 1,2 }))
+        {
+
         }
     }
 
