@@ -5,7 +5,7 @@ import variantmadness;
 
 int main()
 {
-	WaitingB::Run();
+	//WaitingB::Run();
 	TimingPerformance::Run();
 	OtherStuff::Run();
 	SomeOtherTest::Run();

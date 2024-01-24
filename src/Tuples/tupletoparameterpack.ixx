@@ -824,3 +824,153 @@ export namespace WaitingB
             std::println("Wait one succeeded");
     }
 }
+
+export namespace AnotherWait
+{
+    template<class T>
+    struct is_duration : std::false_type {};
+
+    template<class Rep, class Period>
+    struct is_duration<std::chrono::duration<Rep, Period>> : std::true_type {};
+
+    template<typename T>
+    concept duration = is_duration<T>::value;
+
+    template<typename T>
+    concept waitable =
+        not std::is_null_pointer_v<T>
+        and (
+            std::same_as<std::remove_cvref_t<T>, void*>
+            or requires(const T t)
+            {
+                {t.get_handle()} noexcept -> std::same_as<void*>;
+            }
+    );
+
+    template<typename T>
+    struct is_vector : std::false_type {};
+
+    template<typename T>
+    struct is_vector<std::vector<T>> : std::true_type {};
+
+    template<typename T>
+    constexpr bool is_vector_v = is_vector<std::vector<T>>::value;
+
+    template<typename T>
+    struct is_array : std::false_type {};
+
+    template<typename T, size_t N>
+    struct is_array<std::array<T, N>> : std::true_type {};
+
+    template<typename T, size_t N>
+    constexpr bool is_array_v = is_array<T, N>;
+
+    template<typename T>
+    concept arraylike = is_array_v<T>;
+
+    template<waitable T>
+    constexpr auto to_handle(T&& item)
+    {
+        using TU = std::remove_cvref_t<T>;
+        if constexpr (std::same_as<TU, void*>)
+            return item;
+        else
+            return item.get_handle();
+    }
+
+    unsigned internal_wait_on(
+        const bool wait_for_all,
+        const bool is_interruptible_wait,
+        const duration auto timespan,
+        const void* waitables,
+        const size_t count
+    )
+    {
+        const unsigned result = WaitForMultipleObjectsEx(
+            static_cast<unsigned>(count),
+            static_cast<const HANDLE*>(waitables),
+            wait_for_all,
+            static_cast<unsigned>(std::chrono::duration_cast<std::chrono::milliseconds>(timespan).count()),
+            is_interruptible_wait
+        );
+        if (result == WAIT_ABANDONED)
+            throw std::runtime_error("The wait was unexpectedly abandoned");
+        if (result == WAIT_FAILED)
+            throw std::runtime_error("The wait unexpectedly failed");
+
+        return result;
+    }
+
+    template<typename T>
+    constexpr bool not_array(T&& t)
+    {
+        static_assert(not arraylike<std::remove_cvref_t<T>>);
+    }
+
+    void not_array_one(auto&&...waitables)
+    {
+        if constexpr (sizeof...(waitables) > 0)
+        {
+            []<size_t...Is, typename TTuple>(std::index_sequence<Is...>, TTuple&& args)
+            {
+                (not_array(std::get<Is>(args)), ...);
+            }(
+                std::make_index_sequence<sizeof...(waitables)>{},
+                std::forward_as_tuple(waitables...)
+            );
+        }
+    }
+
+    unsigned wait_on(
+        const bool wait_for_all,
+        const bool is_interruptible_wait,
+        const duration auto timespan,
+        waitable auto&&... waitables
+    )
+    {
+        static_assert(sizeof...(waitables) > 0, "Must pass at least one waitable.");
+        static_assert(sizeof...(waitables) <= MAXIMUM_WAIT_OBJECTS, "Cannot wait on more than MAXIMUM_WAIT_OBJECTS objects.");
+
+        const auto waitable_array = std::array<void*, sizeof...(waitables)>{ to_handle(waitables)... };
+        if (std::any_of(waitable_array.begin(), waitable_array.end(), [](auto&& h) { return h == nullptr; }))
+            throw std::runtime_error("Unexpected nullptr for handle");
+
+        return internal_wait_on(
+            wait_for_all,
+            is_interruptible_wait,
+            timespan,
+            waitable_array.data(),
+            waitable_array.size()
+        );
+    }
+
+    template<size_t N>
+    unsigned wait_on(
+        const bool wait_for_all,
+        const bool is_interruptible_wait,
+        const duration auto timespan,
+        const std::array<void*, N>& waitables
+    )
+    {
+        return internal_wait_on(wait_for_all, is_interruptible_wait, timespan, waitables.data(), N);
+    }
+
+    unsigned wait_on(
+        const bool wait_for_all,
+        const bool is_interruptible_wait,
+        const duration auto timespan,
+        const std::vector<void*>& waitables
+    )
+    {
+        return internal_wait_on(wait_for_all, is_interruptible_wait, timespan, waitables.data(), waitables.size());
+    }
+
+    void Run()
+    {
+        void* a = CreateEvent(nullptr, true, false, nullptr);
+        void* b = CreateEvent(nullptr, true, false, nullptr);
+        wait_on(false, false, std::chrono::seconds{ 2 }, std::vector{ a, b });
+        wait_on(false, false, std::chrono::seconds{ 2 }, std::array{ a, b });
+        wait_on(false, false, std::chrono::seconds{ 2 }, a);
+    }
+}
