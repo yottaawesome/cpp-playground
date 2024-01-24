@@ -703,15 +703,16 @@ export namespace WaitingB
     )
     {
         static_assert(sizeof...(waitables) > 0, "Must pass at least one waitable.");
-        const auto waitableArray = std::array<void*, sizeof...(waitables)>{ convert(waitables)... };
-        if (std::any_of(waitableArray.begin(), waitableArray.end(), [](auto&& h) { return h == nullptr; }))
+        const auto waitable_array = std::array<void*, sizeof...(waitables)>{ convert(waitables)... };
+        if (std::any_of(waitable_array.begin(), waitable_array.end(), [](auto&& h) { return h == nullptr; }))
             throw std::runtime_error("Unexpected nullptr for handle");
 
+        using std::chrono::duration_cast, std::chrono::milliseconds;
         const unsigned result = WaitForMultipleObjectsEx(
-            static_cast<unsigned>(waitableArray.size()),
-            waitableArray.data(),
+            static_cast<unsigned>(waitable_array.size()),
+            waitable_array.data(),
             wait_for_all,
-            static_cast<unsigned>(std::chrono::duration_cast<std::chrono::milliseconds>(timespan).count()),
+            static_cast<unsigned>(duration_cast<milliseconds>(timespan).count()),
             is_interruptible_wait
         );
         if (result == WAIT_ABANDONED)
