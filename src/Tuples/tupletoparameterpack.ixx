@@ -988,3 +988,52 @@ export namespace AnotherWait
         wait_on(false, false, std::chrono::seconds{ 2 }, a);
     }
 }
+
+export namespace PrettyPrint
+{
+    void pretty_print(
+	    const std::string_view message,
+	    const std::source_location& location = std::source_location::current(),
+	    const std::stacktrace& trace = std::stacktrace::current()
+    )
+    {
+	    constexpr std::string_view entryFmt = "  + {} {:>{}} {}:{}\n";
+
+        constexpr auto minPadding = 2;
+        size_t fixedSize = minPadding;
+        std::for_each(
+            trace.begin(),
+            trace.end(),
+            [&fixedSize](const auto& entry)
+            {
+                std::string description = entry.description();
+                if (description.size() > fixedSize - minPadding)
+                    fixedSize = description.size() + minPadding;
+            }
+        );
+
+	    std::string traceMsg;
+	    for (const std::stacktrace_entry& entry : trace)
+	    {
+            std::string description = entry.description();
+		    if (description.contains("invoke_main") or description.contains("__scrt_common_main_seh"))
+		    	break;
+            auto size = fixedSize - description.size();
+		    traceMsg += std::format(entryFmt, description, "@", size, entry.source_file(), entry.source_line());
+	    }
+
+	    constexpr std::string_view messageFmt = 
+R"(Error: {}
+  in function: {}
+  of file:     {}:{}
+Stacktrace:
+{})";
+
+	    std::println(messageFmt, message, location.function_name(), location.file_name(), location.line(), traceMsg);
+    }
+
+    void Run()
+    {
+        pretty_print("something broke");
+    }
+}

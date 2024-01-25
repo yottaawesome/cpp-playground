@@ -5,6 +5,14 @@ import variantmadness;
 
 int main()
 {
+	try
+	{
+		PrettyPrint::Run();
+	}
+	catch (const std::exception& ex)
+	{
+		std::println("{}", ex.what());
+	}
 	//WaitingB::Run();
 	TimingPerformance::Run();
 	OtherStuff::Run();
