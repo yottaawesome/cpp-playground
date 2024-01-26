@@ -998,29 +998,28 @@ export namespace PrettyPrint
     )
     {
 	    constexpr std::string_view entryFmt = "  + {} {:>{}} {}:{}\n";
-
+        // Determine necessary padding
         constexpr auto minPadding = 2;
         size_t fixedSize = minPadding;
         std::for_each(
-            trace.begin(),
-            trace.end(),
-            [&fixedSize](const auto& entry)
+            trace.begin(), trace.end(),
+            [&fixedSize](const std::stacktrace_entry& entry)
             {
                 std::string description = entry.description();
                 if (description.size() > fixedSize - minPadding)
                     fixedSize = description.size() + minPadding;
             }
         );
-
+        // Format stacktrace
 	    std::string traceMsg;
-	    for (const std::stacktrace_entry& entry : trace)
-	    {
+        for (const std::stacktrace_entry& entry : trace)
+        {
             std::string description = entry.description();
-		    if (description.contains("invoke_main") or description.contains("__scrt_common_main_seh"))
-		    	break;
-            auto size = fixedSize - description.size();
-		    traceMsg += std::format(entryFmt, description, "@", size, entry.source_file(), entry.source_line());
-	    }
+            if (description.contains("invoke_main"))
+                break;
+            size_t size = fixedSize - description.size();
+            traceMsg += std::format(entryFmt, description, "@", size, entry.source_file(), entry.source_line());
+        }
 
 	    constexpr std::string_view messageFmt = 
 R"(Error: {}
