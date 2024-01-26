@@ -132,6 +132,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="moremadness.ixx" />
     <ClCompile Include="tupletoparameterpack.ixx" />
     <ClCompile Include="variantmadness.ixx" />
   </ItemGroup>
