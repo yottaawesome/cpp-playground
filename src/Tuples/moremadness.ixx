@@ -8,7 +8,7 @@ export module moremadness;
 import std;
 import std.compat;
 
-export namespace WaitingB
+namespace WaitingB
 {
     template<typename T>
     struct is_array : std::false_type {};
@@ -191,7 +191,7 @@ export namespace WaitingB
         x(std::make_index_sequence<3>{});
     }
 
-    void Run()
+    export void Run()
     {
         handle_a a{};
         handle_b b{};
@@ -214,7 +214,7 @@ export namespace WaitingB
     }
 }
 
-export namespace AnotherWait
+namespace AnotherWait
 {
     template<class T>
     struct is_duration : std::false_type {};
@@ -368,7 +368,7 @@ export namespace AnotherWait
         return internal_wait_on(wait_for_all, is_interruptible_wait, timespan, waitables.data(), waitables.size());
     }
 
-    void Run()
+    export void Run()
     {
         void* a = CreateEvent(nullptr, true, false, nullptr);
         void* b = CreateEvent(nullptr, true, false, nullptr);

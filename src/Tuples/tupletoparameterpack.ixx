@@ -1,5 +1,3 @@
-
-
 export module tupletoparameterpack;
 import std;
 import std.compat;
@@ -699,5 +697,86 @@ export namespace Pairing
             std::pair{ "a", m1 },
             std::pair{ "b", m2 }
 	    );   
+    }
+}
+
+export namespace Structs
+{
+    std::default_random_engine engn;
+    std::uniform_int_distribution<int> dist(1, 50);
+
+    struct A
+    {
+	    int M = 
+		    []{
+			    PrettyPrint::pretty_print("Lambda dummy error");
+			    return dist(engn);
+		    }();
+
+	    int N = 
+		    [](int M) 
+		    {
+			    return M;
+		    }(M);
+    };
+
+    void Run()
+    {
+        if constexpr (std::is_standard_layout_v<A>)
+            std::println("Yes");
+        else
+            std::println("No");
+        // https://developercommunity.visualstudio.com/t/10452770
+        //std::println("{}", std::is_standard_layout_v<A>);
+    }
+}
+
+export namespace FilterVariadic
+{   
+    // https://stackoverflow.com/questions/60006076/filter-types-in-a-parameter-pack
+    // https://ideone.com/MzUtL6
+    template <
+        template <class> class,
+        template <class...> class,
+        class...
+    >
+    struct filter;
+    template <template <class> class Pred, template <class...> class Variadic>
+    struct filter<Pred, Variadic>
+    {
+        using type = Variadic<>;
+    };
+
+    template<
+        template <class> class Pred,
+        template <class...> class Variadic,
+        class T, class... Ts
+    >
+    struct filter<Pred, Variadic, T, Ts...>
+    {
+        template <class, class> 
+        struct Cons;
+        
+        template <class Head, class... Tail>
+        struct Cons<Head, Variadic<Tail...> >
+        {
+            using type = Variadic<Head, Tail...>;
+        };
+
+        using type = typename std::conditional<
+            Pred<T>::value,
+            typename Cons<T, typename filter<Pred, Variadic, Ts...>::type>::type,
+            typename filter<Pred, Variadic, Ts...>::type
+        >::type;
+    };
+
+    void Run() 
+    {
+        static_assert(
+            std::is_same<
+                filter<std::is_integral, std::tuple, int, float, long>::type, 
+                std::tuple<int, long>
+            >::value
+        );
     }
 }
