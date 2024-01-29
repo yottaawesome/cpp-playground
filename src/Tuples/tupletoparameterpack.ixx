@@ -685,6 +685,19 @@ export namespace Pairing
 	    M<1> m1;
 	    M<2> m2;
 
+        []<typename...T>(T&&...values)
+        {
+            // https://www.fluentcpp.com/2021/12/13/the-evolutions-of-lambdas-in-c14-c17-and-c20/
+            [...S = values]() 
+            {
+                (std::println("{}", S), ...);
+            }();
+            [...S = std::forward<decltype(values)>(values)]() 
+            {
+                (std::println("{}", S), ...);
+            }();
+        }(1, 2, 3);
+
         []<std::convertible_to<std::string_view> T>(T&& value)
         {
 
