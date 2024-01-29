@@ -685,6 +685,26 @@ export namespace Pairing
 	    M<1> m1;
 	    M<2> m2;
 
+        []<std::convertible_to<std::string_view> T>(T&& value)
+        {
+
+        }("a");
+        [](std::convertible_to<std::string_view> auto&&...value)
+        {
+            (std::println("{}", value), ...);
+        }("a", std::string{"a"});
+
+        std::tuple t{ 1, 2 };
+        []<typename...Ts, size_t...Is>(std::tuple<Ts...>&& tuple, std::index_sequence<Is...> seq)
+        {
+            ((std::get<Is>(tuple) == 0 ? true : false), ...);
+        }(std::forward<decltype(t)>(t), std::make_index_sequence<std::tuple_size_v<decltype(t)>>{});
+
+        []<typename T, typename S>(std::pair<T, S>&& pairs)
+        {
+
+        }(std::pair{1,2});
+
         [](Pair auto&&...pairs)
 	    {
 		    ([](Pair auto&& p, const int minimum)

@@ -4,6 +4,14 @@ import tupletoparameterpack;
 import variantmadness;
 import moremadness;
 
+constexpr bool something()
+{
+	return false;
+}
+
+template<bool b = something()>
+struct M {};
+
 int main()
 {
 	Structs::Run();
