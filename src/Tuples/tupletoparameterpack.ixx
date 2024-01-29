@@ -702,9 +702,14 @@ export namespace Pairing
         {
 
         }("a");
-        [](std::convertible_to<std::string_view> auto&&...value)
+        bool b = [](std::convertible_to<std::string_view> auto&&...value)
         {
-            (std::println("{}", value), ...);
+            bool b = false;
+            return ((
+                std::println("{}", value), 
+                std::println("{}", value),
+                b = 1 == 1
+            ), ...);
         }("a", std::string{"a"});
 
         std::tuple t{ 1, 2 };
