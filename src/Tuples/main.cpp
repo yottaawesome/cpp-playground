@@ -14,6 +14,7 @@ struct M {};
 
 int main()
 {
+	TupleCats::Run();
 	Structs::Run();
 	PrettyPrint::Run();
 	//WaitingB::Run();

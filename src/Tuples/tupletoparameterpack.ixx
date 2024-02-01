@@ -818,3 +818,53 @@ export namespace FilterVariadic
         );
     }
 }
+
+export namespace TupleCats
+{
+    bool Predicate(auto& element)
+    {
+        return element.IsValue;
+    }
+
+    template<typename T>
+    struct S
+    {
+        bool IsValue = false;
+    };
+
+    using A = S<struct I>;
+    using B = S<struct II>;
+    using C = S<struct III>;
+
+    template<bool And = true>
+    bool Something(auto&& tuple, auto&& pred)
+    {
+        using T = std::remove_cvref_t<decltype(tuple)>;
+        return []<size_t...Is>(auto&& tuple, auto&& pred, std::index_sequence<Is...>)
+        {
+            if constexpr (And)
+                return ((pred(std::get<Is>(tuple)) ? (true) : (false)) and ...);
+            else
+                return ((pred(std::get<Is>(tuple)) ? (true) : (false)) or ...);
+        }(
+            std::forward<decltype(tuple)>(tuple), 
+            std::forward<decltype(pred)>(pred), 
+            std::make_index_sequence<std::tuple_size_v<T>>{}
+        );
+    }
+
+    struct F 
+    { 
+        //friend auto operator<=>(const F&, const F&) = default;
+        auto operator<=>(const F&) const = default;
+    };
+
+    void Run()
+    {
+        std::tuple t{ A{true}, B{false} };
+        F a;
+        F b;
+        std::println("{} {}", a == b, a < b);
+        Something(std::forward<decltype(t)>(t), [](auto&& v) { return v.IsValue; });
+    }
+}
