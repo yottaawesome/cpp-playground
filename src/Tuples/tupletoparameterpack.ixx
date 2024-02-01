@@ -859,8 +859,12 @@ export namespace TupleCats
         auto operator<=>(const F&) const = default;
     };
 
+    template<typename T, typename...R>
+    concept L = (std::same_as<T, R> or ...);
+
     void Run()
     {
+        static_assert(L<int, int, float>);
         std::tuple t{ A{true}, B{false} };
         F a;
         F b;
