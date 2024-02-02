@@ -5,3 +5,4 @@ export import :generator;
 export import :eagerfuture;
 export import :minimalasyncframework;
 export import :taskscheduler;
+export import :random;

@@ -131,6 +131,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="coroutines-random.ixx" />
     <ClCompile Include="coroutines-eagerfuture.ixx" />
     <ClCompile Include="coroutines-minimalasyncframework.ixx" />
     <ClCompile Include="coroutines-taskscheduler.ixx" />
