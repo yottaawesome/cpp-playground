@@ -46,12 +46,14 @@ export namespace Coroutines::Random
 
 	Queue WorkQueue{};
 
+	template<bool TLaunch = true>
 	struct awaitable
 	{
 		bool await_ready() { return false; }
 		void await_suspend(std::coroutine_handle<> h)
 		{
-			WorkQueue.Add(h);
+			if constexpr(TLaunch)
+				WorkQueue.Add(h);
 		}
 		void await_resume()
 		{
@@ -166,7 +168,7 @@ export namespace Coroutines::Random
 	}
 }
 
-export namespace Coroutines::Random2
+export namespace Coroutines::WithFutex
 {
 	struct Queue
 	{
@@ -190,9 +192,11 @@ export namespace Coroutines::Random2
 				bool success = m_semaphore.try_acquire_for(std::chrono::seconds{1});
 				if (not success)
 					return false;
+
 				std::scoped_lock lock{ m_mutex };
 				if (m_cos.empty())
 					return false;
+				
 				out = std::move(m_cos[0]);
 				m_cos.erase(m_cos.begin());
 				return true;
@@ -206,12 +210,14 @@ export namespace Coroutines::Random2
 
 	Queue WorkQueue{};
 
-	struct awaitable
+	template<bool TLaunch = true>
+	struct Awaitable
 	{
 		bool await_ready() { return false; }
 		void await_suspend(std::coroutine_handle<> h)
 		{
-			WorkQueue.Add(h);
+			if constexpr(TLaunch)
+				WorkQueue.Add(h);
 		}
 		void await_resume()
 		{
@@ -219,31 +225,37 @@ export namespace Coroutines::Random2
 		}
 	};
 
-	struct task
+	struct Result
 	{
-		std::shared_ptr<int> value;
-		task(std::shared_ptr<int> p) : value(p) { }
-		int compare = 0;
+		bool Done = false;
+		int Number = 0;
+	};
 
-		int get()
+	struct Task
+	{
+		std::shared_ptr<Result> value;
+		Task(std::shared_ptr<Result> p) : value(p) { }
+		bool compare = false;
+
+		int Get()
 		{
-			while (*value == 0)
+			while (not value->Done)
 			{
 				WaitOnAddress(
-					&*value,
+					&value->Done,
 					&compare,
 					sizeof(int),
 					INFINITE
 				);
 			}
 
-			return *value;
+			return value->Number;
 		}
 
-		struct promise_type
+		struct promise_type // name must be promise_type
 		{
-			std::shared_ptr<int> ptr = std::make_shared<int>();
-			task get_return_object()
+			std::shared_ptr<Result> ptr = std::make_shared<Result>();
+			Task get_return_object()
 			{
 				return { ptr };
 			}
@@ -252,10 +264,9 @@ export namespace Coroutines::Random2
 			void unhandled_exception() {}
 			void return_value(int i)
 			{
-				*ptr = i;
-				WakeByAddressSingle(
-					&*ptr
-				);
+				ptr->Number = i;
+				ptr->Done = true;
+				WakeByAddressSingle(&ptr->Done);
 			}
 		};
 	};
@@ -297,19 +308,45 @@ export namespace Coroutines::Random2
 			std::jthread m_thread;
 	};
 
-	auto switch_to_new_thread()
+	auto SwitchToNewThread()
 	{
-		return awaitable{};
+		return Awaitable{};
 	}
 
 	std::default_random_engine engn;
 	std::uniform_int_distribution<int> dist(1, 50);
 
-	task resuming_on_new_thread()
+	Task RunOnNewThread()
 	{
-		co_await switch_to_new_thread();
+		co_await SwitchToNewThread();
 		std::println("Resuming on worker thread...");
 		co_return dist(engn);
+	}
+
+	struct VoidTask
+	{
+		struct promise_type // name must be promise_type
+		{
+			VoidTask get_return_object()
+			{
+				return {};
+			}
+			std::suspend_never initial_suspend() { return {}; }
+			std::suspend_never final_suspend() noexcept { return {}; }
+			void unhandled_exception() {}
+			void return_void() {}
+		};
+	};
+
+	auto DoVoid()
+	{
+		return Awaitable<false>{};
+	}
+
+	VoidTask DoVoidTask()
+	{
+		co_await DoVoid();
+		std::println("Ha");
 	}
 
 	void Run()
@@ -320,11 +357,12 @@ export namespace Coroutines::Random2
 		t1.Start();
 		t2.Start();
 
-		task x = resuming_on_new_thread();
-		task y = resuming_on_new_thread();
-		Sleep(2000);
-		std::println("The x value is {}", x.get());
-		std::println("The y value is {}", y.get());
+		auto m = DoVoidTask();
+
+		Task x = RunOnNewThread();
+		Task y = RunOnNewThread();
+		std::println("The x value is {}", x.Get());
+		std::println("The y value is {}", y.Get());
 
 		std::println("Finishing...");
 		t1.SignalToExit();

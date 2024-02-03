@@ -6,6 +6,6 @@ int main()
     //Coroutines::Generator::RunSample();
     //Coroutines::EagerFuture::RunSample();
     //Coroutines::Random::Run();
-    Coroutines::Random2::Run();
+    Coroutines::WithFutex::Run();
     return 0;
 }
