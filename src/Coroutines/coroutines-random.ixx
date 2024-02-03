@@ -357,7 +357,7 @@ export namespace Coroutines::WithFutex
 		t1.Start();
 		t2.Start();
 
-		auto m = DoVoidTask();
+		//auto m = DoVoidTask();
 
 		Task x = RunOnNewThread();
 		Task y = RunOnNewThread();

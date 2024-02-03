@@ -138,6 +138,7 @@
     <ClCompile Include="coroutines-threadswitch2.ixx" />
     <ClCompile Include="coroutines-generator.ixx" />
     <ClCompile Include="coroutines-threadswitch.ixx" />
+    <ClCompile Include="coroutines-tumble.ixx" />
     <ClCompile Include="coroutines.ixx" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
