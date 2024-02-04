@@ -77,3 +77,7 @@ struct Task
 	};
 };
 ```
+
+## Additional resources
+
+* [theshoemaker's Yet Another C++ Coroutine Tutorial](https://theshoemaker.de/posts/yet-another-cpp-coroutine-tutorial)

@@ -257,6 +257,8 @@ export namespace Coroutines::WithFutex
 			std::shared_ptr<Result> ptr = std::make_shared<Result>();
 			Task get_return_object()
 			{
+				// Can pass this back to Task
+				std::coroutine_handle<promise_type>::from_promise(*this);
 				return { ptr };
 			}
 			std::suspend_never initial_suspend() { return {}; }
