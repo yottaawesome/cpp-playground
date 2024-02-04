@@ -2,7 +2,7 @@
 
 ## Awaitable
 
-```
+```C++
 struct Awaitable
 {
 	// Return true if the result is already available; false otherwise.
