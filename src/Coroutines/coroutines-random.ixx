@@ -239,6 +239,7 @@ export namespace Coroutines::WithFutex
 
 		int Get()
 		{
+			std::println("Getting.");
 			while (not value->Done)
 			{
 				WaitOnAddress(
@@ -254,11 +255,13 @@ export namespace Coroutines::WithFutex
 
 		struct promise_type // name must be promise_type
 		{
+			~promise_type() { std::println("promise_type destroyed."); }
 			std::shared_ptr<Result> ptr = std::make_shared<Result>();
 			Task get_return_object()
 			{
-				// Can pass this back to Task
-				std::coroutine_handle<promise_type>::from_promise(*this);
+				// Can pass this back to Task. Don't pass the promise_type
+				// instance back as it's destroyed by then.
+				//std::coroutine_handle<promise_type>::from_promise(*this);
 				return { ptr };
 			}
 			std::suspend_never initial_suspend() { return {}; }
@@ -363,6 +366,7 @@ export namespace Coroutines::WithFutex
 
 		Task x = RunOnNewThread();
 		Task y = RunOnNewThread();
+		Sleep(2000);
 		std::println("The x value is {}", x.Get());
 		std::println("The y value is {}", y.Get());
 
