@@ -36,6 +36,7 @@ struct Task
 	// Name must be promise_type or a using must be defined.
 	struct promise_type
 	{
+		// Return an instance of the enclosing object.
 		Task get_return_object()
 		{
 			...
