@@ -28,7 +28,7 @@ struct Awaitable
 
 ## Task
 
-```
+```C++
 struct Task
 {
 	// Define members here to retrieve the value from promise_type.
