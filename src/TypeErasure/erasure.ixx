@@ -76,7 +76,7 @@ export namespace TypeErasureA
 
     void Run()
     {
-        Man<1>(2);
+        //Man<1>(2);
         std::print("\n");
         std::vector<Object> vec{ Object(Foo()), Object(Bar()) };  // (1)
         printName(vec);

@@ -47,6 +47,27 @@ export namespace DelayedDispatch
     }
 }
 
+export namespace DelayedDispatch2
+{
+    template<auto F, typename...T>
+    struct X
+    {
+        std::tuple<T...> T{};
+        void Run()
+        {
+            std::apply(F, T);
+        }
+    };
+
+    void Func(int x) { std::println("{}", x); };
+
+    void Run()
+    {
+        X<Func, int> m = { std::make_tuple(1) };
+        m.Run();
+    }
+}
+
 export namespace BlabBlah
 {
     void BlahBlah(auto&&...args) 
