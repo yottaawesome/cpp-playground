@@ -172,25 +172,6 @@ namespace WaitingB
         );
     }
 
-    void Random()
-    {
-        std::index_sequence<3> arr[3];
-
-        auto x = []<size_t...Is>(std::index_sequence<Is...>)
-        {
-            return (
-                []<size_t I = Is>()
-            {
-                if constexpr (I == 1)
-                {
-
-                }
-            }(), ...
-                );
-        };
-        x(std::make_index_sequence<3>{});
-    }
-
     export void Run()
     {
         handle_a a{};
