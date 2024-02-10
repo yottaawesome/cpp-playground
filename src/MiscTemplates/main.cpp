@@ -1,24 +1,27 @@
 import std;
 
-struct Source
+auto&& To(auto&& v)
 {
-    auto Get(const std::string_view name)
-    {
-
-    }
-};
+	//return v;
+	return std::forward<decltype(v)>(v);
+}
 
 template<typename T>
-struct Setting;
-
-template<>
-struct Setting<int>
+struct M
 {
-
+	M(auto&& f) : T(To(std::forward<decltype(f)>(f))) {}
+	T t;
 };
 
 int main()
 {
-    Setting<int> f;
-    std::cout << "Hello World!\n";
+	std::string s;
+	std::string& t = s;
+	const std::string& t2 = s;
+	std::println("std::string&: {}", std::same_as<decltype(To(s)), std::string&>);
+	std::println("std::string&&: {}", std::same_as<decltype(To(std::string{})), std::string&&>);
+	std::println("std::string&: {}", std::same_as<decltype(To(t)), std::string&>);
+	std::println("const std::string&: {}", std::same_as<decltype(To(t2)), const std::string&>);
+
+	M m(t2);
 }

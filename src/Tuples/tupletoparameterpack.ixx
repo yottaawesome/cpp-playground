@@ -188,12 +188,13 @@ export namespace Chained
             return 0;
         };
 
-    auto ChainApply(auto&& a, auto&& f, auto&& ...fs)
+    // Chain-invokes a variadic sequence of functions with each output being returned to the next function
+    auto ChainApply(auto&& arg, auto&& func, auto&&...funcs)
     {
-        if constexpr (sizeof...(fs))
-            return ChainApply(std::apply(f, std::forward_as_tuple(a)), std::forward<decltype(fs)>(fs)...);
+        if constexpr (sizeof...(funcs))
+            return ChainApply(std::apply(func, std::forward_as_tuple(arg)), std::forward<decltype(funcs)>(funcs)...);
         else
-            return std::apply(f, std::forward_as_tuple(a));
+            return std::apply(func, std::forward_as_tuple(arg));
     }
 
     void Run()
