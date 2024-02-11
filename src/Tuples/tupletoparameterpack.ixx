@@ -178,15 +178,8 @@ export namespace Chained
     // https://codereview.stackexchange.com/questions/274003/functor-chaining-function-for-c20
     // https://github.com/user1095108/generic/blob/master/invoke.hpp
     // https://github.com/user1095108/generic/blob/master/invoke.cpp
-    auto const inc = [](const int i) noexcept
-        {
-            return i + 1;
-        };
-
-    auto const first = []() noexcept
-        {
-            return 0;
-        };
+    auto const inc = [](const int i) noexcept { return i + 1; };
+    auto const first = []() noexcept { return 0; };
 
     // Chain-invokes a variadic sequence of functions with each output being returned to the next function
     auto ChainApply(auto&& arg, auto&& func, auto&&...funcs)
@@ -214,7 +207,7 @@ export namespace LoopOverElements
 {
     void Do(auto&& x)
     {
-        std::cout << typeid(x).name() << std::endl;
+        std::print("{}", typeid(x).name());
     }
 
     void Run()
@@ -250,7 +243,7 @@ export namespace LoopOverTypes
     template<typename T>
     auto Do()
     {
-        std::cout << typeid(T).name() << std::endl;
+        std::println("{}", typeid(T).name());
     }
 
     void Run()
@@ -275,7 +268,7 @@ export namespace LoopOverLambdas
 
     void Run()
     {
-        std::tuple t{ [] { std::cout << "Hello, one!\n"; }, [] { std::cout << "Hello, two!\n"; } };
+        std::tuple t{ [] { std::println("Hello, one!"); }, [] { std::println("Hello, two!"); } };
         std::apply(
             []<typename...T>(T&&...args)
             {
@@ -442,9 +435,11 @@ export namespace InvokeAtImpl2
             });
         }
 
-        visit_at(tuple, 4, [](auto&& arg) {
-
-            });
+        visit_at(
+            tuple,
+            4,
+            [](auto&& arg) { }
+        );
     }
 }
 
@@ -720,10 +715,7 @@ export namespace Pairing
             }();
         }(1, 2, 3);
 
-        []<std::convertible_to<std::string_view> T>(T&& value)
-        {
-
-        }("a");
+        []<std::convertible_to<std::string_view> T>(T&& value){ }("a");
         bool b = [](std::convertible_to<std::string_view> auto&&...value)
         {
             bool b = false;
@@ -740,10 +732,7 @@ export namespace Pairing
             ((std::get<Is>(tuple) == 0 ? true : false), ...);
         }(std::forward<decltype(t)>(t), std::make_index_sequence<std::tuple_size_v<decltype(t)>>{});
 
-        []<typename T, typename S>(std::pair<T, S>&& pairs)
-        {
-
-        }(std::pair{1,2});
+        []<typename T, typename S>(std::pair<T, S>&& pairs){ }(std::pair{1,2});
 
         [](Pair auto&&...pairs)
 	    {
