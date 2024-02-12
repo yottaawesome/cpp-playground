@@ -27,6 +27,25 @@ namespace ReturnTypes
 	}
 }
 
+enum class SomeEnum
+{
+	ValA, ValB, ValC
+};
+
+template<typename TEnum, typename S>
+struct E {};
+
+namespace B
+{
+	struct EnumBase : E<SomeEnum, struct F> {};
+	template<auto T> struct Val {};
+	struct A : EnumBase, Val<SomeEnum::ValA> {};
+	struct B : EnumBase {};
+	struct C : EnumBase {};
+
+	EnumBase b = A{};
+}
+
 namespace MoreReturnTypes
 {
 	// We want to return either std::string& or std::string
