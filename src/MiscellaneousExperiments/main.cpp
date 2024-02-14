@@ -79,6 +79,8 @@ int main()
 
 	MessageLocationTrace m;
 	Something(m.Message);
-	
+
+	DeducingThis::Run();
+
 	return 0;
 }

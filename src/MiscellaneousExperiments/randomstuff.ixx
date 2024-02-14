@@ -282,3 +282,9 @@ export namespace BitfieldEnums
     using Filesystem::Permission;
     Permission readAndWrite{ Permission::Read | Permission::Write };
 }
+
+
+export namespace DeducingThis
+{
+    void Run();
+}
