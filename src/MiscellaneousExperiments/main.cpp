@@ -72,16 +72,8 @@ void Blah(std::variant<Args...>& m, int x, Args&&...args)
 	Get<decltype(t)>(m, t, x);
 }
 
-int main()
+void WorkingWithStringViews()
 {
-	std::variant<int, char> v;
-	Blah(v, 0, 1, 'c');
-
-	MessageLocationTrace m;
-	Something(m.Message);
-
-	DeducingThis::Run();
-
 	std::string test{ "abbakadabra" };
 	std::string to_find{ "a" };
 	std::vector<std::string_view> results =
@@ -101,7 +93,7 @@ int main()
 				size_t pos = test.find(to_find);
 				while (pos != std::string::npos)
 				{
-					results.push_back(std::string_view{ test.data()+pos, to_find.size()});
+					results.push_back(std::string_view{ test.data() + pos, to_find.size() });
 					pos += to_find.size();
 					pos = test.find(to_find, pos);
 				}
@@ -118,32 +110,43 @@ int main()
 		}
 	);
 
-
 	std::string test2 = "some=value,another=one,and=onemore,hey=again";
 	results = [](const std::string& str)
-	{
-		std::vector<std::string_view> results;
-		auto tokens = std::array{ "some=","another=","and=","hey="};
-		for (size_t pos = 0; std::string_view sv : tokens)
 		{
-			pos = str.find(sv, pos);
-			if (pos == std::string::npos)
-				continue;
-			size_t comma = str.find(",", pos);
-			if (comma == std::string::npos)
-				results.push_back({ str.data() + pos + sv.size(), (size_t)std::distance(str.begin() + pos + sv.size(), str.end()) });
-			else
-				results.push_back({str.data() + pos + sv.size(), comma-pos-sv.size()});
-		}
-		return results;
-	}(test2);
-	std::for_each(
-		results.begin(), results.end(),
-		[](std::string_view v)
-		{
-			std::println("{}", v);
-		}
-	);
+			std::vector<std::string_view> results;
+			auto tokens = std::array{ "some=","another=","and=","hey=" };
+			for (size_t pos = 0; std::string_view sv : tokens)
+			{
+				pos = str.find(sv, pos);
+				if (pos == std::string::npos)
+					continue;
+				size_t comma = str.find(",", pos);
+				if (comma == std::string::npos)
+					results.push_back({ str.data() + pos + sv.size(), (size_t)std::distance(str.begin() + pos + sv.size(), str.end()) });
+				else
+					results.push_back({ str.data() + pos + sv.size(), comma - pos - sv.size() });
+			}
+			return results;
+		}(test2);
+
+		std::println("Found {}", results.size());
+		std::for_each(
+			results.begin(), results.end(),
+			[](std::string_view v)
+			{
+				std::println("{}", v);
+			}
+		);
+}
+
+int main()
+{
+	std::variant<int, char> v;
+	Blah(v, 0, 1, 'c');
+
+	MessageLocationTrace m;
+	Something(m.Message);
+	DeducingThis::Run();
 
 	return 0;
 }
