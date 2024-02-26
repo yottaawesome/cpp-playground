@@ -36,12 +36,24 @@ export namespace using_expected
             {
                 return std::expected<int, bool>(t.some_value);
             });
-        // transforms from std::expected<test_struct, bool> to std::expected<string, bool> 
-        result.transform(
-            [](const test_struct& t)
+        result.or_else(
+            [](bool s)
             {
-                return std::string{};
+                return std::expected<test_struct, std::string>{test_struct{}};
             });
+        // transforms from std::expected<test_struct, bool> to std::expected<string, bool> 
+        result
+            .transform(
+                [](const test_struct& t)
+                {
+                    return std::string{};
+                })
+            .or_else(
+                [](bool s)
+                {
+                    return std::expected<std::string, bool>{{}};
+                })
+            .value_or(std::string{ "blah" });
 
         result = test_struct::try_fail();
         if (not result)
