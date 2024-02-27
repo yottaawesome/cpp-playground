@@ -26,23 +26,29 @@ export namespace using_expected
         }
     };
 
-    void Run()
+    void run()
     {
         auto result = test_struct::try_success();
         if (result)
             std::println("Have value");
         result.and_then(
-            [](const test_struct& t)
+            [](const test_struct& t) -> std::expected<int, bool> // can change the expected's primary type
             {
-                return std::expected<int, bool>(t.some_value);
+                return t.some_value;
             });
         result.or_else(
-            [](bool s)
+            [](bool s) -> std::expected<test_struct, std::string> // can change the expected's error type
             {
-                return std::expected<test_struct, std::string>{test_struct{}};
+                return test_struct{};
             });
-        // transforms from std::expected<test_struct, bool> to std::expected<string, bool> 
-        result
+
+        result.transform( // transforms from std::expected<test_struct, bool> to std::expected<string, int> 
+            [](const test_struct& t) -> std::expected<std::string, int>
+            {
+                return std::string{};
+            });
+        
+        result 
             .transform(
                 [](const test_struct& t)
                 {
@@ -71,5 +77,39 @@ export namespace using_expected
 
         if (not result)
             std::println("Failed to get value");
+    }
+}
+
+export namespace using_expected_2
+{
+    struct test
+    {
+        int field_a = 0;
+        int field_b = 1;
+        int field_c = 2;
+        int field_d = 3;
+
+        static std::expected<test, bool> try_get() noexcept try
+        {
+            return test{};
+        }
+        catch (...)
+        {
+            return std::unexpected(false);
+        }
+    };
+
+    void run()
+    {
+        auto [a, b] = test::try_get()
+            .transform([](const test& t) { return std::make_tuple(t.field_a, t.field_c); })
+            .value_or(std::make_tuple(0, 0)) // use this
+            //.or_else( // or this
+            //    [](bool b)
+            //    {
+            //        return std::expected<std::tuple<int, int>, bool>{std::make_tuple(0, 0)};
+            //    })
+            //.value()
+            ;
     }
 }

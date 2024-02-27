@@ -3,5 +3,5 @@ import using_expected;
 
 int main()
 {
-    using_expected::Run();
+    using_expected::run();
 }
