@@ -12,28 +12,23 @@ export namespace Random
     class Q
     {
         friend T;
-
-    public:
-        Q(T& t) : m_t(t) {}
-
-    public:
-        void DoThis() { m_t.DoSomething(*this); }
-
-    private:
-        int M;
-        T m_t;
+        public:
+            Q(T& t) : m_t(t) {}
+        public:
+            void DoThis() { m_t.DoSomething(*this); }
+        private:
+            int M;
+            T m_t;
     };
 
     template<auto T>
     class Q2
     {
         friend decltype(T);
-
-    public:
-        void DoThis() { T.DoSomething(*this); }
-
-    private:
-        int M;
+        public:
+            void DoThis() { T.DoSomething(*this); }
+        private:
+            int M;
     };
 
     class M
@@ -55,8 +50,8 @@ export namespace Random
 
     void Run()
     {
-        //M m;
-        //Q<M> qm(m);
+        M m;
+        Q<M> qm(m);
     }
 }
 
@@ -283,8 +278,28 @@ export namespace BitfieldEnums
     Permission readAndWrite{ Permission::Read | Permission::Write };
 }
 
-
 export namespace DeducingThis
 {
     void Run();
+}
+
+export namespace sums
+{
+    // See https://www.cppstories.com/2022/20-smaller-cpp20-features/
+    constexpr auto constexpr_sum()
+    {
+        std::vector<int> someNumbers{ 1,2,3,4 };
+        auto tmp = std::accumulate(someNumbers.begin(), someNumbers.end(), 0);
+        return tmp;
+    }
+
+    consteval auto consteval_sum()
+    {
+        return constexpr_sum();
+    }
+
+    void Run()
+    {
+        std::println("{}", consteval_sum());
+    }
 }
