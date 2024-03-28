@@ -303,3 +303,61 @@ export namespace sums
         std::println("{}", consteval_sum());
     }
 }
+
+export namespace dont_return_protected_reference
+{
+    // ICE
+    /*constexpr int blah()
+    {
+        try
+        {
+            return 1;
+        }
+        catch (...)
+        {
+            return 2;
+        }
+    }*/
+
+    template<typename TFunc, typename S, typename...TArgs>
+    concept basic_invocable =
+        std::invocable<TFunc, S, TArgs...>
+        //and not std::is_reference_v<std::invoke_result_t<T>>
+        ;
+
+    template<typename TFunc, typename S, typename...TArgs>
+    concept restricted_function =
+        std::invocable<TFunc, S, TArgs...>
+        and not std::same_as<S&, std::invoke_result_t<TFunc, S, TArgs...>>
+        and not std::same_as<const S&, std::invoke_result_t<TFunc, S, TArgs...>>
+        and not std::same_as<S*, std::invoke_result_t<TFunc, S, TArgs...>>
+        and not std::same_as<const S*, std::invoke_result_t<TFunc, S, TArgs...>>
+        and not std::same_as<S* const, std::invoke_result_t<TFunc, S, TArgs...>>
+        //and not std::is_reference_v<std::invoke_result_t<T>>
+        ;
+
+    template<typename T>
+    struct protect
+    {
+        template<typename...TArgs>
+        auto invoke_on(restricted_function<T, TArgs> auto&& func, TArgs&&...args)
+        {
+            return std::invoke(func, to_protect, std::forward<TArgs>(args)...);
+        }
+        // We want to protect this field and so we don't want functions returning 
+        // a reference or a pointer to it.
+        T to_protect;
+    };
+
+    void run()
+    {
+        protect<int> p;
+        p.invoke_on(
+            [](int i, int y) -> int
+            {
+                return i;
+            },
+            3
+        );
+    }
+}
