@@ -325,10 +325,10 @@ export namespace dont_return_protected_reference
         //and not std::is_reference_v<std::invoke_result_t<T>>
         ;
 
+    // std::remove_cv_t doesn't work as it only removes topmost qualifiers
     template<typename TFn, typename S, typename...TArgs, typename TFnResult = std::remove_volatile_t<std::invoke_result_t<TFn, S, TArgs...>>>
     concept restricted_function =
         std::invocable<TFn, S, TArgs...>
-        //and not std::same_as<S&, std::remove_cv_t<std::invoke_result_t<TFunc, S, TArgs...>>>
         and not std::same_as<S&, TFnResult>
         and not std::same_as<const S&, TFnResult>
         and not std::same_as<S*, TFnResult>
