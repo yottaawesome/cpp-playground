@@ -363,4 +363,10 @@ export namespace dont_return_protected_reference
             Y{}
         );
     }
+
+    template<typename...TArgs>
+    struct BaseVariant
+    {
+
+    };
 }

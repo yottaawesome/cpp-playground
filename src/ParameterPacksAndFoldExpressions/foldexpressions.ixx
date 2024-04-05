@@ -337,3 +337,36 @@ export namespace NestedFold
 // https://stackoverflow.com/a/53398815/7448661
 template<typename... input_t>
 using tuple_cat_t = decltype(std::tuple_cat(std::declval<input_t>()...));
+
+export namespace AnotherTest
+{
+	struct Test
+	{
+		static constexpr int x = 0;
+		static bool DoSomething()
+		{
+			return true;
+		}
+	};
+
+	template<typename T>
+	concept TestConcept = std::same_as<decltype(T::x), const int>;
+	static_assert(TestConcept<Test>);
+
+	template<typename...TList>
+	void DoTemplate()
+	{
+		(TList::DoSomething(), ...);
+		(TList::DoSomething() and ...);
+		(TList::DoSomething() or ...);
+		std::string s;
+		((TList::DoSomething() ? (s) : (s += "a")), ...);
+		int x = ((TList::DoSomething() ? (1) : (2)) + ...);
+		((TList::DoSomething() ? (x++) : (x--)), ...);
+	}
+
+	void Run()
+	{
+		DoTemplate<Test, Test, Test>();
+	}
+}
