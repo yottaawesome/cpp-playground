@@ -342,6 +342,7 @@ export namespace AnotherTest
 {
 	struct Test
 	{
+		int y = 1;
 		static constexpr int x = 0;
 		static bool DoSomething()
 		{
@@ -350,7 +351,9 @@ export namespace AnotherTest
 	};
 
 	template<typename T>
-	concept TestConcept = std::same_as<decltype(T::x), const int>;
+	concept TestConcept = 
+		std::same_as<decltype(T::y), int> 
+		and std::same_as<decltype(T::x), const int>;
 	static_assert(TestConcept<Test>);
 
 	template<typename...TList>
