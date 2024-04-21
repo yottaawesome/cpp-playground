@@ -147,6 +147,7 @@ int main()
 	MessageLocationTrace m;
 	Something(m.Message);
 	DeducingThis::Run();
+	Dates::Run();
 
 	return 0;
 }

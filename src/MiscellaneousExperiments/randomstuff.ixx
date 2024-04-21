@@ -5,6 +5,7 @@ module;
 export module randomstuff;
 import std;
 import std.compat;
+export import :dates;
 
 export namespace Random
 {
