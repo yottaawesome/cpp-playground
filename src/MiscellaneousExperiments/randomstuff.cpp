@@ -2,6 +2,8 @@ module randomstuff;
 import std;
 import std.compat;
 
+// https://devblogs.microsoft.com/cppblog/cpp23-deducing-this/
+// https://www.youtube.com/watch?v=jXf--bazhJw
 namespace DeducingThis
 {
     struct M
