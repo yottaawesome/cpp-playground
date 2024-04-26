@@ -1,14 +1,7 @@
-module;
-
 // Adapted from https://www.modernescpp.com/index.php/ranges-improvements-with-c-23
 // range.cpp
-
-#include <iostream>
-#include <ranges>
-#include <vector>
-#include <algorithm>
-
 export module ranges;
+import std;
 
 export namespace RangesA
 {
@@ -19,6 +12,12 @@ export namespace RangesB
 {
     int Run();
 }
+
+export namespace RangesWithFile
+{
+    int Run();
+}
+
 
 module :private;
 
@@ -112,6 +111,55 @@ namespace RangesB
         std::ranges::copy(d, std::ostream_iterator<int>(std::cout, " "));
 
         std::cout << "\nSample B finished.\n\n";
+
+        return 0;
+    }
+}
+
+namespace RangesWithFile
+{
+    // adapted from https://mobiarch.wordpress.com/2023/12/17/reading-a-file-line-by-line-using-c-ranges/
+    struct file_line
+    {
+        std::string line;
+        size_t line_number = 0;
+ 
+        friend std::istream &operator>>(std::istream& s, file_line& fl)
+        {
+            std::getline(s, fl.line);
+ 
+            ++fl.line_number;
+ 
+            return s;
+        }
+    };
+
+    int Run()
+    {
+        std::filesystem::path p{ "cube.obj" };
+        if (not std::filesystem::exists(p))
+            throw std::runtime_error("Path not found");
+
+        std::ifstream file;
+        file.open(p.string());
+        if (file.fail())
+            throw std::runtime_error("Stream in bad state");
+
+        std::vector<std::string> vertexLines;
+        std::vector<std::string> faceLines;
+        auto filter =
+            std::views::istream<file_line>(file)
+            | std::views::filter([](file_line& s) { return s.line.starts_with("v ") or s.line.starts_with("f "); });
+        for (const auto& fl : filter)
+            ;
+
+        std::vector<std::string> m { "b", "baa" };
+
+        auto s = m 
+            | std::views::filter([](auto& s) { return s == "a"; }) 
+            | std::views::take(1) 
+            | std::views::join 
+            | std::ranges::to<std::string>();
 
         return 0;
     }
