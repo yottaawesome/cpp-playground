@@ -166,13 +166,15 @@ export namespace Formatting
 	template<typename...Args>
 	void TestPrint(MessageAndLocation msg, Args&&... args)
 	{
-		std::cout 
-			<< std::vformat(
-				msg.message, 
-				std::make_format_args(
+		std::cout << 
+			std::vformat(
+				msg.message,
+				[](auto&&...args)
+				{
 					// Can also use AutoConvertWideTypes(args)...
-					AutoConvertStringTypes<true>(args)...
-				)) 
+					return std::make_format_args(args...);
+				}(AutoConvertStringTypes<true>(args)...)
+			) 
 			<< std::endl;
 	}
 

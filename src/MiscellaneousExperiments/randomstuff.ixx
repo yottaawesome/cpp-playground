@@ -152,7 +152,10 @@ export namespace Random2
             constexpr std::string_view completeMessage = "Error: '{}' --> [{} @ {}:{}:{}].\n";
             return std::vformat(
                 completeMessage,
-                std::make_format_args(baseMessage, msgAndLoc.loc.function_name(), fileName, msgAndLoc.loc.line(), msgAndLoc.loc.column())
+                [](auto&&...args) 
+                {
+                    return std::make_format_args(args...);
+                }(baseMessage, msgAndLoc.loc.function_name(), fileName, msgAndLoc.loc.line(), msgAndLoc.loc.column())
             );
         }
         catch (...)
