@@ -134,6 +134,13 @@ namespace RangesWithFile
         }
     };
 
+    struct face
+    {
+        int x = 0;
+        int y = 0;
+        int z = 0;
+    };
+
     int Run()
     {
         std::filesystem::path p{ "cube.obj" };
@@ -160,6 +167,13 @@ namespace RangesWithFile
             | std::views::take(1) 
             | std::views::join 
             | std::ranges::to<std::string>();
+
+        std::vector<face> f;
+        std::apply(&std::vector<face>::emplace_back<int, int, int>, std::make_tuple(std::ref(f), 1, 2, 3));
+
+
+        std::vector g{ 1,2,3,4,5,6 };
+        std::ranges::for_each(g | std::views::chunk(2), [](auto view) { view.front(); });
 
         return 0;
     }
