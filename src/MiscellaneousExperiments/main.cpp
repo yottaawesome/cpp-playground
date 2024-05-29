@@ -190,11 +190,11 @@ namespace pipe_expected
 
 	template <typename T, typename E, typename Function>
 	requires std::invocable<Function, T> && is_expected<typename std::invoke_result_t<Function, T>>
-	constexpr auto operator|(std::expected<T, E>&& ex, Function&& f) -> typename std::invoke_result_t<Function, T>
+	constexpr auto operator|(std::expected<T, E>&& valueOrFail, Function&& f) -> typename std::invoke_result_t<Function, T>
 	{
-		return ex 
-			? std::invoke(std::forward<Function>(f), *std::forward<std::expected<T, E>>(ex)) 
-			: ex;
+		return valueOrFail
+			? std::invoke(std::forward<Function>(f), *std::forward<std::expected<T, E>>(valueOrFail))
+			: valueOrFail;
 	}
 	// Some error types just for the example
 	enum class OpErrorType : unsigned char 
@@ -219,7 +219,7 @@ namespace pipe_expected
 		if (!s)
 			return s;
 		++s->fVal;
-		s->fStr += " proc by 1,";
+		s->fStr += "proc by 1,";
 		std::println("I'm in Payload_Proc_1, s = '{}'", s->fStr);
 		return s;
 	}
@@ -229,7 +229,7 @@ namespace pipe_expected
 		if (!s)
 			return s;
 		++s->fVal;
-		s->fStr += " proc by 2,";
+		s->fStr += "proc by 2,";
 		std::println("I'm in Payload_Proc_2, s = '{}'", s->fStr);
 		// Emulate the error, at least once in a while ...
 		std::mt19937 rand_gen(std::random_device{} ());
@@ -243,7 +243,7 @@ namespace pipe_expected
 		if (!s)
 			return s;
 		++s->fVal;
-		s->fStr += " proc by 3,";
+		s->fStr += "proc by 3,";
 		std::println("I'm in Payload_Proc_3, s = '{}'", s->fStr);
 		return s;
 	}
