@@ -155,14 +155,14 @@ namespace pipes
 		return std::invoke(std::forward<Function>(f), std::forward<T>(t));
 	}
 
-	auto do_something_with_s(s&& s_to_use)
+	auto do_something_with_s(auto&& s_to_use)
 	{
 		s_to_use.x = 10;
 		s_to_use.y = 10;
 		return s_to_use;
 	}
 
-	auto print_s(s&& s_to_use)
+	auto print_s(auto&& s_to_use)
 	{
 		std::println("{} {}", s_to_use.x, s_to_use.y);
 		return s_to_use;
@@ -170,7 +170,8 @@ namespace pipes
 
 	void run()
 	{
-		(s{} | do_something_with_s | print_s);
+		s ss;
+		//(ss | do_something_with_s | print_s);
 	}
 }
 
@@ -279,6 +280,28 @@ namespace pipe_expected
 		}
 	}
 }
+
+namespace M
+{
+	auto blah(auto&& s) 
+	{ 
+		return s; 
+	}
+
+	template <typename T, typename Function> requires (std::invocable<Function, T>)
+	constexpr auto operator|(T&& t, Function&& f) -> typename std::invoke_result_t<Function, T>
+	{
+		return std::invoke(std::forward<Function>(f), std::forward<T>(t));
+	}
+
+	void run()
+	{
+		std::vector<int> vec{ 1,2,3 };
+		(std::move(vec) | blah<std::vector<int>>);
+	}
+}
+
+
 
 int main()
 {
