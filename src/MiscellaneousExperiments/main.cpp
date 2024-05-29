@@ -283,7 +283,6 @@ namespace pipe_expected
 int main()
 {
 	std::vector vec{ 1,2,3 };
-
 	auto newVec = vec 
 		| std::views::filter([](auto&& val) { return val % 2; })
 		| std::views::transform([](auto&& val) { return val % 2 ? std::string{ "a" } : std::string{ "b" }; })
