@@ -139,8 +139,152 @@ void WorkingWithStringViews()
 		);
 }
 
+namespace pipes
+{
+	// Adapted from https://www.cppstories.com/2024/pipe-operator/
+	// with compilation fixes.
+	struct s
+	{
+		int x = 0;
+		int y = 0;
+	};
+
+	template <typename T, typename Function> requires (std::invocable<Function, T>)
+	constexpr auto operator|(T&& t, Function&& f) -> typename std::invoke_result_t<Function, T>
+	{
+		return std::invoke(std::forward<Function>(f), std::forward<T>(t));
+	}
+
+	auto do_something_with_s(s&& s_to_use)
+	{
+		s_to_use.x = 10;
+		s_to_use.y = 10;
+		return s_to_use;
+	}
+
+	auto print_s(s&& s_to_use)
+	{
+		std::println("{} {}", s_to_use.x, s_to_use.y);
+		return s_to_use;
+	}
+
+	void run()
+	{
+		(s{} | do_something_with_s | print_s);
+	}
+}
+
+namespace pipe_expected
+{
+	// Adapted from https://www.cppstories.com/2024/pipe-operator/
+	// with compilation fixes.
+	template <typename T>
+	concept is_expected = requires(T t) 
+	{
+		typename T::value_type;
+		typename T::error_type;
+		requires std::is_constructible_v<bool, T>;
+		requires std::same_as<std::remove_cvref_t<decltype(*t)>, typename T::value_type>;
+		requires std::constructible_from<T, std::unexpected<typename T::error_type>>;
+	};
+
+	template <typename T, typename E, typename Function>
+	requires std::invocable<Function, T> && is_expected<typename std::invoke_result_t<Function, T>>
+	constexpr auto operator|(std::expected<T, E>&& ex, Function&& f) -> typename std::invoke_result_t<Function, T>
+	{
+		return ex 
+			? std::invoke(std::forward<Function>(f), *std::forward<std::expected<T, E>>(ex)) 
+			: ex;
+	}
+	// Some error types just for the example
+	enum class OpErrorType : unsigned char 
+	{
+		InvalidInput, 
+		Overflow, 
+		Underflow
+	};
+
+	struct Payload 
+	{
+		std::string fStr{};
+		int fVal{};
+	};
+
+	// For the pipeline operation - the expected type is Payload,
+	// while the 'unexpected' is OpErrorType
+	using PayloadOrError = std::expected<Payload, OpErrorType>;
+
+	PayloadOrError Payload_Proc_1(PayloadOrError&& s) 
+	{
+		if (!s)
+			return s;
+		++s->fVal;
+		s->fStr += " proc by 1,";
+		std::println("I'm in Payload_Proc_1, s = '{}'", s->fStr);
+		return s;
+	}
+
+	PayloadOrError Payload_Proc_2(PayloadOrError&& s) 
+	{
+		if (!s)
+			return s;
+		++s->fVal;
+		s->fStr += " proc by 2,";
+		std::println("I'm in Payload_Proc_2, s = '{}'", s->fStr);
+		// Emulate the error, at least once in a while ...
+		std::mt19937 rand_gen(std::random_device{} ());
+		return (rand_gen() % 2) 
+			? s 
+			: std::unexpected{ rand_gen() % 2 ? OpErrorType::Overflow : OpErrorType::Underflow };
+	}
+
+	PayloadOrError Payload_Proc_3(PayloadOrError&& s) 
+	{
+		if (!s)
+			return s;
+		++s->fVal;
+		s->fStr += " proc by 3,";
+		std::println("I'm in Payload_Proc_3, s = '{}'", s->fStr);
+		return s;
+	}
+
+	void run() 
+	{
+		auto res = 
+			PayloadOrError{ Payload{"Start string ", 42} } 
+			| Payload_Proc_1
+			| Payload_Proc_2 
+			| Payload_Proc_3;
+
+		if (res)
+		{
+			std::println("Success! Result of the pipe: {}, {}", res->fStr, res->fVal);
+			return;
+		}
+
+		switch (res.error()) 
+		{
+			case OpErrorType::InvalidInput:
+				std::println("Error: OpErrorType::kInvalidInput");
+				break;
+			case OpErrorType::Overflow:
+				std::println("Error: OpErrorType::kOverflow");
+				break;
+			case OpErrorType::Underflow:
+				std::println("Error: OpErrorType::kUnderflow");
+				break;
+			default:
+				std::println("That's really an unexpected error ...");
+				break;
+		}
+	}
+}
+
 int main()
 {
+	pipes::run();
+	pipe_expected::run();
+
 	std::variant<int, char> v;
 	Blah(v, 0, 1, 'c');
 
