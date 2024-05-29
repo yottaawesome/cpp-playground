@@ -229,7 +229,7 @@ namespace pipe_expected
 		if (!s)
 			return s;
 		++s->fVal;
-		s->fStr += "proc by 2,";
+		s->fStr += " proc by 2,";
 		std::println("I'm in Payload_Proc_2, s = '{}'", s->fStr);
 		// Emulate the error, at least once in a while ...
 		std::mt19937 rand_gen(std::random_device{} ());
@@ -243,7 +243,7 @@ namespace pipe_expected
 		if (!s)
 			return s;
 		++s->fVal;
-		s->fStr += "proc by 3,";
+		s->fStr += " proc by 3";
 		std::println("I'm in Payload_Proc_3, s = '{}'", s->fStr);
 		return s;
 	}
@@ -282,6 +282,18 @@ namespace pipe_expected
 
 int main()
 {
+	std::vector vec{ 1,2,3 };
+
+	auto newVec = vec 
+		| std::views::filter([](auto&& val) { return val % 2; })
+		| std::views::transform([](auto&& val) { return val % 2 ? std::string{ "a" } : std::string{ "b" }; })
+		| std::ranges::to<std::vector<std::string>>();
+	//can also do std::vector<std::string> sss{ newVec.begin(), newVec.end() };
+
+	vec = vec 
+		| std::views::filter([](auto&& val) {return val % 2; }) 
+		| std::ranges::to<std::vector<int>>();
+
 	pipes::run();
 	pipe_expected::run();
 
