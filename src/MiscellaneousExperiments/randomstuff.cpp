@@ -51,7 +51,7 @@ namespace DeducingThis
         return std::unexpected(ex);
     }
 
-    auto repeatable2 = 
+    constexpr auto repeatable2 = 
         []<typename TFn, typename...TArgs, typename TExpected = std::expected<std::invoke_result_t<TFn, TArgs...>, std::exception>>(
             this auto&& self, 
             int repetitions, 
