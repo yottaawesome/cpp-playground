@@ -1,7 +1,5 @@
-module;
-import std;
-
 export module sample;
+import std;
 
 // Based off https://qiita.com/angeart/items/94734d68999eca575881
 export namespace A

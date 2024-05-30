@@ -288,6 +288,11 @@ namespace M
 		return s; 
 	}
 
+	struct test
+	{
+		void b(this auto&& self, int i) {}
+	};
+
 	template <typename T, typename Function> requires (std::invocable<Function, T>)
 	constexpr auto operator|(T&& t, Function&& f) -> typename std::invoke_result_t<Function, T>
 	{
@@ -301,6 +306,25 @@ namespace M
 	}
 }
 
+namespace more_pipes
+{
+	struct p
+	{
+		auto operator()(auto&& p) { return p; }
+	};
+
+	template<typename T, typename C>
+	auto operator|(T& v, C&& c)
+	{
+		return std::invoke(c, v);
+	}
+
+	auto run() 
+	{
+		std::string s;
+		s | p{};
+	}
+}
 
 
 int main()
