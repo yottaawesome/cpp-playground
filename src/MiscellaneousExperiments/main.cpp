@@ -326,9 +326,75 @@ namespace more_pipes
 	}
 }
 
+namespace MoreFixedStrings
+{
+	template <typename TChar, typename TView, typename TString, size_t N>
+	struct ProperFixedString
+	{
+		using CharType = TChar;
+		using ViewType = TView;
+		using StringType = TString;
+
+		TChar buf[N]{};
+
+		consteval ProperFixedString(const TChar(&arg)[N]) noexcept
+		{
+			std::copy_n(arg, N, buf);
+		}
+
+		// There's a consteval bug in the compiler.
+		// See https://developercommunity.visualstudio.com/t/consteval-function-unexpectedly-returns/10501040
+		constexpr operator const TChar* () const noexcept
+		{
+			return buf;
+		}
+
+		consteval TView ToView() const noexcept
+		{
+			return { buf };
+		}
+
+		consteval operator TView() const noexcept
+		{
+			return { buf };
+		}
+
+		constexpr operator TString() const noexcept
+		{
+			return { buf };
+		}
+
+		constexpr TString ToString() const noexcept
+		{
+			return { buf };
+		}
+	};
+	template<size_t N>
+	ProperFixedString(char const (&)[N]) -> ProperFixedString<char, std::string_view, std::string, N>;
+	template<size_t N>
+	ProperFixedString(wchar_t const (&)[N]) -> ProperFixedString<wchar_t, std::wstring_view, std::wstring, N>;
+
+	template<ProperFixedString F, typename T = decltype(F)>
+	struct Y 
+	{
+		constexpr static T::ViewType Name = F.ToView();
+	};
+
+	using FY = Y<L"This is wide!">;
+	using FL = Y<"This is narrow!">;
+
+	void Run()
+	{
+		//FY f1;
+		FL f2;
+		std::println("{}", f2.Name);
+	}
+}
 
 int main()
 {
+	MoreFixedStrings::Run();
+
 	std::vector vec{ 1,2,3 };
 	auto newVec = vec 
 		| std::views::filter([](auto&& val) { return val % 2; })

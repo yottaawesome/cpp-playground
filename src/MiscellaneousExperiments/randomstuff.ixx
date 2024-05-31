@@ -58,53 +58,15 @@ export namespace Random
 
 export namespace Random2
 {
-    template <size_t N>
-    struct FixedString
-    {
-        // There's a consteval bug in the compiler.
-        // See https://developercommunity.visualstudio.com/t/consteval-function-unexpectedly-returns/10501040
-        wchar_t buf[N]{};
-
-        constexpr FixedString(const wchar_t(&arg)[N]) noexcept
-        {
-            std::copy_n(arg, N, buf);
-        }
-
-        constexpr operator const wchar_t* () const noexcept
-        {
-            return buf;
-        }
-
-        constexpr operator std::wstring_view() const noexcept
-        {
-            return { buf, N };
-        }
-
-        operator std::wstring() const noexcept
-        {
-            return { buf, N };
-        }
-
-        std::wstring ToString() const noexcept
-        {
-            return { buf, N };
-        }
-    };
-    template<size_t N>
-    FixedString(wchar_t const (&)[N]) -> FixedString<N>;
-
     struct MessageAndLocation
     {
         std::string_view message;
         std::source_location loc;
 
         template<typename T>
-        MessageAndLocation(
-            T&& msg,
-            std::source_location loc = std::source_location::current()
-        ) requires std::is_convertible_v<T, std::string_view>
-            : message{ msg },
-            loc{ loc }
+        MessageAndLocation(T&& msg, std::source_location loc = std::source_location::current()) 
+            requires std::is_convertible_v<T, std::string_view>
+            : message{ msg }, loc{ loc }
         {}
     };
 
