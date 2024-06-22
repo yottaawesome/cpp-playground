@@ -3,6 +3,54 @@ import std;
 // Simplified from https://github.com/joboccara/NamedType/blob/master/include/NamedType/named_type_impl.hpp
 // in order to understand the concept better.
 
+namespace Stuff
+{
+    template<typename T, typename M>
+    struct crtp
+    {
+        T& Get()
+        {
+            return static_cast<T&>(*this);
+        }
+    };
+
+    template<typename T>
+    struct Addable : public crtp<T, Addable<T>>
+    {
+        void Add()
+        {
+            this->Get().AddImpl();
+        }
+    };
+
+    template<typename T>
+    struct Addable2 : public crtp<T, Addable2<T>>
+    {
+        void Add2()
+        {
+            this->Get().AddImpl();
+        }
+    };
+
+    struct M : Addable<M>, Addable2<M>
+    {
+        void AddImpl()
+        {
+            int x = 10;
+        }
+    };
+
+    bool b =
+        []()
+        {
+            M m;
+            m.Add();
+            m.Add2();
+
+            return false;
+        }();
+}
+
 template <typename T, template <typename> class crtpType>
 struct crtp
 {
