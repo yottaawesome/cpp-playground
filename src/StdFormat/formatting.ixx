@@ -1,5 +1,6 @@
 export module formatting;
 import std;
+import win32;
 
 export namespace Formats
 {
@@ -362,3 +363,5 @@ export namespace FormattingTo
 		std::wcout << wbuffer;
 	}
 }
+
+
