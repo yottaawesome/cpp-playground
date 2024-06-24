@@ -94,7 +94,7 @@ export namespace std
 	struct formatter<wchar_t[N], char> : formatter<char, char>
 	{
 		template <class TContext>
-		auto format(const wchar_t(str)[N], TContext ctx) const
+		auto format(const wchar_t(str)[N], TContext&& ctx) const
 		{
 			return format_to(ctx.out(), "{}", Converters::Convert(str));
 		}
@@ -104,7 +104,7 @@ export namespace std
 	struct formatter<const wchar_t*, char> : formatter<char, char>
 	{
 		template <class TContext>
-		auto format(const wchar_t* str, TContext ctx) const
+		auto format(const wchar_t* str, TContext&& ctx) const
 		{
 			return format_to(ctx.out(), "{}", Converters::Convert(str));
 		}
@@ -114,7 +114,7 @@ export namespace std
 	struct formatter<std::wstring, char> : formatter<char, char>
 	{
 		template <class TContext>
-		auto format(const std::wstring& str, TContext ctx) const
+		auto format(const std::wstring& str, TContext&& ctx) const
 		{
 			return format_to(ctx.out(), "{}", Converters::Convert(str));
 		}
@@ -124,7 +124,7 @@ export namespace std
 	struct formatter<std::wstring_view, char> : formatter<char, char>
 	{
 		template <class TContext>
-		auto format(std::wstring_view str, TContext ctx) const
+		auto format(std::wstring_view str, TContext&& ctx) const
 		{
 			return format_to(ctx.out(), "{}", Converters::Convert(str));
 		}
@@ -145,7 +145,7 @@ export namespace std
 	struct formatter<const char*, wchar_t> : formatter<wchar_t, wchar_t>
 	{
 		template <class TContext>
-		auto format(const char* str, TContext ctx) const
+		auto format(const char* str, TContext&& ctx) const
 		{
 			return format_to(ctx.out(), L"{}", Converters::Convert(str));
 		}
@@ -155,7 +155,7 @@ export namespace std
 	struct formatter<std::string, wchar_t> : formatter<wchar_t, wchar_t>
 	{
 		template <class TContext>
-		auto format(const std::string& str, TContext ctx) const
+		auto format(const std::string& str, TContext&& ctx) const
 		{
 			return format_to(ctx.out(), L"{}", Converters::Convert(str));
 		}
@@ -165,7 +165,7 @@ export namespace std
 	struct formatter<std::string_view, wchar_t> : formatter<wchar_t, wchar_t>
 	{
 		template <class TContext>
-		auto format(std::string_view str, TContext ctx) const
+		auto format(std::string_view str, TContext&& ctx) const
 		{
 			return format_to(ctx.out(), L"{}", Converters::Convert(str));
 		}
