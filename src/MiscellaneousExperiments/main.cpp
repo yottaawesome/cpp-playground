@@ -1,9 +1,6 @@
 import std;
 import std.compat;
 import randomstuff;
-import <stdfloat>;
-
-std::float16_t t;
 
 template<typename T>
 concept IsString =

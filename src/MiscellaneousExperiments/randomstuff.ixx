@@ -336,3 +336,52 @@ export namespace dont_return_protected_reference
 
     };
 }
+
+export namespace SettingsTest
+{
+    template<auto VInvoke>
+    struct Setting
+    {
+        using TReturn = std::invoke_result_t<decltype(VInvoke)>;
+
+        operator TReturn() const noexcept(std::is_nothrow_invocable_v<decltype(VInvoke)>)
+        {
+            return std::invoke(VInvoke);
+        }
+    };
+
+    template<auto VInvoke>
+    struct CachedSetting
+    {
+        using TReturn = std::invoke_result_t<decltype(VInvoke)>;
+        static constexpr bool NoExcept = std::is_nothrow_invocable_v<decltype(VInvoke)>;
+        std::optional<TReturn> Cached;
+
+        operator TReturn() noexcept(NoExcept)
+        {
+            if (not Cached.has_value())
+                Cached = std::invoke(VInvoke);
+            return Cached.value();
+        }
+
+        TReturn Refresh() noexcept(NoExcept)
+        {
+            Cached = std::invoke(VInvoke);
+            return Cached.value();
+        }
+    };
+
+    int Something() { return 1; }
+
+    constexpr Setting<[] { return 1; }> Blah;
+    // Adding constexpr causes ICE.
+    CachedSetting<[] { return 1; }> Blah2;
+    constexpr Setting<Something> Blah3;
+
+    void Run()
+    {
+        int x1 = Blah;
+        int x2 = Blah2;
+        int x3 = Blah3;
+    }
+}
