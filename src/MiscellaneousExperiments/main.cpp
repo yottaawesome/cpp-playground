@@ -1,6 +1,9 @@
 import std;
 import std.compat;
 import randomstuff;
+import <stdfloat>;
+
+std::float16_t t;
 
 template<typename T>
 concept IsString =
@@ -373,6 +376,9 @@ namespace MoreFixedStrings
 	ProperFixedString(char const (&)[N]) -> ProperFixedString<char, std::string_view, std::string, N>;
 	template<size_t N>
 	ProperFixedString(wchar_t const (&)[N]) -> ProperFixedString<wchar_t, std::wstring_view, std::wstring, N>;
+
+
+	constinit ProperFixedString V = "aaaaa";
 
 	template<ProperFixedString F, typename T = decltype(F)>
 	struct Y 

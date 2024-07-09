@@ -17,6 +17,6 @@ static_assert(x<S>);
 
 int main(int argc, char* argv[])
 {
-    S s;
+    FixedStrings2::Run();
     return 0;
 }
