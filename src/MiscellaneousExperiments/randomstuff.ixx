@@ -350,33 +350,94 @@ export namespace SettingsTest
         }
     };
 
-    template<auto VInvoke>
+    template<auto VInvoke, bool VEagerInitialisation>
     struct CachedSetting
     {
-        using TReturn = std::invoke_result_t<decltype(VInvoke)>;
-        static constexpr bool NoExcept = std::is_nothrow_invocable_v<decltype(VInvoke)>;
-        std::optional<TReturn> Cached;
+        protected:
+        using TInvoke = decltype(VInvoke);
+        using TReturn = std::invoke_result_t<TInvoke>;
+
+        public:
+        constexpr CachedSetting() requires (not VEagerInitialisation) = default;
+        CachedSetting() requires VEagerInitialisation { Refresh(); }
 
         operator TReturn() noexcept(NoExcept)
         {
-            if (not Cached.has_value())
-                Cached = std::invoke(VInvoke);
-            return Cached.value();
+            return Get();
         }
 
-        TReturn Refresh() noexcept(NoExcept)
+        TReturn Get() noexcept(NoExcept)
         {
-            Cached = std::invoke(VInvoke);
-            return Cached.value();
+            if constexpr (not VEagerInitialisation)
+                if (not m_cached.has_value()) // Uncomment to disable lazy initialisation
+                    Refresh();
+
+            return m_cached.value();
         }
+
+        protected:
+        void Refresh() noexcept(NoExcept)
+        {
+            m_cached = std::invoke(VInvoke);
+        }
+
+        static constexpr bool NoExcept = std::is_nothrow_invocable_v<TInvoke>;
+        std::optional<TReturn> m_cached;
+    };
+
+    template<auto VInvoke, int VTimeout, bool VEagerInitialisation>
+    struct TimedCachedSetting
+    {
+        private:
+        using TInvoke = decltype(VInvoke);
+        using TReturn = std::invoke_result_t<TInvoke>;
+        
+        public:
+        constexpr TimedCachedSetting() requires (not VEagerInitialisation) = default;
+        TimedCachedSetting() requires VEagerInitialisation { Refresh(); }
+
+        operator TReturn() noexcept(NoExcept)
+        {
+            return Get();
+        }
+
+        std::chrono::steady_clock::time_point LastRefresh() const noexcept
+        {
+            return m_lastRefresh;
+        }
+
+        TReturn Get() noexcept(NoExcept)
+        {
+            if constexpr (not VEagerInitialisation)
+                if (not m_cached.has_value()) // Uncomment to disable lazy initialisation
+                    Refresh();
+            
+            if (auto dur = std::chrono::steady_clock::now() - m_lastRefresh; std::chrono::duration_cast<std::chrono::seconds>(dur) > Timeout)
+                Refresh();
+            return m_cached.value();
+        }
+
+        private:
+        void Refresh() noexcept(NoExcept)
+        {
+            m_cached = std::invoke(VInvoke);
+            m_lastRefresh = std::chrono::steady_clock::now();
+        }
+
+        static constexpr bool NoExcept = std::is_nothrow_invocable_v<TInvoke>;
+        static constexpr std::chrono::seconds Timeout{ VTimeout };
+        std::chrono::steady_clock::time_point m_lastRefresh;
+        std::optional<TReturn> m_cached;
     };
 
     int Something() { return 1; }
 
     constexpr Setting<[] { return 1; }> Blah;
     // Adding constexpr causes ICE.
-    CachedSetting<[] { return 1; }> Blah2;
+    TimedCachedSetting<[] { return 1; }, 30, true> Blah2;
     constexpr Setting<Something> Blah3;
+    TimedCachedSetting<[] { return 1; }, 30, false> Blah4;
+    CachedSetting<[]{ return 1; }, false> Blah5;
 
     void Run()
     {
