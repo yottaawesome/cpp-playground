@@ -453,7 +453,7 @@ export namespace SettingsTest
             return std::invoke(VGet);
         }
 
-        TReturn operator()() const
+        auto operator()() const
         {
             return std::invoke(VGet);
         }
@@ -468,35 +468,59 @@ export namespace SettingsTest
             return std::unexpected(ex.what());
         }
 
-        auto operator()(const TReturn& set) const 
-            requires std::invocable<TSet, TReturn>
+        template<typename...TArgs>
+        auto operator()(TArgs&&...set) const
+            requires std::invocable<TSet, TArgs...>
         {
-            return std::invoke(VSet, set);
+            return Set(std::forward<TArgs>(set)...);
         }
 
-        const auto& operator=(const TReturn& set) const 
-            requires std::invocable<TSet, TReturn>
+        template<typename...TArgs>
+        const auto& operator=(TArgs&&...set) const 
+            requires std::invocable<TSet, TArgs...>
         {
-            std::invoke(VSet, set);
+            Set(std::forward<TArgs>(set)...);
             return *this;
+        }
+
+        template<typename...TArgs>
+        auto Set(TArgs&&...set) const
+        {
+            return std::invoke(VSet, std::forward<TArgs>(set)...);
+        }
+
+        template<typename...TArgs>
+        auto Get(TArgs&&...set) const
+            requires std::invocable<TGet, TArgs...>
+        {
+            return std::invoke(VGet);
         }
     };
 
     constexpr Settable<
-        []{ 
-            return 1; 
+        []() -> std::string 
+        { 
+            return "a";
         }, 
-        [](int i) 
+        [](std::string_view i) 
         {
         }
     > TestSettable;
+
+    constexpr Settable <
+        []() -> std::string
+        {
+            return "a";
+        }
+    > TestSettable2;
 
     void Run()
     {
         int x1 = Blah;
         int x2 = Blah2;
         int x3 = Blah3;
-        TestSettable = 1;
-        int x4 = TestSettable;
+        TestSettable = "a";
+        std::string x5 = TestSettable2;
+        std::string x4 = TestSettable;
     }
 }
