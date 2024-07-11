@@ -439,7 +439,40 @@ export namespace SettingsTest
     TimedCachedSetting<[] { return 1; }, 30, false> Blah4;
     CachedSetting<[]{ return 1; }, false> Blah5;
 
-    template<auto VGet, auto VSet = nullptr>
+    // ICE
+    template<auto VGet>
+    struct SettableDefaults
+    {
+        static constexpr auto VSet = nullptr;
+        static std::expected<std::invoke_result_t<decltype(VGet)>, std::string> VNoExceptGet()
+        {
+            try
+            {
+                return std::invoke(VGet);
+            }
+            catch (const std::exception& ex)
+            {
+                return std::unexpected(ex.what());
+            }
+        };
+    };
+
+    template<
+        auto VGet, 
+        auto VSet = nullptr,
+        auto VNoExceptGet = 
+        []() noexcept -> std::expected<std::invoke_result_t<decltype(VGet)>, std::string>
+        {
+            try
+            {
+                return std::invoke(VGet);
+            }
+            catch (const std::exception& ex)
+            {
+                return std::unexpected(ex.what());
+            }
+        }
+    >
     struct Settable
     {
         using TGet = decltype(VGet);
@@ -458,15 +491,7 @@ export namespace SettingsTest
             return std::invoke(VGet);
         }
 
-        TGetExpected operator()(const std::nothrow_t&) const noexcept
-        try
-        {
-            return std::invoke(VGet);
-        }
-        catch (const std::exception& ex)
-        {
-            return std::unexpected(ex.what());
-        }
+        auto operator()(const std::nothrow_t&) const noexcept { return VNoExceptGet(); }
 
         template<typename...TArgs>
         auto operator()(TArgs&&...set) const
