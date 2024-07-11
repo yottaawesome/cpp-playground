@@ -439,10 +439,64 @@ export namespace SettingsTest
     TimedCachedSetting<[] { return 1; }, 30, false> Blah4;
     CachedSetting<[]{ return 1; }, false> Blah5;
 
+    template<auto VGet, auto VSet = nullptr>
+    struct Settable
+    {
+        using TGet = decltype(VGet);
+        using TSet = decltype(VSet);
+        using TReturn = std::invoke_result_t<TGet>;
+        using TGetExpected = std::expected<TReturn, std::string>;
+        constexpr Settable() = default;
+
+        operator TReturn() const
+        {
+            return std::invoke(VGet);
+        }
+
+        TReturn operator()() const
+        {
+            return std::invoke(VGet);
+        }
+
+        TGetExpected operator()(const std::nothrow_t&) const noexcept
+        try
+        {
+            return std::invoke(VGet);
+        }
+        catch (const std::exception& ex)
+        {
+            return std::unexpected(ex.what());
+        }
+
+        auto operator()(const TReturn& set) const 
+            requires std::invocable<TSet, TReturn>
+        {
+            return std::invoke(VSet, set);
+        }
+
+        const auto& operator=(const TReturn& set) const 
+            requires std::invocable<TSet, TReturn>
+        {
+            std::invoke(VSet, set);
+            return *this;
+        }
+    };
+
+    constexpr Settable<
+        []{ 
+            return 1; 
+        }, 
+        [](int i) 
+        {
+        }
+    > TestSettable;
+
     void Run()
     {
         int x1 = Blah;
         int x2 = Blah2;
         int x3 = Blah3;
+        TestSettable = 1;
+        int x4 = TestSettable;
     }
 }
