@@ -457,10 +457,8 @@ export namespace SettingsTest
         };
     };
 
-    template<
-        auto VGet, 
-        auto VSet = nullptr,
-        auto VNoExceptGet = 
+    template<auto VGet>
+    constexpr auto V =
         []() noexcept -> std::expected<std::invoke_result_t<decltype(VGet)>, std::string>
         {
             try
@@ -471,7 +469,12 @@ export namespace SettingsTest
             {
                 return std::unexpected(ex.what());
             }
-        }
+        };
+
+    template<
+        auto VGet, 
+        auto VSet = nullptr,
+        auto VNoExceptGet = V<VGet>
     >
     struct Settable
     {
