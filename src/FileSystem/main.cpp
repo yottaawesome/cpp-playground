@@ -1,7 +1,6 @@
-#include <iostream>
-#include <filesystem>
+import std;
 
-int main(int argc, char* args[])
+void Test()
 {
     std::filesystem::path currentPath = std::filesystem::current_path();
     currentPath = currentPath.parent_path();
@@ -26,6 +25,10 @@ int main(int argc, char* args[])
     {
         std::cout << x << " ";
     }
+}
 
+int main(int argc, char* args[])
+{
+    
     return 0;
 }

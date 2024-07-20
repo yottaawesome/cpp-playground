@@ -27,4 +27,22 @@ export
 		mutable T* m_cache = nullptr;
 		mutable std::once_flag m_flag;
 	};
+
+	template<typename T>
+	struct Constant2
+	{
+		constexpr Constant2(T&& t) : m_t(t) {}
+		/*constexpr operator const T& () const noexcept
+		{
+			return m_t;
+		}*/
+
+		/*operator std::invoke_result_t<T>() const noexcept
+			requires std::invocable<T>
+		{
+			return std::invoke(m_t);
+		}*/
+
+		T m_t;
+	};
 }

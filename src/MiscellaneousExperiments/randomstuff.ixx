@@ -553,4 +553,105 @@ export namespace SettingsTest
     }
 }
 
+export namespace InheritanceTags
+{
+    struct Human {};
+    struct Enemy {};
 
+    struct Johnson : Human, Enemy
+    {
+
+    };
+
+    template<typename T>
+    constexpr bool IsA(auto&& entity)
+    {
+        return std::is_base_of_v<T, std::remove_cvref_t<decltype(entity)>>;
+    }
+
+    void Run()
+    {
+        Johnson j{};
+        std::println("{}", IsA<Human>(j));
+    }
+}
+
+export namespace TagsTesting
+{
+    template<size_t N>
+    struct FixedString
+    {
+        char Buffer[N];
+
+        consteval size_t Size() const noexcept { return N; }
+
+        consteval size_t StrLen() const noexcept { return N - 1; }
+
+        constexpr FixedString(const char(&arg)[N]) noexcept
+        {
+            std::copy_n(arg, N, Buffer);
+        }
+
+        constexpr bool operator==(FixedString<N> other) const noexcept
+        {
+            return std::equal(other.Buffer, other.Buffer + N, Buffer);
+        }
+
+        template<size_t M>
+        constexpr bool operator==(FixedString<M> other) const noexcept
+        {
+            return false;
+        }
+
+        template<size_t M>
+        consteval FixedString<M + N - 1> operator+(FixedString<M> other) const noexcept
+        {
+            char out[M + N - 1];
+            std::copy_n(Buffer, N - 1, out);
+            std::copy_n(other.Buffer, M, out + N - 1);
+            return out;
+        }
+    };
+
+    template<FixedString...TStrings>
+    struct TagsCollection
+    {
+        template<size_t N>
+        constexpr bool Has(FixedString<N> test) const noexcept
+        {
+            return
+                []<typename...TStrings>(FixedString<N> op, TStrings...input)
+                {
+                    return (
+                        []<size_t M>(FixedString<N> test, FixedString<M> val)
+                        {
+                            return test == val;
+                        }(op, input) or ...);
+                }(test, TStrings...);
+        }
+
+        template<size_t N>
+        constexpr bool Has(const char(&arg)[N]) const noexcept
+        {
+            return Has(FixedString<N>(arg));
+        }
+    };
+
+    struct P
+    {
+        TagsCollection<"a"> Collection;
+    };
+
+    void Run()
+    {
+        TagsCollection<"a"> F;
+
+        TagsCollection<"A", "B"> H;
+
+        std::println("{}", H.Has("A"));
+
+        constexpr FixedString A{ "a" };
+        constexpr FixedString B{ "B" };
+        constexpr FixedString C = A + B;
+    }
+}
