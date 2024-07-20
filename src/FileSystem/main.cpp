@@ -29,6 +29,43 @@ void Test()
 
 int main(int argc, char* args[])
 {
-    
+    std::expected result = 
+        []<typename TFunc>(this auto&& self, TFunc&& func, int attempts) -> std::expected<std::invoke_result_t<TFunc>, std::string>
+        {
+            try
+            {
+                if constexpr (std::same_as<std::invoke_result_t<TFunc>, void>)
+                {
+                    std::invoke(func);
+                    return {};
+                }
+                else
+                    return std::invoke(func);
+            }
+            catch (const std::exception& ex)
+            {
+                if (--attempts == 0)
+                    return std::unexpected(ex.what());
+                return self(func, attempts);
+            }
+        }([]{}, 5);
+
+    std::expected result2 =
+        []<typename...TArgs>(this auto&& self, int attempts, auto&& func, TArgs&&...args) 
+            -> std::expected<void, std::string>
+        {
+            try
+            {
+                std::invoke(func, std::forward<TArgs>(args)...);
+                return {};
+            }
+            catch (const std::exception& ex)
+            {
+                if (--attempts == 0)
+                    return std::unexpected(ex.what());
+                return self(attempts, func, std::forward<TArgs>(args)...);
+            }
+        }(5, [](const std::string& s){}, std::string{"aaa"});
+
     return 0;
 }
