@@ -27,10 +27,31 @@ void Test()
     }
 }
 
+template<typename...TArgs, std::invocable<TArgs...> TFunc>
+auto FuncInvoke(TFunc&& f, TArgs&&...args)
+{
+    std::invoke(f, std::forward<TArgs>(args)...);
+}
+
+template<typename T>
+struct is_expected : std::false_type {};
+
+template<typename T, typename S>
+struct is_expected<std::expected<T, S>> : std::true_type {};
+
+template<typename T>
+constexpr bool is_expected_v = is_expected<T>::value;
+
+template<typename T>
+concept Expected = is_expected_v<T>;
+
 int main(int argc, char* args[])
 {
+    FuncInvoke([](int i) { return i; }, 1);
+
     std::expected result = 
-        []<typename TFunc>(this auto&& self, TFunc&& func, int attempts) -> std::expected<std::invoke_result_t<TFunc>, std::string>
+        []<typename TFunc>(this auto&& self, TFunc&& func, int attempts)
+            -> std::expected<std::invoke_result_t<TFunc>, std::string> 
         {
             try
             {
@@ -51,8 +72,12 @@ int main(int argc, char* args[])
         }([]{}, 5);
 
     std::expected result2 =
-        []<typename...TArgs>(this auto&& self, int attempts, auto&& func, TArgs&&...args) 
-            -> std::expected<void, std::string>
+        []<typename...TArgs>(
+            this auto&& self, 
+            int attempts, 
+            auto&& func, 
+            TArgs&&...args
+        ) -> std::expected<void, std::string>
         {
             try
             {

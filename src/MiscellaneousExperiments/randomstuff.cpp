@@ -80,7 +80,6 @@ namespace DeducingThis
 
         auto ff = []<typename T>(){};
         ff.operator()<int>();
-
         [](this auto&& self, int repetitions, auto&&...args) -> void
         {
             std::println("Repetition {}", repetitions);
