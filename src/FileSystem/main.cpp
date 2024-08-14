@@ -72,12 +72,8 @@ int main(int argc, char* args[])
         }([]{}, 5);
 
     std::expected result2 =
-        []<typename...TArgs>(
-            this auto&& self, 
-            int attempts, 
-            auto&& func, 
-            TArgs&&...args
-        ) -> std::expected<void, std::string>
+        []<typename...TArgs>(this auto&& self, int attempts, auto&& func, TArgs&&...args)
+            -> std::expected<void, std::string>
         {
             try
             {
