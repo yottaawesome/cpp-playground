@@ -6,25 +6,25 @@ export
 	template<auto VConstant>
 	struct Constant
 	{
-		using T = std::invoke_result_t<decltype(VConstant)>;
+		using TConstant = std::invoke_result_t<decltype(VConstant)>;
 		
-		constexpr ~Constant()
+		constexpr operator const TConstant&() const noexcept
 		{
-			if (m_cache)
-				delete m_cache;
+			return Get();
 		}
 
-		constexpr operator T() const 
+		constexpr const TConstant& Get() const noexcept
 		{
 			std::call_once(
-				m_flag, 
-				[](T** cache) { *cache = new T{ std::invoke(VConstant) }; }, 
-				&m_cache
+				m_flag,
+				[](std::unique_ptr<TConstant>& cache) { cache = std::make_unique<TConstant>(std::invoke(VConstant)); },
+				std::ref(m_cache)
 			);
-			return *m_cache; 
+			return *m_cache;
 		}
 
-		mutable T* m_cache = nullptr;
+		private:
+		mutable std::unique_ptr<TConstant> m_cache;
 		mutable std::once_flag m_flag;
 	};
 

@@ -15,9 +15,5 @@ export
 	//constexpr Constant2 DD([] {});
 	//int x = CC;
 
-
 	constexpr Constant<[]() -> std::string { return AA; }> DD;
-
-	
-
 }
