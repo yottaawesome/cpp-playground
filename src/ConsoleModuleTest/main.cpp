@@ -1,5 +1,6 @@
 #define WIN32_LEAN_AND_MEAN
 
+// https://github.com/microsoft/STL/issues/4343
 #include <iostream>
 #include <memory>
 #include <format>
