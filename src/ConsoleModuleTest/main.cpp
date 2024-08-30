@@ -1,12 +1,15 @@
 #define WIN32_LEAN_AND_MEAN
 
 // https://github.com/microsoft/STL/issues/4343
-#include <iostream>
-#include <memory>
-#include <format>
+// Weird bug, the std.ixx.obj doesn't appear to be built.
+// Need to manually link it in the Linker > Additional Dependencies
+// setting to point to the DLL version.
+//#include <iostream>
+//#include <memory>
+//#include <format>
 #include <Windows.h>
 
-//import std;
+import std;
 import LibModule;
 import DllModule;
 import TestModule;
