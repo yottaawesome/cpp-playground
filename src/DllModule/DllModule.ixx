@@ -21,7 +21,8 @@ export namespace ERT
 	};
 }
 
-// Classes don't need __declspec(dllexport)
+// Classes don't need __declspec(dllexport) if
+// functions are defined in the declaration.
 export class AA
 {
 	public:
@@ -40,6 +41,8 @@ export struct __declspec(dllexport) F
 	virtual void Blah() = 0;
 };
 
+// __declspec(dllexport) is required when definitions
+// are in implementation files.
 export class __declspec(dllexport) DllClass
 {
 	public:
