@@ -1,8 +1,11 @@
+#define WIN32_LEAN_AND_MEAN
+
 #include <iostream>
 #include <memory>
 #include <format>
 #include <Windows.h>
 
+//import std;
 import LibModule;
 import DllModule;
 import TestModule;
@@ -15,6 +18,17 @@ int main(int argc, char** args)
 	// Here we use the exported class from the DLL
 	AA a;
 	a.MM();
+	a.NN();
+	a.YY();
+	AA::YY();
+	try
+	{
+		a.OO();
+	}
+	catch(...)
+	{
+		std::wcout << "Caught exception\n";
+	}
 
 	// Here we use TestFunc from ExecutableModule
 	TestModule::TestFunc();
@@ -27,7 +41,7 @@ int main(int argc, char** args)
 	// Here we use the exported class from the DLL
 	DllClass dll;
 	dll.Hello();
-
+	Another::Sup();
 	HMODULE dllModule = GetModuleHandleW(L"DllModule");
 	if (!dllModule)
 	{
