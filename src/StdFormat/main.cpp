@@ -1,4 +1,5 @@
 import formatting;
+import evenmoreformatting;
 //import converters;
 
 struct F
@@ -28,8 +29,12 @@ struct std::formatter<F, wchar_t> : std::formatter<wchar_t, wchar_t>
 
 auto main() -> int
 {
-	std::format(L"{}", F{ 1 });
-	std::format("{}", F{1});
+	EvenMoreFormatting::SomeStructToFormat something;
+	std::println("{}", something);
+	return 0;
+
+	auto a = std::format(L"{}", F{ 1 });
+	auto b = std::format("{}", F{1});
 
 	//PrintTables::Run();
 	//FormattingTo::Run();

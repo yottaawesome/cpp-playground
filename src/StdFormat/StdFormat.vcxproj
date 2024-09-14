@@ -131,6 +131,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="evenmoreformatting.ixx" />
     <ClCompile Include="formatting.ixx" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="moreformatting.ixx" />

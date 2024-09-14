@@ -394,6 +394,69 @@ namespace MoreFixedStrings
 	}
 }
 
+int* i = nullptr;
+
+int* GetIt() { return i ? i : (i = new int(1), i); }
+
+struct Reinitialisable
+{
+	constexpr void Reset() const { Once.~Once(); new (&Once)std::once_flag(); }
+	mutable std::once_flag Once;
+};
+
+
+constexpr Reinitialisable R;
+
+void GG() { R.Reset(); }
+
+// https://www.cppstories.com/2021/constexpr-new-cpp20/
+template <typename T>
+class Buffer {
+public:
+	constexpr Buffer(size_t n) noexcept : size_(n), mem_(new T[n]) { }
+	constexpr ~Buffer() noexcept { delete[] mem_; }
+
+	constexpr Buffer(const Buffer& other) noexcept : size_(other.size_) {
+		// ...
+	}
+
+	constexpr Buffer(Buffer&& other) noexcept {
+		// ...
+	}
+
+	constexpr Buffer& operator=(const Buffer& other) noexcept {
+		// ...
+	}
+
+	constexpr Buffer& operator=(Buffer&& other) noexcept {
+		// ...
+	}
+
+	constexpr T& operator[](size_t id) noexcept { return mem_[id]; }
+	constexpr const T& operator[](size_t id) const noexcept { return mem_[id]; }
+
+	constexpr T* data() const noexcept { return mem_; }
+	constexpr size_t size() const noexcept { return size_; }
+
+private:
+	T* mem_{ nullptr };
+	size_t size_{ 0 };
+};
+
+constexpr int naiveSumBuffer(unsigned int n) 
+{
+	Buffer<int> buf(n); // almost a vector class!
+	std::iota(buf.data(), buf.data() + n, 1);
+	return std::accumulate(buf.data(), buf.data() + n, 0);
+}
+
+constexpr void Something()
+{
+	
+	Reinitialisable r;
+}
+
+
 int main()
 {
 	MoreFixedStrings::Run();
