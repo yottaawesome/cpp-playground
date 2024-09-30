@@ -35,6 +35,7 @@ export namespace Filesystem::Directory
 {
     void Run()
     {
+        // See https://stackoverflow.com/a/32889434/7448661
         std::filesystem::path path("TestDir");
         for (const std::filesystem::directory_entry& dirEntry : std::filesystem::recursive_directory_iterator(path))
         {
