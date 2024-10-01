@@ -134,7 +134,58 @@ namespace MoreReturnTypes
 	}
 }
 
-int main()
+namespace Search
 {
-	MoreReturnTypes::Run();
+	template<size_t N>
+	struct FixedString
+	{
+		char Buffer[N];
+		constexpr FixedString(const char(&arg)[N])
+		{
+			std::copy_n(arg, N, Buffer);
+		}
+
+		constexpr std::string_view ToView() const noexcept { return { Buffer }; }
+
+		constexpr void Print() const noexcept { /*std::println("{}", Buffer);*/ }
+
+		constexpr bool operator==(FixedString<N> other) const noexcept { return std::equal(other.Buffer, other.Buffer + N, Buffer); }
+		template<size_t M>
+		constexpr bool operator==(FixedString<M> other) const noexcept { return false; }
+	};
+	template<size_t N>
+	FixedString(const char(&)[N]) -> FixedString<N>;
+
+	template<FixedString...VValues>
+	struct Searcher
+	{
+		template<FixedString F>
+		constexpr auto Blah() -> void
+		{
+			constexpr bool test = [...args = VValues]() constexpr -> bool
+			{
+				return (
+					[args]() constexpr -> bool
+					{
+						args.Print();
+						return args == F;
+					}() or ...
+				);
+			}();
+			static_assert(test, "The value was not found.");
+		}
+	};
+
+	void Run()
+	{
+		Searcher<"This is a test", "And this is another test"> test;
+		test.Blah<"This is a test">();
+	}
+}
+
+auto main() -> int
+{
+	Search::Run();
+	//MoreReturnTypes::Run();
+	return 0;
 }
