@@ -176,8 +176,17 @@ namespace Search
 		}
 	};
 
+	void DoIt(auto&&...stuff)
+	{
+		[...a = std::forward<decltype(stuff)>(stuff)]
+		{
+			(std::print("{}", a), ...);
+		}();
+	}
+
 	void Run()
 	{
+		DoIt(1, 2, 3);
 		Searcher<"This is a test", "And this is another test"> test;
 		test.Blah<"This is a test">();
 	}
