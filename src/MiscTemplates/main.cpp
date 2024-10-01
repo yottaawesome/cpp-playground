@@ -162,6 +162,8 @@ namespace Search
 		template<FixedString F>
 		constexpr auto Blah() -> void
 		{
+			int i = 0;
+			((VValues.Print(), i++), ...);
 			constexpr bool test = [...args = VValues]() constexpr -> bool
 			{
 				return (
