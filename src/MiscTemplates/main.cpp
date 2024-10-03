@@ -194,6 +194,75 @@ namespace Search
 	}
 }
 
+namespace Combo 
+{
+	template<typename T>
+	concept IntOrIntVector = std::same_as<T, int> or std::same_as<T, std::vector<int>>;
+
+	template<typename T>
+	concept Conformant = requires(const T t)
+	{
+		{ t() } noexcept -> IntOrIntVector;
+	};
+
+	struct AA
+	{
+		constexpr int operator()() const noexcept
+		{
+			return 1;
+		}
+	};
+	struct BB
+	{
+		constexpr std::vector<int> operator()() const noexcept
+		{
+			return { 1 };
+		}
+	};
+	static_assert(Conformant<AA> and Conformant<BB>, "AA and BB must conform to the Conformant concept.");
+
+	template<typename...Ts>
+	struct Overload : Ts... 
+	{ 
+		using Ts::operator()...; 
+	};
+
+	constexpr std::tuple<AA, BB> Tuple;
+
+	void Proc(int) {}
+	void Proc(const std::vector<int>&) {}
+
+	constexpr auto Visit(auto&& tuple, auto&&...fn)
+	{
+		return std::visit(Overload{ std::forward<decltype(fn)>(fn)... }, std::forward<decltype(tuple)>(tuple));
+	}
+
+	void AnotherDo()
+	{
+		[&tuple = Tuple]<size_t...Is>(std::index_sequence<Is...>)
+		{
+			std::vector<int> collection;
+			([&value = std::get<Is>(tuple), &collection]()
+			{
+				auto result = value();
+				Proc(result);
+
+				Visit(
+					std::variant<int, std::vector<int>>{value()},
+					[&collection](int i)
+					{
+						collection.push_back(i);
+					},
+					[&collection](const std::vector<int>& other)
+					{
+						collection.insert(std::end(collection), std::begin(other), std::end(other));
+					}
+				);
+			}(), ...);
+		}(std::make_index_sequence<std::tuple_size_v<decltype(Tuple)>>{});
+	}
+}
+
 auto main() -> int
 {
 	Search::Run();
