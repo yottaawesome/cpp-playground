@@ -263,8 +263,43 @@ namespace Combo
 	}
 }
 
+struct S 
+{
+	void Do() const { v = std::make_unique<std::vector<int>>(); }
+	mutable std::unique_ptr<std::vector<int>> v = nullptr;
+};
+
+constexpr S s;
+
+//template<typename...T>
+//struct MM { void operator(T...) {} };
+
+namespace TupleAll
+{
+	template<typename T, typename...Ts>
+	concept IsSame = (std::same_as<T, Ts> and ...);
+
+	constexpr auto All = 
+		[](auto&&... args) constexpr
+		{
+			if constexpr (sizeof...(args) == 0)
+				return true;
+			else
+				return IsSame<decltype(args)...>;
+		};
+
+	void Run()
+	{
+		constexpr bool b = std::apply(All, std::tuple{ 1, 2 });
+		constexpr bool c = std::apply(All, std::tuple{ 1, 2.f });
+		std::println("{} {}", b, c);
+	}
+}
+
 auto main() -> int
 {
+	TupleAll::Run();
+	s.Do();
 	Search::Run();
 	//MoreReturnTypes::Run();
 	return 0;
