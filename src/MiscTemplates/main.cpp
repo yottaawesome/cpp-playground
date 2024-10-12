@@ -296,6 +296,32 @@ namespace TupleAll
 	}
 }
 
+namespace TupleAll2
+{
+	constexpr auto All =
+		[](auto&& a, auto&&... args) constexpr
+		{
+			return (std::same_as<decltype(a), decltype(args)> and ...);
+		};
+
+	constexpr auto All2 =
+		[](auto&&... args) constexpr
+		{
+			if constexpr (sizeof...(args) == 0 or sizeof...(args) == 1)
+				return true;
+			else
+				return All(args...);
+		};
+
+
+	void Run()
+	{
+		constexpr bool b = std::apply(All, std::tuple{ 1, 2 });
+		constexpr bool c = std::apply(All, std::tuple{ 1, 2.f });
+		std::println("{} {}", b, c);
+	}
+}
+
 auto main() -> int
 {
 	TupleAll::Run();
