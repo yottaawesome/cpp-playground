@@ -271,9 +271,6 @@ struct S
 
 constexpr S s;
 
-//template<typename...T>
-//struct MM { void operator(T...) {} };
-
 namespace TupleAll
 {
 	template<typename T, typename...Ts>
@@ -322,9 +319,48 @@ namespace TupleAll2
 	}
 }
 
+namespace TupleAll3
+{
+	constexpr bool Something(const std::tuple<>&) { return true; };
+
+	template<typename T, typename...TRest>
+	constexpr bool Something(const std::tuple<T, TRest...>&) { return (std::same_as<T, TRest> and ...); };
+
+	void Run()
+	{
+		std::println(
+			"{} {} {}", 
+			Something(std::tuple{ }),
+			Something(std::tuple{ 1, 2, 3 }),
+			Something(std::tuple{ 1, 2, 3.f })
+		);
+	}
+}
+
+namespace TupleAll4
+{
+	template<typename...T>
+	constexpr bool AllSame(const std::tuple<T...>& tuple)
+	{
+		if constexpr (sizeof...(T) == 0)
+			return true;
+		else 
+			return []<typename THead, typename...TRest>(const std::tuple<THead, TRest...>&) constexpr
+			{
+				return (std::same_as<THead, TRest> and ...);
+			}(tuple);
+	}
+
+	void Run()
+	{
+		AllSame(std::tuple{ });
+		AllSame(std::tuple{ 1 });
+	}
+}
+
 auto main() -> int
 {
-	TupleAll::Run();
+	TupleAll3::Run();
 	s.Do();
 	Search::Run();
 	//MoreReturnTypes::Run();
