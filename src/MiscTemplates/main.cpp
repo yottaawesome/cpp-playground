@@ -358,10 +358,87 @@ namespace TupleAll4
 	}
 }
 
+consteval void blah(int x) {}
+
+template<typename T>
+struct SizeErasedArray
+{
+	template<size_t S>
+	SizeErasedArray(std::array<T, S> array)
+		: object(std::make_unique<Model<S>>(std::forward<std::array<T,S>>(array))) {}
+
+	class Iterator
+	{
+		const SizeErasedArray<T>::Concept* value_ = nullptr;
+		int pos = 0;
+
+		public:
+		explicit Iterator(const SizeErasedArray<T>::Concept* ptr, int position) : value_{ ptr }, pos(position) {}
+
+		const T& operator*() const 
+		{ 
+			return value_->Data()[pos]; 
+		}
+
+		Iterator& operator++()
+		{
+			++pos;
+			return *this;
+		}
+
+		bool operator!=(const Iterator& other) const
+		{
+			return pos != other.pos;
+		}
+	};
+	
+	Iterator begin() const { return Iterator{ object.get(), 0}; }
+	Iterator end() const { return Iterator{ object.get(), (int)object->Size() }; }
+
+	private:
+	struct Concept
+	{
+		virtual ~Concept() = default;
+		virtual const T* Data() const = 0;
+		virtual size_t Size() const noexcept = 0;
+	};
+
+	std::unique_ptr<const Concept> object;
+
+	template<size_t S> // (6)
+	struct Model final : Concept
+	{
+		Model(auto&& t) : object(t) {}
+		const T* Data() const override
+		{
+			return object.data();
+		}
+		size_t Size() const noexcept override
+		{
+			return object.size();
+		}
+		private:
+		std::array<T,S> object;
+	};
+};
+
+
 auto main() -> int
 {
+	std::array s{ 1 };
+	//s.be
+	SizeErasedArray f(std::array{ 1,2,3 });
+
+	f = std::array{ 1,2,3, 4 };
+	for (int o : f)
+	{
+		std::println("{} ", o);
+	}
+
+	constexpr int i = 10;
+	blah(i);
 	TupleAll3::Run();
-	s.Do();
+	//s.Do();
 	Search::Run();
 	//MoreReturnTypes::Run();
 	return 0;
