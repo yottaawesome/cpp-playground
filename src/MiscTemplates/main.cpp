@@ -360,6 +360,30 @@ namespace TupleAll4
 
 consteval void blah(int x) {}
 
+// https://stackoverflow.com/a/42774523/7448661
+namespace ConcatenateArrays
+{
+	template <typename Type, std::size_t... sizes>
+	auto concatenate(const std::array<Type, sizes>&... arrays)
+	{
+		std::array<Type, (sizes + ...)> result;
+		std::size_t index{};
+
+		((std::copy_n(arrays.begin(), sizes, result.begin() + index), index += sizes), ...);
+
+		return result;
+	}
+
+	void Run()
+	{
+		const std::array array1 = { 1, 2, 3 };
+		const std::array array2 = { 4, 5 };
+		const std::array array3 = { 6, 7, 8, 9 };
+
+		const auto result = concatenate(array1, array2, array3);
+	}
+}
+
 template<typename T>
 struct SizeErasedArray
 {
