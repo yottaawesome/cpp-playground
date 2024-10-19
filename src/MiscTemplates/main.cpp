@@ -271,6 +271,12 @@ struct S
 
 constexpr S s;
 
+template<typename T>
+concept GH = requires(T t) 
+{ 
+	{ t.This() }->std::same_as<int>; 
+};
+
 namespace TupleAll
 {
 	template<typename T, typename...Ts>
@@ -446,9 +452,171 @@ struct SizeErasedArray
 	};
 };
 
+namespace FunctionPointers
+{
+	using SendFnT = void(*)();
+	struct SomeSocket
+	{
+		SendFnT Send;
+	};
+
+	struct GH
+	{
+		~GH()
+		{
+			std::filesystem::remove("AAAAAA");
+		}
+	};
+	
+
+	struct HG
+	{
+		constexpr ~HG()
+		{
+			if(H)
+				delete H;
+		}
+
+		auto Get() const
+		{
+			if(not H) H = new GH();
+			return H;
+		}
+
+		mutable GH* H = nullptr;
+	};
+	
+	constexpr HG X;
+}
+
+namespace Looping
+{
+	template<size_t I, size_t N>
+	auto GetValueType(auto&& tuple, std::integral_constant<int, N> val) -> auto
+	{
+		if constexpr (I == N)
+		{
+			return std::tuple_element_t<N, std::remove_cvref_t<decltype(tuple)>>{};
+		}
+		else
+		{
+			return GetValue<I + 1>(std::forward<decltype(tuple)>(tuple), val);
+		};
+	}
+
+	template<size_t I, size_t N>
+	auto GetValue(auto&& tuple, std::integral_constant<int, N> val) -> std::convertible_to<bool> auto
+	{
+		if constexpr (I == N)
+		{
+			return std::tuple_element_t<N, std::remove_cvref_t<decltype(tuple)>>{};
+		}
+		else
+		{
+			return GetValue<I+1>(std::forward<decltype(tuple)>(tuple), val);
+		};
+	}
+
+	using M = int(*)();
+
+	template<typename T> concept SD = std::convertible_to<T, M>;
+
+	SD auto HM(auto&& X)
+	{
+		if (X == 1)
+		{
+			return []() { return 6; };
+		}
+		else
+		{
+			throw 1;
+		}
+	}
+
+	template<typename T>
+	struct C
+	{
+		using TT = T;
+	};
+
+	struct D { virtual operator bool() const noexcept = 0; virtual int Do() = 0; };
+	struct A : D { virtual operator bool() const noexcept override { return true; } int Do() { return 1; } };
+	struct B : D { virtual operator bool() const noexcept override { return true; } int Do() { return 1; } };
+
+	template<typename T>
+	concept UI = std::is_pointer_v<T> and requires(T t)
+	{
+		t->Do();
+	};
+
+	void DoSomething(int value)
+	{
+		HM(1);
+		std::tuple t{ A{},B{} };
+		auto X = GetValue<0>(t, std::integral_constant<int, 1>{});
+
+		constexpr std::variant<A, B> P = B{};
+
+		if (std::holds_alternative<B>(P))
+		{
+
+		}
+
+		std::variant<A*(*)(), B*(*)()> Alm = []() { return new B(); };
+		UI auto d = std::visit(
+			[](auto&& a) -> D*
+			{
+				static auto* elf = a();
+				return a(); 
+			},
+			Alm
+		);
+	}
+
+
+}
+
+namespace GetSocket
+{
+	template<size_t N>
+	void AS(int i)
+	{
+
+	}
+
+	template<>
+	void AS<1>(int i)
+	{
+
+	}
+
+	/*template<size_t I>
+	auto GetValue(auto&& tuple, int index) -> auto
+	{
+		if (I == index)
+		{
+			return std::tuple_element_t<I, decltype(tuple)>{};
+		}
+		else
+		{
+			return GetValue<I+1>(std::forward<decltype(tuple)>(tuple), index);
+		};
+	}
+
+	struct A {}; struct B {};
+
+	void Test()
+	{
+		std::tuple<A, B> Sockets{};
+		GetValue<0>(Sockets, 1);
+	}*/
+}
+
 
 auto main() -> int
 {
+	FunctionPointers::X.Get();
+
 	std::array s{ 1 };
 	//s.be
 	SizeErasedArray f(std::array{ 1,2,3 });
