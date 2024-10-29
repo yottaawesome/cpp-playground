@@ -290,6 +290,8 @@ namespace ConcatenateArrays
 
 auto main() -> int
 {
+	TypeIndexes::Run();
+
 	std::array s{ 1 };
 	//s.be
 	SizeErased::SizeErasedArray f(std::array{ 1,2,3 });
