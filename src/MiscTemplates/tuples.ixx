@@ -110,6 +110,15 @@ export namespace TypeIndexes
 
 		static void Each()
 		{
+			([]<typename T = TArgs>()
+			{
+				if constexpr (std::constructible_from<T, int>)
+					std::println("Type is constructible with int.");
+				else
+					std::println("Type is default constructible.");
+			}(), ...);
+
+			return;
 			[]<size_t...Is>(std::index_sequence<Is...>)
 			{
 				//([v = Arg<Is>::Type(1)] {}, ...);
@@ -122,7 +131,6 @@ export namespace TypeIndexes
 					else
 						std::println("Type is default constructible.");
 				}(), ...);
-
 			}(std::make_index_sequence<Arity>{});
 		}
 
