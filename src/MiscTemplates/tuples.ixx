@@ -100,12 +100,42 @@ export namespace TypeIndexes
 		template<size_t I>
 		struct ElementType
 		{
-			using Type = std::tuple_element<I, std::tuple<TArgs...>>::type;
+			using Type = std::tuple_element_t<I, std::tuple<TArgs...>>;
 		};
 
 		static void Invoke(auto&& f)
 		{
 			//f.operator()<TArgs...>();
+		}
+
+		static auto At(int x, auto&& func)
+		{
+			int iter = 0;
+			return ([x, &iter, &func]<typename T = TArgs>()
+			{
+				if (iter >= Arity)
+					throw std::runtime_error("Not found");
+				if (x == iter)
+				{
+					func(T{});
+					return true;
+				}
+				iter++;
+				return false;
+			}() or ...);
+
+			return ([]<size_t...Is>(int x, std::index_sequence<Is...>)
+			{
+				return ([]<typename T = TArgs>(int x)
+				{
+					if (x == Is)
+					{
+						std::println("Found it!");
+						return true;
+					}
+					return false;
+				}(x) or ...);
+			}(x, std::make_index_sequence<Arity>{}));
 		}
 
 		static void Each()
@@ -117,21 +147,6 @@ export namespace TypeIndexes
 				else
 					std::println("Type is default constructible.");
 			}(), ...);
-
-			return;
-			[]<size_t...Is>(std::index_sequence<Is...>)
-			{
-				//([v = Arg<Is>::Type(1)] {}, ...);
-				//(Arg<Is>::Type(1), ...);
-
-				([]<typename T = ElementType<Is>::Type>()
-				{
-					if constexpr (std::constructible_from<T, int>)
-						std::println("Type is constructible with int.");
-					else
-						std::println("Type is default constructible.");
-				}(), ...);
-			}(std::make_index_sequence<Arity>{});
 		}
 
 		void ForEach()
@@ -142,10 +157,15 @@ export namespace TypeIndexes
 
 	struct A
 	{
-		A(int) {}
+		//A(int) {}
 	};
 
 	struct B
+	{
+		void operator ()() {}
+	};
+
+	struct C
 	{
 		void operator ()() {}
 	};
@@ -155,8 +175,10 @@ export namespace TypeIndexes
 
 	void Run()
 	{
-		using F = Types<A, B>;
-		F::ElementType<0>::Type o(0);
+		using F = Types<A, B, C>;
+		F::At(1, [](auto&& a) {std::println("OK!"); });
+
+		F::ElementType<0>::Type o;
 		F f{};
 		f.Each();
 		f.Invoke([]<typename...T>() { std::println("something something"); });
