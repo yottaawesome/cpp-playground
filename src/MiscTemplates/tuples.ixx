@@ -111,18 +111,10 @@ export namespace TypeIndexes
 		static auto At(int x, auto&& func)
 		{
 			int iter = 0;
-			return ([x, &iter, &func]<typename T = TArgs>()
+			return ([x, &func]<typename T = TArgs>(int iter)
 			{
-				if (iter >= Arity)
-					throw std::runtime_error("Not found");
-				if (x == iter)
-				{
-					func(T{});
-					return true;
-				}
-				iter++;
-				return false;
-			}() or ...);
+				return x == iter ? func(T{}), true : false;
+			}(iter++) or ...);
 
 			return ([]<size_t...Is>(int x, std::index_sequence<Is...>)
 			{
@@ -176,7 +168,7 @@ export namespace TypeIndexes
 	void Run()
 	{
 		using F = Types<A, B, C>;
-		F::At(1, [](auto&& a) {std::println("OK!"); });
+		F::At(2, [](auto&& a) {std::println("OK!"); });
 
 		F::ElementType<0>::Type o;
 		F f{};
