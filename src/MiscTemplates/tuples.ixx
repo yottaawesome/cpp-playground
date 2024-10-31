@@ -178,4 +178,105 @@ export namespace TypeIndexes
 
 		std::make_index_sequence<F::Arity> a{};
 	}
+
+	struct D
+	{
+		virtual ~D() = 0 {};
+		virtual void DoIt() = 0;
+	};
+
+	struct E : public D
+	{
+		void DoIt() override {}
+	};
+
+	static_assert(std::derived_from<E, D>);
+}
+
+
+export namespace Splitter
+{
+	template<size_t VSize>
+	std::vector<std::byte> CreateRandomVector()
+	{
+		std::vector<std::byte> returnValue(VSize);
+
+		[&]<size_t...Is>(std::index_sequence<Is...>)
+		{
+			([&, Is=Is]()
+			{
+				returnValue[Is] = static_cast<std::byte>(Is % 255);
+			}(), ...);
+		}(std::make_index_sequence<VSize>{});
+
+		return returnValue;
+	}
+
+	std::vector<std::vector<std::byte>> Split(std::vector<std::byte>& toSplit)
+	{
+		std::vector<std::vector<std::byte>> returnValue;
+
+		constexpr auto splitAmount = 256;
+		auto maxSize = toSplit.size();
+		auto ptr = toSplit.begin();
+		size_t totalRead = 0;
+
+
+		/*auto y = toSplit | std::ranges::views::split(300);
+
+		auto x = toSplit | std::ranges::views::take(3000);
+		std::ranges::for_each(x, [](std::byte t) { std::println("Took {}", static_cast<unsigned short>(t)); });*/
+
+		while (true)
+		{
+			auto remaining = maxSize - totalRead;
+			auto toRead = remaining > splitAmount ? splitAmount: remaining;
+			
+
+			std::vector<std::byte> v{ ptr, ptr + toRead };
+			returnValue.push_back(std::move(v));
+
+			totalRead += toRead;
+			ptr += toRead;
+
+			if (totalRead >= maxSize)
+				break;
+		}
+
+		return returnValue;
+	}
+
+	enum class SplitError
+	{
+		NoRemainder
+	};
+
+	std::expected<std::vector<std::byte>, SplitError> Split(std::vector<std::byte>& toSplit, int iter, size_t splitAmount)
+	{
+		auto maxSize = toSplit.size();
+		auto ptr = toSplit.begin();
+		size_t totalRead = splitAmount * iter;
+
+		if (totalRead >= maxSize)
+			return std::unexpected(SplitError::NoRemainder);
+
+		auto remaining = maxSize - totalRead;
+		auto toRead = remaining > splitAmount ? splitAmount : remaining;
+
+		return std::vector<std::byte>{ ptr, ptr + toRead };
+	}
+
+	void Run()
+	{
+		std::vector data = CreateRandomVector<1024>();
+		//std::vector split = Split(data);
+		//std::println("{} vectors, last {}", split.size(), split.back().size());
+
+		for (int i = 0; auto x = Split(data, i, 256); i++)
+		{
+			std::println("Iter {}, got vector of size {}", i, x->size());
+		}
+
+		//std::ranges::for_each(data, [](std::byte b) { std::println("{}", static_cast<unsigned short>(b)); });
+	}
 }

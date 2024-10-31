@@ -290,6 +290,10 @@ namespace ConcatenateArrays
 
 auto main() -> int
 {
+	Splitter::Run();
+	return 0;
+
+
 	TypeIndexes::Run();
 
 	std::array s{ 1 };
