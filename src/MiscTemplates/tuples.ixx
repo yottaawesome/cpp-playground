@@ -266,8 +266,29 @@ export namespace Splitter
 		return std::vector<std::byte>{ ptr, ptr + toRead };
 	}
 
+	void ReadFromFile()
+	{
+		std::basic_ifstream<std::byte> file("test.txt", std::ios_base::in | std::ios_base::binary);
+		if (file.fail())
+			return;
+
+		std::vector<std::byte> read;
+		std::byte readBuffer[3];
+		while (not file.eof())
+		{
+			file.read(readBuffer, 3);
+			read.insert(read.end(), std::begin(readBuffer), std::begin(readBuffer)+file.gcount());
+		}
+		
+		std::string s(reinterpret_cast<char*>(read.data()), read.size());
+		std::println("Read a total of {} bytes: {}", read.size(), s);
+	}
+
 	void Run()
 	{
+		ReadFromFile();
+		return;
+
 		std::vector data = CreateRandomVector<1024>();
 		//std::vector split = Split(data);
 		//std::println("{} vectors, last {}", split.size(), split.back().size());
