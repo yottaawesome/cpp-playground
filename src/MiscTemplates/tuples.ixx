@@ -197,19 +197,12 @@ export namespace TypeIndexes
 export namespace Splitter
 {
 	template<size_t VSize>
-	std::vector<std::byte> CreateRandomVector()
+	std::vector<std::byte> CreateSequencedVector()
 	{
-		std::vector<std::byte> returnValue(VSize);
-
-		[&]<size_t...Is>(std::index_sequence<Is...>)
+		return []<size_t...Is>(std::index_sequence<Is...>)
 		{
-			([&, Is=Is]()
-			{
-				returnValue[Is] = static_cast<std::byte>(Is % 255);
-			}(), ...);
+			return std::vector<std::byte> { static_cast<std::byte>(Is % 255)... };
 		}(std::make_index_sequence<VSize>{});
-
-		return returnValue;
 	}
 
 	std::vector<std::vector<std::byte>> Split(std::vector<std::byte>& toSplit)
@@ -284,14 +277,88 @@ export namespace Splitter
 		std::println("Read a total of {} bytes: {}", read.size(), s);
 	}
 
+	template<bool VBinary>
+	struct FileReader
+	{
+		template<bool VIsBinary> struct StreamTypeTraits;
+		template<> struct StreamTypeTraits<false>
+		{
+			using BasicType = char;
+			using BufferType = std::vector<char>;
+			using Type = std::ifstream;
+			static constexpr bool Flags = std::ios::in;
+		};
+		template<> struct StreamTypeTraits<true>
+		{
+			using BasicType = std::byte;
+			using BufferType = std::vector<std::byte>;
+			using Type = std::basic_ifstream<std::byte>;
+			static constexpr bool Flags = std::ios::in | std::ios_base::binary;
+		};
+		using StreamTraits = StreamTypeTraits<VBinary>;
+		using StreamType = StreamTraits::Type;
+		using BufferType = StreamTraits::BufferType;
+		using BasicType = StreamTraits::BasicType;
+
+		FileReader(const std::filesystem::path p)
+			: Path(std::move(p))
+		{
+			if (not std::filesystem::exists(Path))
+				throw std::runtime_error("Non-existent file.");
+			FileStream = StreamType(p.string(), StreamTypeTraits::Flags);
+			if (FileStream.fail())
+				throw std::runtime_error("Stream failed to open file.");
+		}
+
+		size_t Size() const
+		{
+			return std::filesystem::file_size(Path);
+		}
+
+		enum class ReadError {EOF};
+
+		std::expected<BufferType, ReadError> Read(size_t amount)
+		{
+			if (FileStream.eof())
+				return std::unexpected(ReadError::EOF);
+
+			BufferType returnValue(amount, BasicType{});
+			FileStream.read(amount, returnValue.data());
+			returnValue.resize(FileStream.gcount());
+			return returnValue;
+		}
+
+		auto begin() const
+		{
+			return FileStream.begin();
+		}
+
+		auto end() const
+		{
+			return FileStream.end();
+		}
+
+		private:
+		std::filesystem::path Path;
+		StreamType FileStream;
+	};
+
+	using TextFileStream = FileReader<false>;
+	using BinFileStream = FileReader<true>;
+
+	void Chunked()
+	{
+		std::vector v{ 1,3,4,5 };
+		auto x = v | std::views::chunk(2);
+	}
+
 	void Run()
 	{
 		ReadFromFile();
-		return;
 
-		std::vector data = CreateRandomVector<1024>();
-		//std::vector split = Split(data);
-		//std::println("{} vectors, last {}", split.size(), split.back().size());
+		std::vector data = CreateSequencedVector<1024>();
+		std::vector split = Split(data);
+		std::println("{} vectors, last {}", split.size(), split.back().size());
 
 		for (int i = 0; auto x = Split(data, i, 256); i++)
 		{
