@@ -290,6 +290,11 @@ namespace ConcatenateArrays
 
 auto main() -> int
 {
+	auto lambda = []<int N>() { int test[N]; };
+
+	lambda.template operator() < 5 > ();
+	lambda.operator() < 5 > ();
+
 	Splitter::Run();
 	return 0;
 

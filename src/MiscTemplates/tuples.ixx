@@ -286,14 +286,14 @@ export namespace Splitter
 			using BasicType = char;
 			using BufferType = std::vector<char>;
 			using Type = std::ifstream;
-			static constexpr bool Flags = std::ios::in;
+			static constexpr int Flags = std::ios::in;
 		};
 		template<> struct StreamTypeTraits<true>
 		{
 			using BasicType = std::byte;
 			using BufferType = std::vector<std::byte>;
 			using Type = std::basic_ifstream<std::byte>;
-			static constexpr bool Flags = std::ios::in | std::ios_base::binary;
+			static constexpr int Flags = std::ios::in | std::ios_base::binary;
 		};
 		using StreamTraits = StreamTypeTraits<VBinary>;
 		using StreamType = StreamTraits::Type;
@@ -305,7 +305,7 @@ export namespace Splitter
 		{
 			if (not std::filesystem::exists(Path))
 				throw std::runtime_error("Non-existent file.");
-			FileStream = StreamType(p.string(), StreamTypeTraits::Flags);
+			FileStream = StreamType(p.string(), StreamTypeTraits<VBinary>::Flags);
 			if (FileStream.fail())
 				throw std::runtime_error("Stream failed to open file.");
 		}
