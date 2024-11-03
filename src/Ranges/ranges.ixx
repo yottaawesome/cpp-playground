@@ -18,6 +18,11 @@ export namespace RangesWithFile
     int Run();
 }
 
+export namespace ChunkZip
+{
+    int Run();
+}
+
 
 module :private;
 
@@ -173,7 +178,37 @@ namespace RangesWithFile
 
 
         std::vector g{ 1,2,3,4,5,6 };
-        std::ranges::for_each(g | std::views::chunk(2), [](auto view) { view.front(); });
+        std::ranges::for_each(g | std::views::chunk(2), [](auto view) { auto x = view.front(); });
+
+        return 0;
+    }
+}
+
+namespace ChunkZip
+{
+    int Run()
+    {
+        std::vector<std::byte> rawBuffer{ std::byte{255}, std::byte{255}, std::byte{255}, std::byte{127} };
+        std::vector<int> values = rawBuffer
+            | std::ranges::views::chunk(4)
+            | std::ranges::views::transform(
+                [](std::ranges::viewable_range auto&& chunkView) -> int
+                {
+                    if (chunkView.size() == 4)
+                        return *reinterpret_cast<int*>(&chunkView.front());
+
+                    std::byte intBuffer[4]{};
+                    for (std::tuple<std::byte&, std::byte&> elem : std::ranges::views::zip(intBuffer, chunkView))
+                        std::get<0>(elem) = std::get<1>(elem);
+                    // ^^^^^ alternative to below
+                    //for (int i = 0; i < s.size(); i++)
+                    //	b[i] = *(s.begin() + i);
+                    return *reinterpret_cast<int*>(&intBuffer[0]);
+                })
+            | std::ranges::to<std::vector<int>>();
+
+        for (int value : values)
+            std::println("{}", value);
 
         return 0;
     }

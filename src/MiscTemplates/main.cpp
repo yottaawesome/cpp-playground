@@ -296,9 +296,6 @@ auto main() -> int
 	lambda.operator() < 5 > ();
 
 	Splitter::Run();
-	return 0;
-
-
 	TypeIndexes::Run();
 
 	std::array s{ 1 };

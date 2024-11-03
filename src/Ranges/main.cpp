@@ -2,8 +2,9 @@ import ranges;
 
 int main()
 {
-	RangesA::Run();
+	ChunkZip::Run();
+	/*RangesA::Run();
 	RangesB::Run();
-	RangesWithFile::Run();
+	RangesWithFile::Run();*/
 	return 0;
 }
