@@ -341,6 +341,20 @@ namespace SomeRandomStuff
 		{
 			using Type = std::tuple_element_t<I, std::tuple<TArgs...>>;
 		};
+
+		template<size_t I>
+		using ElementTypeT = ElementType<I>::Type;
+
+		template<size_t Index = 0>
+		static auto Get(int required, std::integral_constant<int, Index> = {}) -> std::unique_ptr<TCommon>
+		{
+			if constexpr (Index >= sizeof...(TArgs))
+				throw std::runtime_error("no");
+			else
+				return Index == required
+					? std::unique_ptr<TCommon>(new ElementTypeT<Index>)
+					: Get(required, std::integral_constant<int, Index + 1>{});
+		};
 	};
 
 	void Run()
@@ -348,6 +362,8 @@ namespace SomeRandomStuff
 		std::tuple<A, B> testTuple;
 
 		using Impls = Types<I, A, B>;
+		auto i = Impls::Get(1);
+		i->DoIt();
 
 		std::optional found = 
 			[]<typename...T>(this auto && self, int i, T&&... values) -> auto
