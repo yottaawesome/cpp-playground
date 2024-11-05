@@ -288,8 +288,118 @@ namespace ConcatenateArrays
 	}
 }
 
+enum class AnEnum
+{
+	TypeA,
+	TypeB
+};
+
+template<AnEnum VEnum>
+auto SomeFunc() -> auto;
+
+template<>
+auto SomeFunc<AnEnum::TypeA>() -> auto { return 1; }
+template<>
+auto SomeFunc<AnEnum::TypeB>() -> auto { return 1.f; }
+
+
+template<typename T>
+concept XX = std::same_as<T, int> or std::same_as<T, float>;
+
+template<typename T>
+auto DoIt()->XX auto
+{
+	return 1;
+}
+
+struct AA { void DoIt() {} };
+struct AB { void DoIt() {} };
+template<typename T>
+concept IsDoIt = requires(T t)
+{
+	t.DoIt();
+};
+
+template<typename T>
+using OO = T(*)();
+
+namespace SomeRandomStuff
+{
+	struct I { virtual ~I() = 0 {} virtual void DoIt() = 0; };
+	struct A : I { void DoIt() override {} };
+	struct B : I { void DoIt() override {} };
+
+	template<typename TCommon, typename... TArgs>
+	struct Types
+	{
+		enum { Arity = sizeof...(TArgs) };
+
+		constexpr static int Arity2 = sizeof...(TArgs);
+
+		template<size_t I>
+		struct ElementType
+		{
+			using Type = std::tuple_element_t<I, std::tuple<TArgs...>>;
+		};
+	};
+
+	void Run()
+	{
+		std::tuple<A, B> testTuple;
+
+		using Impls = Types<I, A, B>;
+
+		std::optional found = 
+			[]<typename...T>(this auto && self, int i, T&&... values) -> auto
+			{
+				std::variant<T...> var;
+				int curr = 0;
+				([i, &var]<typename S = T>(int curr) -> bool
+				{
+					return i == curr ? (var = S{}, true) : false;
+				}(curr++) or ...);
+				return var;
+			}(1, 1, 2.f);
+
+		std::unique_ptr<I> ptr =
+			[]<size_t Index = 0, typename I, typename...T>(this auto&& self, int required, Types<I, T...> tuple, std::integral_constant<int, Index> = {}) -> std::unique_ptr<I>
+			{
+				if constexpr (Index >= sizeof...(T))
+					throw std::runtime_error("no");
+				else 
+					return Index == required 
+						? std::unique_ptr<I>(new Types<I, T...>::ElementType<Index>::Type) 
+						: self(required, tuple, std::integral_constant<int, Index + 1>{});
+			}(1, Impls{});
+		ptr->DoIt();
+
+		std::unique_ptr<I> out = 
+			[]<size_t Index, typename...T>(this auto && self, int i, std::tuple<T...> tuple, std::integral_constant<int, Index>) -> std::unique_ptr<I>
+			{
+				constexpr auto Size = sizeof...(T);
+				if constexpr (Index >= Size)
+					throw std::runtime_error("no");
+				else return Index == i 
+					? std::unique_ptr<I>(new std::tuple_element_t<Index, std::tuple<T...>>) 
+					: self(i, tuple, std::integral_constant<int, Index + 1>{});
+			}(1, testTuple, std::integral_constant<int, 0>{});
+	}
+}
+
 auto main() -> int
 {
+	SomeRandomStuff::Run();
+
+	AnEnum a = AnEnum::TypeA;
+
+	IsDoIt auto aDoIt = [](int i) -> auto(*)() -> IsDoIt auto
+	{
+		//if (i == 0)
+			return (OO<AA>) []()->IsDoIt auto {return AA{};};
+		//else
+			//return (OO<AB>) []()->IsDoIt auto {return AB{}; };
+	}(1)();
+
 	auto lambda = []<int N>() { int test[N]; };
 
 	lambda.template operator() < 5 > ();
