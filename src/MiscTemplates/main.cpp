@@ -343,22 +343,76 @@ namespace SomeRandomStuff
 		};
 
 		template<size_t I>
-		using ElementTypeT = ElementType<I>::Type;
+		using ElementTypeT = std::tuple_element_t<I, std::tuple<TArgs...>>;
 
 		template<size_t Index = 0>
-		static auto Get(int required, std::integral_constant<int, Index> = {}) -> std::unique_ptr<TCommon>
+		static auto Get(int required) -> std::unique_ptr<TCommon>
 		{
 			if constexpr (Index >= sizeof...(TArgs))
 				throw std::runtime_error("no");
 			else
 				return Index == required
 					? std::unique_ptr<TCommon>(new ElementTypeT<Index>)
-					: Get(required, std::integral_constant<int, Index + 1>{});
+					: Get<Index+1>(required);
 		};
 	};
 
+	template<auto x>
+	concept XJ = []() { return x == 1; }();
+
+	template<auto O>
+	struct K 
+	{
+		consteval K(int i) { O == i; }
+	};
+
+	struct LLL
+	{
+		LLL(XJ auto i) {  }
+	};
+
+	
+	void P() {};
+
+	struct SomethingToCapture {};
+	struct SomethingElseToCapture {};
+
+	struct Yap
+	{
+		Yap(auto&& t, auto&& s) : pair{ t,s } {}
+		void DoA(int i) 
+		{
+			pair.first(i);
+		}
+		void DoB(float f)
+		{
+			pair.second(f);
+		}
+		std::pair<std::function<void(int)>, std::function<void(float)>> pair;
+	};
+
+	//std::pair<std::function<void(int)>, std::function<void(float)>> 
+	auto Make()
+	{
+		SomethingToCapture s;
+		return Yap{ [s](int) {}, [s](float) {} };
+		return Yap { [s](int) {}, [s](float) {} };
+
+
+		SomethingElseToCapture t;
+		return Yap{ [t](int) {}, [t](float) {} };
+
+		//return { [s](int) {}, [s](float) {} };
+		//return { [s](int) {}, [s](float) {} };
+	}
+
 	void Run()
 	{
+		auto maked = Make();
+		maked.DoA(1);
+
+		//LLL l(1);
+
 		std::tuple<A, B> testTuple;
 
 		using Impls = Types<I, A, B>;
