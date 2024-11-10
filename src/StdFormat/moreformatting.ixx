@@ -111,20 +111,20 @@ export namespace std
 	};
 
 	template<>
-	struct formatter<std::wstring, char> : formatter<char, char>
+	struct formatter<wstring, char> : formatter<char, char>
 	{
 		template <class TContext>
-		auto format(const std::wstring& str, TContext&& ctx) const
+		auto format(const wstring& str, TContext&& ctx) const
 		{
 			return format_to(ctx.out(), "{}", Converters::Convert(str));
 		}
 	};
 
 	template<>
-	struct formatter<std::wstring_view, char> : formatter<char, char>
+	struct formatter<wstring_view, char> : formatter<char, char>
 	{
 		template <class TContext>
-		auto format(std::wstring_view str, TContext&& ctx) const
+		auto format(wstring_view str, TContext&& ctx) const
 		{
 			return format_to(ctx.out(), "{}", Converters::Convert(str));
 		}
@@ -132,7 +132,7 @@ export namespace std
 
 	// char -> wchar_t
 	template<size_t N>
-	struct std::formatter<char[N], wchar_t> : std::formatter<wchar_t, wchar_t>
+	struct formatter<char[N], wchar_t> : formatter<wchar_t, wchar_t>
 	{
 		template <class TContext>
 		auto format(const char(str)[N], TContext&& ctx) const
@@ -152,20 +152,20 @@ export namespace std
 	};
 
 	template<>
-	struct formatter<std::string, wchar_t> : formatter<wchar_t, wchar_t>
+	struct formatter<string, wchar_t> : formatter<wchar_t, wchar_t>
 	{
 		template <class TContext>
-		auto format(const std::string& str, TContext&& ctx) const
+		auto format(const string& str, TContext&& ctx) const
 		{
 			return format_to(ctx.out(), L"{}", Converters::Convert(str));
 		}
 	};
 
 	template<>
-	struct formatter<std::string_view, wchar_t> : formatter<wchar_t, wchar_t>
+	struct formatter<string_view, wchar_t> : formatter<wchar_t, wchar_t>
 	{
 		template <class TContext>
-		auto format(std::string_view str, TContext&& ctx) const
+		auto format(string_view str, TContext&& ctx) const
 		{
 			return format_to(ctx.out(), L"{}", Converters::Convert(str));
 		}
@@ -176,7 +176,8 @@ namespace ConvertingStrings
 {
 	export void Run()
 	{
-		std::format(L"{} {}", "Hello", std::string{"world!"});
+		auto str = std::format(L"{} {}", "Hello", "world!");
 		std::println("{} {}", L"Hello", std::wstring{ L"world!" });
+		std::println("{} {}", L"Hello", "world!");
 	}
 }
