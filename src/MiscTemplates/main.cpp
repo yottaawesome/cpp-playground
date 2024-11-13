@@ -396,8 +396,6 @@ namespace SomeRandomStuff
 	{
 		SomethingToCapture s;
 		return Yap{ [s](int) {}, [s](float) {} };
-		return Yap { [s](int) {}, [s](float) {} };
-
 
 		SomethingElseToCapture t;
 		return Yap{ [t](int) {}, [t](float) {} };
@@ -470,10 +468,11 @@ auto main() -> int
 			//return (OO<AB>) []()->IsDoIt auto {return AB{}; };
 	}(1)();
 
-	auto lambda = []<int N>() { int test[N]; };
+	constexpr auto lambda = []<int N=1>() { int test[N]; };
 
-	lambda.template operator() < 5 > ();
-	lambda.operator() < 5 > ();
+	// ICE in 17.12.0
+	//lambda.template operator() < 5 > ();
+	//lambda.operator() < 5 > ();
 
 	Splitter::Run();
 	TypeIndexes::Run();

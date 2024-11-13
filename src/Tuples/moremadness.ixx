@@ -16,8 +16,8 @@ namespace WaitingB
     template<typename T, size_t N>
     struct is_array<std::array<T, N>> : std::true_type {};
 
-    template<typename T, size_t N>
-    constexpr bool is_array_v = is_array<T, N>;
+    template<typename T>
+    constexpr bool is_array_v = is_array<T>::value;
 
     template<typename T>
     concept array_like = is_array<std::remove_cvref_t<T>>::value;
@@ -232,8 +232,8 @@ namespace AnotherWait
     template<typename T, size_t N>
     struct is_array<std::array<T, N>> : std::true_type {};
 
-    template<typename T, size_t N>
-    constexpr bool is_array_v = is_array<T, N>;
+    template<typename T>
+    constexpr bool is_array_v = is_array<T>::value;
 
     template<typename T>
     concept arraylike = is_array_v<T>;
