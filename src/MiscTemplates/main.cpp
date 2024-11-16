@@ -454,6 +454,81 @@ namespace SomeRandomStuff
 	}
 }
 
+namespace MultiTypes
+{
+	struct RType
+	{
+		constexpr static inline int Value = 3;
+		int Value2 = 3;
+	};
+
+	template<typename T>
+	concept RTypeConcept = requires(T t)
+	{
+		requires T::Value == 3;
+	};
+	static_assert(RTypeConcept<RType>);
+
+	template<typename...TTypes>
+	struct TypeSequence
+	{
+		std::tuple<TTypes...> Tuple;
+
+		void DoOn(auto fn) const
+		{
+			([&fn, this]<typename S = TTypes>()
+			{
+				if (not TTypes::Active)
+					return;
+				if constexpr (std::invocable<decltype(fn), S>)
+					fn(std::get<S>(Tuple));
+			}(), ...);
+
+			((TTypes::Active
+				? [&fn, this]<typename S = TTypes>()
+				{
+					if constexpr (std::invocable<decltype(fn), S>)
+						fn(std::get<S>(Tuple));
+				}()
+				: void()), ...);
+
+			// Works, but tries to invoke it on all
+			//((T::Active ? fn(std::get<T>(Tuple)) : void()), ...);
+		}
+	
+		template<typename...TTypes>
+		void PostData(std::vector<std::byte> data)
+		{
+			([]<typename S = TTypes>()
+			{
+				auto x = std::get<S>(Tuple);
+			}, ...);
+		}
+
+		void PostData(std::vector<std::byte> data)
+		{
+			DoOn([](const auto& connection) {});
+		}
+	};
+
+	struct QA { static inline bool Active = true; static constexpr int Type = 1; };
+	struct AQ { static inline bool Active = true; static constexpr int Type = 2; };
+	constexpr TypeSequence<QA, AQ> Sequence;
+
+	template<typename T>
+	concept OnlyType2 = requires(T t)
+	{
+		requires T::Type == 1;
+	};
+
+	void Run()
+	{
+		Sequence.DoOn([](const auto& type) {});
+		Sequence.DoOn([](const AQ& type) {});
+		Sequence.DoOn([](const OnlyType2 auto& type) {});
+	}
+}
+
 auto main() -> int
 {
 	SomeRandomStuff::Run();
@@ -469,6 +544,12 @@ auto main() -> int
 	}(1)();
 
 	constexpr auto lambda = []<int N=1>() { int test[N]; };
+
+	[](this auto&& self, int x) consteval -> void
+	{
+		if (x > 0)
+			self(x-1);
+	}(1);
 
 	// ICE in 17.12.0
 	//lambda.template operator() < 5 > ();
