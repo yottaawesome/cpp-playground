@@ -575,6 +575,14 @@ namespace TemplatesSetup
 
 auto main() -> int
 {
+	[]<int VIndex = 0>(this auto self, std::integral_constant<int, VIndex> = {})
+	{
+		if constexpr (VIndex < 5)
+		{
+			self(std::integral_constant<int, VIndex + 1>{});
+		}
+	}();
+
 	SomeRandomStuff::Run();
 
 	AnEnum a = AnEnum::TypeA;
