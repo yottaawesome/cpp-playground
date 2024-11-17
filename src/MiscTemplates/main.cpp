@@ -529,6 +529,50 @@ namespace MultiTypes
 	}
 }
 
+namespace TemplatesSetup
+{
+	struct A {};
+	struct B {};
+	struct C {};
+	struct D {};
+	struct E {};
+
+	template<typename A, typename B, typename C, typename D, typename E>
+	int RunWithTypes()
+	{
+		return 0;
+	}
+
+	template<typename...TOthers>
+	int SetupD()
+	{
+		return RunWithTypes<E, TOthers...>();
+	}
+
+	template<typename...TOthers>
+	int SetupC()
+	{
+		return SetupD<D, TOthers...>();
+	}
+
+	template<typename...TOthers>
+	int SetupB()
+	{
+		return SetupC<C, TOthers...>();
+	}
+
+	template<typename...TOthers>
+	int SetupA()
+	{
+		return SetupB<B, TOthers...>();
+	}
+
+	void Run()
+	{
+		SetupA<A>();
+	}
+}
+
 auto main() -> int
 {
 	SomeRandomStuff::Run();
