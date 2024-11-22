@@ -573,8 +573,46 @@ namespace TemplatesSetup
 	}
 }
 
+template<typename TDummy, typename T, typename...TArgs>
+using F = auto(TArgs...)->T;
+
+struct FF
+{
+	int X = 10;
+};
+
+constexpr FF f;
+
+template<typename...T, auto Is = std::make_index_sequence<sizeof...(T)>{} >
+void V(std::tuple<T...> t)
+{
+
+}
+
+struct SS
+{
+	void operator()(int) {}
+	void operator()(float) {}
+};
+
+namespace MultiVector
+{
+
+}
+
 auto main() -> int
 {
+	std::any any = 1;
+	int anyInt = std::any_cast<int>(any);
+
+	std::variant<int, float> fffff;
+	std::visit(SS{}, fffff);
+
+	int x = 1;
+	std::tuple t([x](auto s) { return s(x); });
+
+	std::get<0>(t)([](auto&& s) {return s; });
+
 	[]<int VIndex = 0>(this auto self, std::integral_constant<int, VIndex> = {})
 	{
 		if constexpr (VIndex < 5)
@@ -582,6 +620,14 @@ auto main() -> int
 			self(std::integral_constant<int, VIndex + 1>{});
 		}
 	}();
+
+	std::vector<int> vint{ 1,2,3 };
+	[](this auto self, int index, const std::vector<int>& vint) -> void
+	{
+		if (index < vint.size())
+			self(++index, vint);
+	}(0, vint);
+
 
 	SomeRandomStuff::Run();
 
@@ -609,6 +655,11 @@ auto main() -> int
 
 	Splitter::Run();
 	TypeIndexes::Run();
+
+	using fn_t = auto()->void;
+	std::tuple o{ std::function<fn_t>{ []() {} } };
+	o = { [] {} };
+
 
 	std::array s{ 1 };
 	//s.be

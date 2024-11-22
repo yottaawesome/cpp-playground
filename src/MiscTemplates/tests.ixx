@@ -246,3 +246,63 @@ export namespace SocketsTesting
 	{
 	}
 }
+
+namespace SomeSetupA
+{
+	struct A {};
+
+	struct OpA {};
+	struct OpB {};
+
+	void N(auto&& lambda)
+	{
+		auto out = lambda(OpA{});
+	}
+
+	void M()
+	{
+		constexpr auto fn =
+			[]<typename TA, typename T>(TA && ta, T && operation) -> auto
+			{
+				if constexpr (std::same_as<std::remove_cvref_t<T>, OpA>)
+					return ta;
+				else
+					;
+			};
+
+		if (1 == 1)
+			N([t = A{}](auto&& operation) { return fn(t, std::forward<decltype(operation)>(operation)); });
+	}
+}
+
+namespace SomeSetupB
+{
+	struct A { bool Active = false; };
+	struct B : A {};
+	struct C : A {};
+
+	std::tuple Tuple{ A{false}, B{true}, C{false} };
+
+	A& Get(auto&...types)
+	{
+		return ((types.IsActive ? (types) : (false)) or ...);
+	}
+
+	auto Do() -> A&
+	{
+		int x = 10;
+		auto a = []() {};
+		auto b = []() {};
+
+		[i = (1 == 1 ? a : b)]() {}();
+
+		return
+			[]<int I = 0>(this auto self) -> A&
+		{
+			if constexpr (I < std::tuple_size_v<decltype(Tuple)>)
+				return std::get<I>(Tuple).Active ? std::get<I>(Tuple) : self.template operator() < I + 1 > ();
+			else
+				throw std::runtime_error("Exceeded bounds");
+		}();
+	}
+}
