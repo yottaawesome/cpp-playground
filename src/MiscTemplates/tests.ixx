@@ -277,6 +277,19 @@ namespace SomeSetupA
 
 namespace SomeSetupB
 {
+	template<typename C>
+	concept CLike = true;
+
+	template<typename C>
+	concept CLikeDoIt = requires(C s) { s.DoIt; };
+
+	template<typename T>
+		//requires (CLike<T>)
+	struct OP {};
+
+	template<CLikeDoIt C>
+	struct OP<C> {};
+
 	struct A { bool Active = false; };
 	struct B : A {};
 	struct C : A {};
