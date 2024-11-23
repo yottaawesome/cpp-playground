@@ -87,7 +87,58 @@ namespace Converters
 	}
 }
 
+export namespace PrintableTest
+{
+	template<typename C>
+	concept Printable = 
+		requires(C s) { { s.Print() }->std::same_as<std::string>; } 
+		or requires(C s) { { s.Print() }->std::same_as<std::wstring>; };
 
+	struct PrintTest
+	{
+		std::string Print() const { return "Hello, world!"; }
+	};
+}
+
+export namespace std
+{
+	template<PrintableTest::Printable TPrintable>
+	struct formatter<TPrintable, char> : formatter<char, char>
+	{
+		template <class TContext>
+		auto format(const TPrintable& n, TContext&& ctx) const
+		{
+			auto result = n.Print();
+			if constexpr (std::same_as<decltype(result), std::string>)
+				return format_to(ctx.out(), "{}", result);
+			else
+				return format_to(ctx.out(), "{}", Converters::Convert(result));
+		}
+	};
+
+	template<PrintableTest::Printable TPrintable>
+	struct formatter<TPrintable, wchar_t> : formatter<wchar_t, wchar_t>
+	{
+		template <class TContext>
+		auto format(const TPrintable& n, TContext&& ctx) const
+		{
+			auto result = n.Print();
+			if constexpr (std::same_as<decltype(result), std::wstring>)
+				return format_to(ctx.out(), L"{}", result);
+			else
+				return format_to(ctx.out(), L"{}", Converters::Convert(result));
+		}
+	};
+}
+
+export namespace PrintableTest
+{
+	void Run()
+	{
+		std::println("{}", PrintTest{});
+		auto result = std::format(L"{}", PrintTest{});
+	}
+}
 
 export namespace std
 {
