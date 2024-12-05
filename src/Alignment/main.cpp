@@ -8,6 +8,8 @@ struct Something
 // https://stackoverflow.com/questions/20221311/convert-a-struct-to-vector-of-bytes
 // https://stackoverflow.com/questions/71828288/why-is-stdaligned-storage-to-be-deprecated-in-c23-and-what-to-use-instead
 // https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p1413r3.pdf
+// https://stackoverflow.com/questions/53922209/how-to-invoke-aligned-new-delete-properly
+// https://stackoverflow.com/questions/39058850/how-to-align-stdarray-contained-data
 int main()
 {
     std::cout << "Hello World!\n";
