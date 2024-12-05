@@ -28,8 +28,16 @@ struct std::formatter<F, wchar_t> : std::formatter<wchar_t, wchar_t>
 	}
 };
 
+thread_local int ThreadLocalValue = 25;
+
 auto main() -> int
 {
+	ThreadLocalValue++;
+	std::jthread j ([]()
+	{
+		std::println("{}",ThreadLocalValue);
+	});
+
 	PrintableTest::Run();
 
 	EvenMoreFormatting::SomeStructToFormat something;

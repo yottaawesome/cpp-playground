@@ -134,6 +134,7 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="tests.ixx" />
     <ClCompile Include="tuples.ixx" />
+    <ClCompile Include="variants.ixx" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="test.txt" />
