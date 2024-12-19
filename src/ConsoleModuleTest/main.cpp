@@ -67,5 +67,6 @@ int main(int argc, char** args)
 		L"Successfully invoked returnNumber(): {}", 
 		returnNumber()
 	);
+
 	return 0;
 }

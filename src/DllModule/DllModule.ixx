@@ -14,25 +14,23 @@ export namespace Another
 
 export namespace ERT
 {
-	export class __declspec(dllexport) XX
+	export struct __declspec(dllexport) XX
 	{
-		public:
-			void MM();
+		void MM();
 	};
 }
 
 // Classes don't need __declspec(dllexport) if
 // functions are defined in the declaration.
-export class AA
+export struct AA
 {
-	public:
-		void MM() {};
-		void NN() {};
-		void OO()
-		{
-			throw std::runtime_error("This is a test");
-		}
-		static void YY() {};
+	void MM() {};
+	void NN() {};
+	void OO()
+	{
+		throw std::runtime_error("This is a test");
+	}
+	static void YY() {};
 };
 
 export struct __declspec(dllexport) F
@@ -43,8 +41,15 @@ export struct __declspec(dllexport) F
 
 // __declspec(dllexport) is required when definitions
 // are in implementation files.
-export class __declspec(dllexport) DllClass
+export struct __declspec(dllexport) DllClass
 {
-	public:
-		void Hello();
+	void Hello();
+};
+
+// C4275
+// Can be ignored https://learn.microsoft.com/en-us/cpp/error-messages/compiler-warnings/compiler-warning-level-2-c4275?view=msvc-170
+#pragma warning(disable: 4275)
+export struct __declspec(dllexport) Error : std::runtime_error 
+{
+	Error() : std::runtime_error("") {}
 };
