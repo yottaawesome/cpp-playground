@@ -1,6 +1,7 @@
 module;
 
 #include <iostream>
+#include <memory>
 #include <Windows.h>
 
 module DllModule;

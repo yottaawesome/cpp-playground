@@ -13,9 +13,12 @@ import std;
 import LibModule;
 import DllModule;
 import TestModule;
+import ModuleNamespace;
 
 int main(int argc, char** args)
 {
+	int someF = NamespaceTest::Get();
+	std::string s = NamespaceTest::GetAString();
 	ERT::XX k;
 	k.MM();
 
