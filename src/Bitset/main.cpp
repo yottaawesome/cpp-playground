@@ -4,7 +4,6 @@ import std;
 
 auto main() -> int
 {
-
     typedef std::size_t length_t, position_t; // the hints
 
     // constructors:
