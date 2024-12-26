@@ -31,7 +31,7 @@ namespace OutPtrWithCustomPtr
 			m_i = nullptr; 
 		}
 
-		private:
+	private:
 		PtrType& Move(PtrType& other) noexcept
 		{
 			reset();
@@ -43,12 +43,12 @@ namespace OutPtrWithCustomPtr
 		int* m_i = nullptr;
 	};
 
-	void FnWithOutParam(int** i)
+	constexpr void FnWithOutParam(int** i)
 	{
 		*i = new int(1);
 	}
 
-	void FnWithOutParam2(int** i)
+	constexpr void FnWithOutParam2(int** i)
 	{
 		**i = 10;
 	}
