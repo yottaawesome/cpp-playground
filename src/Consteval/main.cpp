@@ -98,8 +98,54 @@ namespace Consteval2
     }
 }
 
+namespace FixedStrings
+{
+    template<size_t N>
+    struct FixedString
+    {
+        char Buffer[N]{};
+
+        consteval FixedString(const char(&arg)[N]) noexcept
+        {
+            std::copy_n(arg, N, Buffer);
+        }
+
+        consteval size_t Size() const noexcept { return N - 1; }
+
+        constexpr std::string_view View() const noexcept { return Buffer; }
+
+        constexpr bool operator==(FixedString<N> other) const noexcept
+        {
+            return std::equal(other.Buffer, other.Buffer + N, Buffer);
+        }
+
+        template<size_t M>
+        consteval bool operator==(FixedString<M> other) const noexcept
+        {
+            return false;
+        }
+
+        template<size_t M>
+        consteval FixedString<M + N - 1> operator+(FixedString<M> other) const noexcept
+        {
+            char out[M + N - 1];
+            std::copy_n(Buffer, N - 1, out);
+            std::copy_n(other.Buffer, M, out + N - 1);
+            return out;
+        }
+    };
+
+    auto Run() -> void
+    {
+        constexpr FixedString f{ "AAAA" };
+        constexpr FixedString e = f + FixedString("M");
+        std::println("{}", e.View());
+    }
+}
+
 auto main() -> int
 {
     Consteval2::Run();
+    FixedStrings::Run();
     return 0;
 }

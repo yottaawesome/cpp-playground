@@ -14,6 +14,7 @@ import LibModule;
 import DllModule;
 import TestModule;
 import ModuleNamespace;
+import somemodule;
 
 int main(int argc, char** args)
 {
