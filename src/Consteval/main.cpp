@@ -114,7 +114,7 @@ namespace FixedStrings
 
         constexpr std::string_view View() const noexcept { return Buffer; }
 
-        constexpr bool operator==(FixedString<N> other) const noexcept
+        consteval bool operator==(FixedString<N> other) const noexcept
         {
             return std::equal(other.Buffer, other.Buffer + N, Buffer);
         }
@@ -133,6 +133,19 @@ namespace FixedStrings
             std::copy_n(other.Buffer, M, out + N - 1);
             return out;
         }
+
+        struct Iterator
+        {
+            const char* Buffer = nullptr;
+            int Position = 0;
+            constexpr Iterator(int position, const char* buffer) : Position(position), Buffer(buffer) {}
+            constexpr char operator*() const noexcept { return Buffer[Position]; }
+            constexpr Iterator& operator++() noexcept { Position++; return *this; }
+            constexpr bool operator!=(const Iterator& other) const noexcept { return Position != other.Position; }
+        };
+
+        Iterator begin() const noexcept { return Iterator(0, Buffer); }
+        Iterator end() const noexcept { return Iterator(N-1, Buffer); }
     };
 
     auto Run() -> void
@@ -140,6 +153,8 @@ namespace FixedStrings
         constexpr FixedString f{ "AAAA" };
         constexpr FixedString e = f + FixedString("M");
         std::println("{}", e.View());
+
+        std::println("{}", std::all_of(f.begin(), f.end(), [](char c) { return c == 'A'; }));
     }
 }
 
