@@ -1,6 +1,6 @@
 import std;
 
-namespace Consteval1
+namespace Consteval1 
 {
     struct Q
     {
@@ -23,6 +23,7 @@ namespace Consteval1
 
     auto Run() -> auto
     {
+        int x [[std::deprecated]] = 1;
         constexpr std::string_view m = A();
     }
 }
