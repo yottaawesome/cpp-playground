@@ -161,6 +161,7 @@
     </PreLinkEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="modulenamespace-part.ixx" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="modulenamespace.ixx" />
   </ItemGroup>

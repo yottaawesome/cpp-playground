@@ -1,34 +1,10 @@
-export module ModuleNamespace;
+export module modulenamespace;
 import std;
+export import :part;
 
-namespace Blah
+export namespace TryThis
 {
-	using F = int;
-}
-
-namespace Blah2
-{
-	using A = int;
-}
-
-// These are not exported and so are not visible
-// in consuming code. This is unlike headers.
-using namespace Blah;
-using namespace Blah2;
-using namespace std;
-using namespace std::chrono;
-
-export namespace NamespaceTest
-{
-	F Get() { return 1; }
-
-	string GetAString()
+	consteval void Delete()
 	{
-		return "AAAA!";
-	}
-
-	milliseconds GetMillis() 
-	{ 
-		return milliseconds{0}; 
 	}
 }

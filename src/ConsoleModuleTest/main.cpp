@@ -13,7 +13,7 @@ import std;
 import LibModule;
 import DllModule;
 import TestModule;
-import ModuleNamespace;
+import modulenamespace;
 import somemodule;
 
 int main(int argc, char** args)
