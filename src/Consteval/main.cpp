@@ -23,7 +23,7 @@ namespace Consteval1
 
     auto Run() -> auto
     {
-        int x [[std::deprecated]] = 1;
+        int x = 1;
         constexpr std::string_view m = A();
     }
 }
@@ -157,6 +157,131 @@ namespace FixedStrings
 
         std::println("{}", std::all_of(f.begin(), f.end(), [](char c) { return c == 'A'; }));
     }
+}
+
+namespace StaticAssertions
+{
+    struct ListEntry
+    {
+        constexpr void Attach(const std::vector<std::byte>& data)
+        {
+            Data = data;
+        }
+
+        constexpr void Attach(std::span<std::byte> data)
+        {
+            Data = { data.begin(), data.end() };
+        }
+
+        constexpr size_t CopyTo(std::span<std::byte> out)
+        {
+            if (Index >= Data.size())
+                return 0;
+            size_t numberToCopy = std::min(Data.size() - Index, out.size());
+            std::copy_n(Data.begin() + Index, numberToCopy, out.begin());
+            Index += numberToCopy;
+            return numberToCopy;
+        }
+
+        constexpr size_t CopyTo(std::vector<std::byte>& data)
+        {
+            if (Index >= Data.size())
+                return 0;
+            data.insert(data.end(), Data.begin() + Index, Data.end());
+            Index += std::distance(Data.begin() + Index, Data.end());
+            return Index;
+        }
+
+        constexpr bool Empty() const noexcept
+        {
+            return Index >= Data.size();
+        }
+
+        constexpr size_t Remaining() const noexcept
+        {
+            return Data.size() - Index;
+        }
+
+        ListEntry* Forward = nullptr;
+        ListEntry* Backward = nullptr;
+        std::vector<std::byte> Data;
+        size_t Index = 0;
+    };
+    static_assert(
+        []() consteval
+        {
+            ListEntry entry;
+            if (entry.Remaining() != 0)
+                throw std::runtime_error("Remaining() must be empty!");
+
+            std::vector<std::byte> dataToEnter{
+                std::byte{0x1}, std::byte{0x1}, std::byte{0x1}, std::byte{0x1}, std::byte{0x1},
+                std::byte{0x1}, std::byte{0x1}, std::byte{0x1}, std::byte{0x1}, std::byte{0x1}
+            };
+            entry.Attach(dataToEnter);
+            if (entry.Remaining() != dataToEnter.size())
+                throw std::runtime_error("Remaining() must be v.size()!");
+
+            // Copy the first 5 bytes out
+            std::array<std::byte, 5> arr{};
+            entry.CopyTo(std::span{ arr.data(), arr.size() });
+            if (entry.Remaining() != 5)
+                throw std::runtime_error("Remaining() is expected to be 5.");
+            if (not std::all_of(arr.begin(), arr.end(), [](auto x) { return x == std::byte{ 0x1 }; }))
+                throw std::runtime_error("arr is expected to be 0x1.");
+
+            // Copy the remaining 5 bytes out
+            entry.CopyTo(std::span{ arr.data(), arr.size() });
+            if (not entry.Empty() or entry.Remaining() != 0)
+                throw std::runtime_error("entry is expected to be empty.");
+            if (not std::all_of(arr.begin(), arr.end(), [](auto x) { return x == std::byte{ 0x1 }; }))
+                throw std::runtime_error("arr is expected to be 0x1.");
+
+            return true;
+        }());
+
+    // Double-linked list.
+    struct List
+    {
+        constexpr List()
+        {
+            this->m_head.Forward = &this->m_head;
+            this->m_head.Backward = &this->m_head;
+        }
+
+        constexpr ListEntry* Peek()
+        {
+            return this->m_head.Forward;
+        }
+
+        constexpr void RemoveHead()
+        {
+            ListEntry* first = this->m_head.Forward;
+            ListEntry* previous = first->Backward;
+            previous->Forward = first->Forward;
+            first->Forward->Backward = first->Backward;
+            delete first;
+        }
+
+        constexpr void AppendTail(ListEntry* entry)
+        {
+            ListEntry* last = m_head.Backward;
+            ListEntry* next = last->Forward;
+
+            last->Forward = entry;
+            next->Backward = entry;
+            entry->Forward = next;
+            entry->Backward = last;
+        }
+
+        constexpr bool IsEmpty()
+        {
+            return (m_head.Forward == &m_head and m_head.Forward == &m_head);
+        }
+
+    private:
+        ListEntry m_head;
+    };
 }
 
 auto main() -> int
