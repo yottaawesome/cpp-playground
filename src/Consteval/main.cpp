@@ -284,8 +284,28 @@ namespace StaticAssertions
     };
 }
 
+namespace Unrelated
+{
+    template<std::invocable TCleanupFn>
+    struct ScopeCleanup
+    {
+        ~ScopeCleanup() { m_cleanupFn(); }
+        ScopeCleanup(TCleanupFn fn) : m_cleanupFn(fn) {}
+        TCleanupFn m_cleanupFn;
+    };
+
+    void Run()
+    {
+        constexpr auto xx = [](int* x) {};
+        using yy = std::unique_ptr<int, decltype(xx)>;
+        std::vector<std::string> q{ "Hello, " "world!" };
+        ScopeCleanup cleanup([&q]() { std::ranges::for_each(q, [](std::string_view s) {std::println("{}", s); }); });
+    }
+}
+
 auto main() -> int
 {
+    Unrelated::Run();
     Consteval2::Run();
     FixedStrings::Run();
     return 0;
