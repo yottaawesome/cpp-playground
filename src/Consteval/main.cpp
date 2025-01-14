@@ -296,9 +296,15 @@ namespace Unrelated
 
     void Run()
     {
-        constexpr auto xx = [](int* x) {};
-        using yy = std::unique_ptr<int, decltype(xx)>;
+        constexpr auto xx = 
+            [](std::vector<std::string>* str) 
+            {
+                std::ranges::for_each(*str, [](std::string_view str) { std::println("{}", str); });
+            };
         std::vector<std::string> q{ "Hello, " "world!" };
+        using yy = std::unique_ptr<decltype(q), decltype(xx)>;
+        yy ys(&q);
+
         ScopeCleanup cleanup([&q]() { std::ranges::for_each(q, [](std::string_view s) {std::println("{}", s); }); });
     }
 }
