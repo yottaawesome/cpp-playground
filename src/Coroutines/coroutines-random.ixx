@@ -10,38 +10,37 @@ export namespace Coroutines::Random
 {
 	struct Queue
 	{
-		public:
-			void Add(std::coroutine_handle<>& handle)
-			{
-				std::scoped_lock lock{ m_mutex };
-				m_cos.push_back(handle);
-				m_semaphore.release();
-			}
+		void Add(std::coroutine_handle<>& handle)
+		{
+			std::scoped_lock lock{ m_mutex };
+			m_cos.push_back(handle);
+			m_semaphore.release();
+		}
 
-			void Add(std::coroutine_handle<>&& handle)
-			{
-				std::scoped_lock lock{ m_mutex };
-				m_cos.push_back(std::move(handle));
-				m_semaphore.release();
-			}
+		void Add(std::coroutine_handle<>&& handle)
+		{
+			std::scoped_lock lock{ m_mutex };
+			m_cos.push_back(std::move(handle));
+			m_semaphore.release();
+		}
 
-			bool Get(std::coroutine_handle<>& out)
-			{
-				bool success = m_semaphore.try_acquire_for(std::chrono::seconds{1});
-				if (not success)
-					return false;
-				std::scoped_lock lock{ m_mutex };
-				if (m_cos.empty())
-					return false;
-				out = std::move(m_cos[0]);
-				m_cos.erase(m_cos.begin());
-				return true;
-			}
+		bool Get(std::coroutine_handle<>& out)
+		{
+			bool success = m_semaphore.try_acquire_for(std::chrono::seconds{1});
+			if (not success)
+				return false;
+			std::scoped_lock lock{ m_mutex };
+			if (m_cos.empty())
+				return false;
+			out = std::move(m_cos[0]);
+			m_cos.erase(m_cos.begin());
+			return true;
+		}
 
-		private:
-			std::mutex m_mutex{};
-			std::vector<std::coroutine_handle<>> m_cos;
-			std::counting_semaphore<5> m_semaphore{0};
+	private:
+		std::mutex m_mutex{};
+		std::vector<std::coroutine_handle<>> m_cos;
+		std::counting_semaphore<5> m_semaphore{0};
 	};
 
 	Queue WorkQueue{};
@@ -98,39 +97,32 @@ export namespace Coroutines::Random
 
 	struct Thread
 	{
-		public:
-			void Start()
-			{
-				m_thread = std::jthread{ Thread::EntryPoint, this };
-			}
+		void Start()
+		{
+			m_thread = std::jthread{ &Thread::Run, this };
+		}
 
-			void SignalToExit()
-			{
-				m_run = false;
-			}
+		void SignalToExit()
+		{
+			m_run = false;
+		}
 
-		private:
-			static void EntryPoint(Thread* self)
+	private:
+		void Run()
+		{
+			while (m_run)
 			{
-				self->Run();
+				std::coroutine_handle<> h;
+				if (WorkQueue.Get(h))
+					h.resume();
+				if (not m_run)
+					break;
 			}
+		}
 
-			void Run()
-			{
-				while (m_run)
-				{
-					std::coroutine_handle<> h;
-					if (WorkQueue.Get(h))
-						h.resume();
-					if (not m_run)
-						break;
-				}
-			}
-
-		private:
-			static constexpr std::chrono::seconds SleepTime{ 1 };
-			bool m_run = true;
-			std::jthread m_thread;
+		static constexpr std::chrono::seconds SleepTime{ 1 };
+		bool m_run = true;
+		std::jthread m_thread;
 	};
 
 	auto switch_to_new_thread()
@@ -172,40 +164,39 @@ export namespace Coroutines::WithFutex
 {
 	struct Queue
 	{
-		public:
-			void Add(std::coroutine_handle<>& handle)
-			{
-				std::scoped_lock lock{ m_mutex };
-				m_cos.push_back(handle);
-				m_semaphore.release();
-			}
+		void Add(std::coroutine_handle<>& handle)
+		{
+			std::scoped_lock lock{ m_mutex };
+			m_cos.push_back(handle);
+			m_semaphore.release();
+		}
 
-			void Add(std::coroutine_handle<>&& handle)
-			{
-				std::scoped_lock lock{ m_mutex };
-				m_cos.push_back(std::move(handle));
-				m_semaphore.release();
-			}
+		void Add(std::coroutine_handle<>&& handle)
+		{
+			std::scoped_lock lock{ m_mutex };
+			m_cos.push_back(std::move(handle));
+			m_semaphore.release();
+		}
 
-			bool Get(std::coroutine_handle<>& out)
-			{
-				bool success = m_semaphore.try_acquire_for(std::chrono::seconds{1});
-				if (not success)
-					return false;
+		bool Get(std::coroutine_handle<>& out)
+		{
+			bool success = m_semaphore.try_acquire_for(std::chrono::seconds{1});
+			if (not success)
+				return false;
 
-				std::scoped_lock lock{ m_mutex };
-				if (m_cos.empty())
-					return false;
+			std::scoped_lock lock{ m_mutex };
+			if (m_cos.empty())
+				return false;
 				
-				out = std::move(m_cos[0]);
-				m_cos.erase(m_cos.begin());
-				return true;
-			}
+			out = std::move(m_cos[0]);
+			m_cos.erase(m_cos.begin());
+			return true;
+		}
 
-		private:
-			std::mutex m_mutex{};
-			std::vector<std::coroutine_handle<>> m_cos;
-			std::counting_semaphore<5> m_semaphore{0};
+	private:
+		std::mutex m_mutex{};
+		std::vector<std::coroutine_handle<>> m_cos;
+		std::counting_semaphore<5> m_semaphore{0};
 	};
 
 	Queue WorkQueue{};
@@ -278,39 +269,37 @@ export namespace Coroutines::WithFutex
 
 	struct Thread
 	{
-		public:
-			void Start()
-			{
-				m_thread = std::jthread{ Thread::EntryPoint, this };
-			}
+		void Start()
+		{
+			m_thread = std::jthread{ Thread::EntryPoint, this };
+		}
 
-			void SignalToExit()
-			{
-				m_run = false;
-			}
+		void SignalToExit()
+		{
+			m_run = false;
+		}
 
-		private:
-			static void EntryPoint(Thread* self)
-			{
-				self->Run();
-			}
+		static void EntryPoint(Thread* self)
+		{
+			self->Run();
+		}
 
-			void Run()
+		void Run()
+		{
+			while (m_run)
 			{
-				while (m_run)
-				{
-					std::coroutine_handle<> h;
-					if (WorkQueue.Get(h))
-						h.resume();
-					if (not m_run)
-						break;
-				}
+				std::coroutine_handle<> h;
+				if (WorkQueue.Get(h))
+					h.resume();
+				if (not m_run)
+					break;
 			}
+		}
 
-		private:
-			static constexpr std::chrono::seconds SleepTime{ 1 };
-			bool m_run = true;
-			std::jthread m_thread;
+	private:
+		static constexpr std::chrono::seconds SleepTime{ 1 };
+		bool m_run = true;
+		std::jthread m_thread;
 	};
 
 	auto SwitchToNewThread()
