@@ -276,7 +276,7 @@ namespace StaticAssertions
 
         constexpr bool IsEmpty()
         {
-            return (m_head.Forward == &m_head and m_head.Forward == &m_head);
+            return (m_head.Forward == &m_head and m_head.Backward == &m_head);
         }
 
     private:
@@ -309,8 +309,92 @@ namespace Unrelated
     }
 }
 
+template<size_t N>
+struct FixedString
+{
+    char Buffer[N]{};
+
+    consteval FixedString(const char(&arg)[N]) noexcept
+    {
+        std::copy_n(arg, N, Buffer);
+    }
+
+    consteval size_t Size() const noexcept { return N - 1; }
+
+    constexpr std::string_view View() const noexcept { return Buffer; }
+
+    consteval bool operator==(FixedString<N> other) const noexcept
+    {
+        return std::equal(other.Buffer, other.Buffer + N, Buffer);
+    }
+
+    template<size_t M>
+    consteval bool operator==(FixedString<M> other) const noexcept
+    {
+        return false;
+    }
+
+    template<size_t M>
+    consteval FixedString<M + N - 1> operator+(FixedString<M> other) const noexcept
+    {
+        char out[M + N - 1];
+        std::copy_n(Buffer, N - 1, out);
+        std::copy_n(other.Buffer, M, out + N - 1);
+        return out;
+    }
+
+    struct Iterator
+    {
+        const char* Buffer = nullptr;
+        int Position = 0;
+        constexpr Iterator(int position, const char* buffer) : Position(position), Buffer(buffer) {}
+        constexpr char operator*() const noexcept { return Buffer[Position]; }
+        constexpr Iterator& operator++() noexcept { Position++; return *this; }
+        constexpr bool operator!=(const Iterator& other) const noexcept { return Position != other.Position; }
+    };
+
+    Iterator begin() const noexcept { return Iterator(0, Buffer); }
+    Iterator end() const noexcept { return Iterator(N - 1, Buffer); }
+
+    void operator()(auto&& x) const
+    {
+        //x();
+    }
+
+    auto Set() {}
+};
+
+struct StaticTest
+{
+    consteval StaticTest(std::string_view s) :S{ s } {}
+    consteval StaticTest() = default;
+    consteval void operator()(std::invocable auto fn) const
+    {
+        //const char M[] = "a";
+        //bool b = fn();
+        static_assert(fn(), "A");
+    }
+    std::string_view S;
+};
+
+template<FixedString F>
+consteval auto operator""_tst()
+{
+    return StaticTest{ };
+}
+
+int operator""_tst2(const char* m)
+{
+    return 1;
+}
+
+
+
 auto main() -> int
 {
+    "a"_tst([]() { return true; });
+
+
     Unrelated::Run();
     Consteval2::Run();
     FixedStrings::Run();

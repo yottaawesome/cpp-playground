@@ -115,8 +115,6 @@ export namespace Coroutines::Random
 				std::coroutine_handle<> h;
 				if (WorkQueue.Get(h))
 					h.resume();
-				if (not m_run)
-					break;
 			}
 		}
 
