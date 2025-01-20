@@ -309,92 +309,155 @@ namespace Unrelated
     }
 }
 
-template<size_t N>
-struct FixedString
+namespace StaticTests
 {
-    char Buffer[N]{};
 
-    consteval FixedString(const char(&arg)[N]) noexcept
+    template<size_t N>
+    struct FixedString
     {
-        std::copy_n(arg, N, Buffer);
-    }
+        char Buffer[N]{};
 
-    consteval size_t Size() const noexcept { return N - 1; }
+        consteval FixedString(const char(&arg)[N]) noexcept
+        {
+            std::copy_n(arg, N, Buffer);
+        }
 
-    constexpr std::string_view View() const noexcept { return Buffer; }
+        consteval size_t Size() const noexcept { return N - 1; }
 
-    consteval bool operator==(FixedString<N> other) const noexcept
-    {
-        return std::equal(other.Buffer, other.Buffer + N, Buffer);
-    }
+        constexpr std::string_view View() const noexcept { return Buffer; }
 
-    template<size_t M>
-    consteval bool operator==(FixedString<M> other) const noexcept
-    {
-        return false;
-    }
+        consteval bool operator==(FixedString<N> other) const noexcept
+        {
+            return std::equal(other.Buffer, other.Buffer + N, Buffer);
+        }
 
-    template<size_t M>
-    consteval FixedString<M + N - 1> operator+(FixedString<M> other) const noexcept
-    {
-        char out[M + N - 1];
-        std::copy_n(Buffer, N - 1, out);
-        std::copy_n(other.Buffer, M, out + N - 1);
-        return out;
-    }
+        template<size_t M>
+        consteval bool operator==(FixedString<M> other) const noexcept
+        {
+            return false;
+        }
 
-    struct Iterator
-    {
-        const char* Buffer = nullptr;
-        int Position = 0;
-        constexpr Iterator(int position, const char* buffer) : Position(position), Buffer(buffer) {}
-        constexpr char operator*() const noexcept { return Buffer[Position]; }
-        constexpr Iterator& operator++() noexcept { Position++; return *this; }
-        constexpr bool operator!=(const Iterator& other) const noexcept { return Position != other.Position; }
+        template<size_t M>
+        consteval FixedString<M + N - 1> operator+(FixedString<M> other) const noexcept
+        {
+            char out[M + N - 1];
+            std::copy_n(Buffer, N - 1, out);
+            std::copy_n(other.Buffer, M, out + N - 1);
+            return out;
+        }
+
+        struct Iterator
+        {
+            const char* Buffer = nullptr;
+            int Position = 0;
+            constexpr Iterator(int position, const char* buffer) : Position(position), Buffer(buffer) {}
+            constexpr char operator*() const noexcept { return Buffer[Position]; }
+            constexpr Iterator& operator++() noexcept { Position++; return *this; }
+            constexpr bool operator!=(const Iterator& other) const noexcept { return Position != other.Position; }
+        };
+
+        Iterator begin() const noexcept { return Iterator(0, Buffer); }
+        Iterator end() const noexcept { return Iterator(N - 1, Buffer); }
     };
 
-    Iterator begin() const noexcept { return Iterator(0, Buffer); }
-    Iterator end() const noexcept { return Iterator(N - 1, Buffer); }
-
-    void operator()(auto&& x) const
+    struct StaticTest
     {
-        //x();
+        consteval StaticTest(std::string_view s) :S{ s } {}
+        consteval StaticTest() = default;
+        consteval void operator()(std::invocable auto fn) const
+        {
+            //const char M[] = "a";
+            //bool b = fn();
+            static_assert(fn(), "A");
+        }
+        consteval auto operator=(std::invocable auto fn) const
+        {
+            //const char M[] = "a";
+            //bool b = fn();
+            static_assert(fn(), "A");
+            return *this;
+        }
+        std::string_view S;
+    };
+
+    template<FixedString F>
+    consteval auto operator""_tst()
+    {
+        return StaticTest{ };
     }
 
-    auto Set() {}
-};
-
-struct StaticTest
-{
-    consteval StaticTest(std::string_view s) :S{ s } {}
-    consteval StaticTest() = default;
-    consteval void operator()(std::invocable auto fn) const
+    int operator""_tst2(const char* m)
     {
-        //const char M[] = "a";
-        //bool b = fn();
-        static_assert(fn(), "A");
+        return 1;
     }
-    std::string_view S;
-};
+    struct YYY
+    {
 
-template<FixedString F>
-consteval auto operator""_tst()
-{
-    return StaticTest{ };
+    };
+    struct SSS
+    {
+        consteval SSS(std::pair<int, int>) {}
+        consteval SSS(int fn) {}
+        consteval SSS(std::invocable auto&& fn) {}
+        consteval void operator()() {}
+    };
+
+    template<SSS T>
+    consteval auto operator""_tst3()
+    {
+        return [] {};
+    }
+
+    
+
+    int operator""_tst4(const char* x, size_t t)
+    {
+        return 1;
+    }
+
+    struct BBB
+    {
+        consteval BBB(int fn) :x(fn) {}
+        consteval void operator()() {}
+        int x = 0;
+    };
+    template<BBB T>
+    consteval auto operator""_tst5()
+    {
+        return[]<int X = T.x>(this auto self, auto&& fn)
+        {
+            if constexpr (X <= 0)
+            {
+                throw std::runtime_error("Bag");
+            }
+            else try
+            {
+                fn();
+            }
+            catch (...)
+            {
+                self.template operator()<X-1>(fn);
+            }
+            
+            //return self.template operator()<X - 1>();
+            //return[]<X - 1>{};
+        };
+    }
+
+    void Run()
+    {
+        "a"_tst = []() { return true; };
+        //SSS s
+        1_tst3;
+        "a"_tst4;
+        auto y = "a"_tst;
+        1_tst5([] {});
+    }
 }
-
-int operator""_tst2(const char* m)
-{
-    return 1;
-}
-
 
 
 auto main() -> int
 {
-    "a"_tst([]() { return true; });
-
-
     Unrelated::Run();
     Consteval2::Run();
     FixedStrings::Run();
