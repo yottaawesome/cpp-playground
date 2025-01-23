@@ -655,3 +655,29 @@ export namespace TagsTesting
         constexpr FixedString C = A + B;
     }
 }
+
+namespace ImplicitLifetimes
+{
+    // https://en.cppreference.com/w/cpp/memory/start_lifetime_as
+    void Run()
+    {
+        alignas(std::complex<float>) unsigned char network_data[sizeof(std::complex<float>)]
+        {
+            0xcd, 0xcc, 0xcc, 0x3d, 0xcd, 0xcc, 0x4c, 0x3e
+        };
+
+        //  auto d = *reinterpret_cast<std::complex<float>*>(network_data);
+        //  std::cout << d << '\n'; // UB: network_data does not point to a complex<float>
+
+        //  auto d1 = *std::launder(reinterpret_cast<std::complex<float>*>(network_data));
+        //  std::cout << d1 << '\n'; // UB: implicitly created objects have dynamic storage
+        //                                  duration and have indeterminate value initially,
+        //                                  even when an array which provides storage for
+        //                                  them has determinate bytes.
+        //                                  See also CWG2721.
+
+        // Not currently implemented by MSVC STL
+        //auto d2 = *std::start_lifetime_as<std::complex<float>>(network_data);
+        //std::cout << d2 << '\n'; // OK
+    }
+}
