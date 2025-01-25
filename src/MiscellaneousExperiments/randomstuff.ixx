@@ -658,6 +658,16 @@ export namespace TagsTesting
 
 namespace ImplicitLifetimes
 {
+    template<typename T>
+    void F()
+    {
+        constexpr bool HasCount = requires(T t) { { t.count() } -> std::convertible_to<int>; };
+        if constexpr (HasCount)
+        {
+
+        }
+    }
+
     // https://en.cppreference.com/w/cpp/memory/start_lifetime_as
     void Run()
     {
@@ -679,5 +689,6 @@ namespace ImplicitLifetimes
         // Not currently implemented by MSVC STL
         //auto d2 = *std::start_lifetime_as<std::complex<float>>(network_data);
         //std::cout << d2 << '\n'; // OK
+        
     }
 }
