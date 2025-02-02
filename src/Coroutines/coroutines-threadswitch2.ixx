@@ -64,26 +64,20 @@ export namespace Coroutines::ThreadSwitch2
 
     task resuming_on_new_thread(std::jthread& out)
     {
-        std::cout << "Coroutine started on thread: " << std::this_thread::get_id() << '\n';
+        std::println("Coroutine started on thread: {}", std::this_thread::get_id());
         co_await switch_to_new_thread(out);
         // awaiter destroyed here
-        std::cout << "Coroutine resumed on thread: " << std::this_thread::get_id() << '\n';
-
+        std::println("Coroutine resumed on thread: {}", std::this_thread::get_id());
         co_return 1;
     }
 
     void RunSample()
     {
-        std::cout
-            << "Original thread " << std::this_thread::get_id() << '\n';
+        std::println("Original thread {}", std::this_thread::get_id());
         std::jthread out;
         task x = resuming_on_new_thread(out);
         std::this_thread::sleep_for(std::chrono::seconds(1));
 
-        std::cout
-            << x.get()
-            << '\n'
-            << "Original thread "
-            << std::this_thread::get_id() << " exiting\n";
+        std::println("{}\nOriginal thread {} exiting", x.get(), std::this_thread::get_id());
     }
 }
