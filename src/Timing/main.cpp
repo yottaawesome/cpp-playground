@@ -333,8 +333,15 @@ void Ceiling()
     std::chrono::time_point<std::chrono::system_clock, std::chrono::milliseconds>
         time_point_ms{};
 
+    // https://en.cppreference.com/w/cpp/chrono/time_point/time_point_cast
     //std::println("{}", std::chrono::time_point_cast<FiveMinutes>(time_point_ms));
-    std::println("{}", std::chrono::ceil<FiveMinutes>(std::chrono::system_clock::now()));
+
+    // https://en.cppreference.com/w/cpp/chrono/time_point/ceil
+    auto now = std::chrono::system_clock::now();
+    auto next = std::chrono::ceil<FiveMinutes>(now);
+    auto diff = std::chrono::duration_cast<std::chrono::milliseconds>(next - now);
+
+    std::println("Current {}\nNext {}\nDifference {}", now, next, diff);
 }
 
 int main()
