@@ -4,7 +4,7 @@ import std.compat;
 
 namespace Timing
 {
-    
+   
     namespace CheckDuration
     {
         
@@ -326,8 +326,20 @@ namespace Alias
     constexpr auto s2 = Sleep;
 }
 
+void Ceiling()
+{
+    using FiveMinutes = std::chrono::duration<int, std::ratio<300>>;
+
+    std::chrono::time_point<std::chrono::system_clock, std::chrono::milliseconds>
+        time_point_ms{};
+
+    //std::println("{}", std::chrono::time_point_cast<FiveMinutes>(time_point_ms));
+    std::println("{}", std::chrono::ceil<FiveMinutes>(std::chrono::system_clock::now()));
+}
+
 int main()
 {
+    Ceiling();
     constexpr Timing::ConstTest t(9);
     constexpr int m = t.Get();
 
