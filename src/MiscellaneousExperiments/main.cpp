@@ -459,6 +459,9 @@ constexpr void Something()
 
 int main()
 {
+	StringConversion::Run();
+	return 0;
+
 	MoreFixedStrings::Run();
 
 	std::vector vec{ 1,2,3 };

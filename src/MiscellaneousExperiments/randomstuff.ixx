@@ -6,6 +6,7 @@ export module randomstuff;
 import std;
 import std.compat;
 export import :dates;
+export import :stringconversion;
 
 export namespace Random
 {

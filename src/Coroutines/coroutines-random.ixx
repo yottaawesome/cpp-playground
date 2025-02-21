@@ -8,6 +8,7 @@ import std;
 
 export namespace Coroutines::Random
 {
+	// Thread safe queue for coroutine handles
 	struct Queue
 	{
 		void Add(std::coroutine_handle<>& handle)
