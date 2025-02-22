@@ -3,7 +3,7 @@ module;
 #include <Windows.h>
 #pragma comment(lib, "Synchronization.lib")
 
-export module coroutines:random;
+export module coroutines:workqueues;
 import std;
 
 export namespace Coroutines::Random

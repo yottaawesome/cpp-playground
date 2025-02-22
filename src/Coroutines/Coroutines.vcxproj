@@ -131,11 +131,10 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="coroutines-random.ixx" />
+    <ClCompile Include="coroutines-workqueues.ixx" />
     <ClCompile Include="coroutines-eagerfuture.ixx" />
     <ClCompile Include="coroutines-minimalasyncframework.ixx" />
     <ClCompile Include="coroutines-taskscheduler.ixx" />
-    <ClCompile Include="coroutines-threadswitch2.ixx" />
     <ClCompile Include="coroutines-generator.ixx" />
     <ClCompile Include="coroutines-threadswitch.ixx" />
     <ClCompile Include="coroutines-tumble.ixx" />
