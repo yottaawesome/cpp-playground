@@ -4,7 +4,11 @@ import std;
 export namespace StringConversion
 {
 	template<typename T>
-	concept StdString = std::same_as<T, std::string> or std::same_as<T, std::wstring>;
+	concept StdString = 
+		std::same_as<T, std::string> 
+		or std::same_as<T, std::wstring>
+		or std::same_as<T, std::string_view>
+		or std::same_as<T, std::wstring_view>;
 
 	std::wstring ChangeType(std::string_view)
 	{
@@ -16,7 +20,15 @@ export namespace StringConversion
 	}
 
 	template<StdString TTo>
-	decltype(auto) Convert(auto&& from);
+	decltype(auto) Convert(StdString auto&& from);
+	template<StdString TTo>
+	decltype(auto) Convert(StdString auto& from);
+	template<StdString TTo>
+	decltype(auto) Convert(const StdString auto& from);
+	template<StdString TTo>
+	decltype(auto) Convert(std::string_view from);
+	template<StdString TTo>
+	decltype(auto) Convert(std::wstring_view from);
 
 	template<StdString T, size_t N>
 	decltype(auto) Convert(const char(&from)[N])
@@ -45,6 +57,11 @@ export namespace StringConversion
 
 	// string -> string
 	template<>
+	decltype(auto) Convert<std::string>(std::string_view from)
+	{
+		return from;
+	}
+	template<>
 	decltype(auto) Convert<std::string>(std::string& from)
 	{
 		return from;
@@ -60,7 +77,12 @@ export namespace StringConversion
 		return from;
 	}
 
-	// wstring -> string
+	// wstring -> wstring
+	template<>
+	decltype(auto) Convert<std::wstring>(std::wstring_view from)
+	{
+		return from;
+	}
 	template<>
 	decltype(auto) Convert<std::wstring>(std::wstring& from)
 	{
@@ -79,6 +101,11 @@ export namespace StringConversion
 	
 	// string -> wstring
 	template<>
+	decltype(auto) Convert<std::wstring>(std::string_view from)
+	{
+		return ChangeType(from);
+	}
+	template<>
 	decltype(auto) Convert<std::wstring>(std::string& from)
 	{
 		return ChangeType(from);
@@ -95,6 +122,11 @@ export namespace StringConversion
 	}
 
 	// wstring -> string
+	template<>
+	decltype(auto) Convert<std::string>(std::wstring_view from)
+	{
+		return ChangeType(from);
+	}
 	template<>
 	decltype(auto) Convert<std::string>(std::wstring& from)
 	{
@@ -115,6 +147,9 @@ export namespace StringConversion
 	{
 		std::string s;
 		auto& x = Convert<std::string>(s);
+		Convert<std::string>("a");
+		Convert<std::string>(L"a");
+		Convert<std::string>(std::string_view{"a"});
 		std::println("{}", &s == &x);
 	}
 }
