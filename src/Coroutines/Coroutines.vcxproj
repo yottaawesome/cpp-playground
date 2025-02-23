@@ -131,6 +131,8 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="coroutines-basic.ixx" />
+    <ClCompile Include="coroutines-pool.ixx" />
     <ClCompile Include="coroutines-workqueues.ixx" />
     <ClCompile Include="coroutines-eagerfuture.ixx" />
     <ClCompile Include="coroutines-minimalasyncframework.ixx" />

@@ -6,3 +6,5 @@ export import :minimalasyncframework;
 export import :taskscheduler;
 export import :tumble;
 export import :workqueues;
+export import :basic;
+export import :pool;
