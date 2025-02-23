@@ -200,11 +200,11 @@ export namespace Coroutines::WithFutex
 
 	Queue WorkQueue{};
 
-	template<bool TLaunch = true>
+	template<typename TPromise, bool TLaunch = true>
 	struct Awaitable
 	{
 		bool await_ready() { return false; }
-		void await_suspend(std::coroutine_handle<> h)
+		void await_suspend(std::coroutine_handle<TPromise> h)
 		{
 			if constexpr(TLaunch)
 				WorkQueue.Add(h);
@@ -270,17 +270,12 @@ export namespace Coroutines::WithFutex
 	{
 		void Start()
 		{
-			m_thread = std::jthread{ Thread::EntryPoint, this };
+			m_thread = std::jthread{ &Thread::Run, this };
 		}
 
 		void SignalToExit()
 		{
 			m_run = false;
-		}
-
-		static void EntryPoint(Thread* self)
-		{
-			self->Run();
 		}
 
 		void Run()
@@ -301,17 +296,17 @@ export namespace Coroutines::WithFutex
 		std::jthread m_thread;
 	};
 
-	auto SwitchToNewThread()
+	/*auto SwitchToNewThread()
 	{
 		return Awaitable{};
-	}
+	}*/
 
 	std::default_random_engine engn;
 	std::uniform_int_distribution<int> dist(1, 50);
 
 	Task RunOnNewThread()
 	{
-		co_await SwitchToNewThread();
+		co_await Awaitable<Task::promise_type>{};
 		std::println("Resuming on worker thread...");
 		co_return dist(engn);
 	}
@@ -331,14 +326,14 @@ export namespace Coroutines::WithFutex
 		};
 	};
 
-	auto DoVoid()
+	/*auto DoVoid()
 	{
 		return Awaitable<false>{};
-	}
+	}*/
 
 	VoidTask DoVoidTask()
 	{
-		co_await DoVoid();
+		co_await Awaitable<VoidTask::promise_type, false>{};
 		std::println("Ha");
 	}
 

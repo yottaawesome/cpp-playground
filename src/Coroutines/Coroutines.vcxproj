@@ -142,6 +142,7 @@
     <ClCompile Include="coroutines-tumble.ixx" />
     <ClCompile Include="coroutines.ixx" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="win32.ixx" />
   </ItemGroup>
   <ItemGroup>
     <None Include="README.md" />
