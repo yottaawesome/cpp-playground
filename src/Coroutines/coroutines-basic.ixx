@@ -272,6 +272,7 @@ export namespace Coroutines::EvenMoreBasicAwaitables
 	}
 }
 
+// Adapted from Concurrency with Modern C++
 export namespace Signal
 {
 	struct Event 
