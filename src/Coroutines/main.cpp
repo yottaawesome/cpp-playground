@@ -12,6 +12,6 @@ int main()
     //Coroutines::EvenMoreBasicAwaitables::Run();
     //Coroutines::Random::Run();
     //Coroutines::WithFutex::Run();
-    Coroutines::Pool2::Run();
+    Coroutines::EvenMoreBasicAwaitables::Run();
     return 0;
 }

@@ -16,6 +16,11 @@ struct Constant
 
 export namespace Win32
 {
+	using
+		::DWORD,
+		::HANDLE,
+		::GetStdHandle;
+
 	constexpr Constant<STD_INPUT_HANDLE> StdIn;
 	constexpr Constant<STD_OUTPUT_HANDLE> StdOut;
 	constexpr Constant<STD_ERROR_HANDLE> StdError;

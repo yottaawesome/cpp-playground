@@ -137,8 +137,9 @@ export namespace Coroutines::Simplest
 
     task MakeTask()
     {
+        resumable r;
         std::println("MakeTask()");
-        co_await resumable();
+        co_await r;
         // awaiter destroyed here
         //co_return 1;
         std::println("Hello");
@@ -153,43 +154,46 @@ export namespace Coroutines::Simplest
 
 export namespace Coroutines::EvenMoreBasicAwaitables
 {
+
+    template<typename T>
     struct OverlappedOperation
     {
         struct Awaitable
         {
-            Awaitable(OverlappedOperation& t) : m_task(t)
-            {
+            Awaitable() noexcept
 
+            {
             }
 
-            ~Awaitable()
+            ~Awaitable()noexcept
             {
                 std::println("~awaitable()");
             }
 
-            bool await_ready() // --> 2
+            bool await_ready()noexcept // --> 2
             {
                 std::println("await_ready()");
                 return false;
             }
 
-            void await_suspend(std::coroutine_handle<> h) // --> 3
+            void await_suspend(std::coroutine_handle<T> h) noexcept// --> 3
             {
+                h.promise().set();
                 std::println("await_suspend()");
+                //H = h;
                 //m_task.handle = h;
             }
 
-            void await_resume()
+            void await_resume()noexcept
             {
                 std::println("await_result()");
             }
-
-            OverlappedOperation& m_task;
         };
 
         Awaitable operator co_await()  noexcept
         {
-            return Awaitable{ *this };
+            //return Awaitable{ *this };
+            return Awaitable{ };
         }
     };
 
@@ -197,25 +201,29 @@ export namespace Coroutines::EvenMoreBasicAwaitables
     {
         struct promise_type
         {
+            std::shared_ptr<int> M = std::make_shared<int>(0);
+
+            void set() { *M = 10; }
+
             ~promise_type()
             {
-                std::println("~promise_type()");
+                std::println("promise_type::~promise_type()");
             }
 
             Task get_return_object()
             {
-                return {};
+                return {std::coroutine_handle<promise_type>::from_promise(*this), M };
             }
 
             std::suspend_never initial_suspend() // --> 1
             {
-                std::println("initial_suspend()");
-                return {};
+                std::println("promise_type::initial_suspend()");
+                return {  };
             }
 
             std::suspend_never final_suspend() noexcept
             {
-                std::println("final_suspend()");
+                std::println("promise_type::final_suspend()");
                 return {};
             }
 
@@ -223,31 +231,48 @@ export namespace Coroutines::EvenMoreBasicAwaitables
             {
             }
 
-            /*void return_value(int t)
-            {
-                std::println("return_value()");
-            }*/
-
             void unhandled_exception()
             {
-                std::println("unhandled_exception()");
+                std::println("promise_type::unhandled_exception()");
             }
         };
+
+        std::coroutine_handle<promise_type> Handle;
+        std::shared_ptr<int> M;
+
+        Task(std::coroutine_handle<promise_type> h, std::shared_ptr<int> m)
+            : Handle(h), M(m)
+        {
+
+        }
 
         ~Task()
         {
             std::println("~task()");
         }
+
+        void Continue()
+        {
+            Handle.resume();
+        }
     };
 
     Task DoTask()
     {
-        co_await OverlappedOperation();
+        co_await OverlappedOperation<Task::promise_type>();
+        std::println("resumed");
     }
 
     void Run()
     {
         std::println("Coroutines::EvenMoreBasicAwaitables");
-        DoTask();
+        auto x = DoTask();
+        x.Continue();
+        std::println("{}", *x.M);
     }
+}
+
+export namespace Overlapped
+{
+   
 }
