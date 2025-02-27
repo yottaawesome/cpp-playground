@@ -77,3 +77,49 @@ export namespace Dates
         std::cout << '\n';
 	}
 }
+
+// Adapted from https://www.modernescpp.com/index.php/chrono-input/
+namespace RunDateParsing
+{
+    void Dates()
+    {
+        std::cout << '\n';
+
+        using std::chrono::floor;
+
+        std::cout << "UTC  time" << '\n';                             // (1)             
+        auto utcTime = std::chrono::system_clock::now();
+        std::cout << "  " << utcTime << '\n';
+        std::cout << "  " << floor<std::chrono::seconds>(utcTime) << '\n';
+
+        std::cout << '\n';
+
+        std::cout << "Local time" << '\n';                           // (2)                
+        auto localTime = std::chrono::zoned_time(std::chrono::current_zone(), utcTime);
+
+        std::cout << "  " << localTime << '\n';
+        std::cout << "  " << floor<std::chrono::seconds>(localTime.get_local_time())
+            << '\n';
+
+        auto offset = localTime.get_info().offset;                 // (3)    
+        std::cout << "  UTC offset: " << offset << '\n';
+
+        std::cout << '\n';
+    }
+
+    void Dates2()
+    {
+        std::string s = "20240315-15:03:22";
+        std::istringstream ss{ s };
+        std::chrono::sys_seconds timePoint;
+        ss >> std::chrono::parse("%Y%m%d-%H:%M:%S", timePoint);
+        std::println("{}", timePoint);
+
+        auto localTime = std::chrono::zoned_time(std::chrono::current_zone(), timePoint);
+        std::println("{}", localTime);
+
+        //std::chrono::from_stream(ss, "%F %T", timePoint);          //(2)
+        //if (iStream1) std::cout << "timePoint: " << timePoint << '\n';
+        //else std::cerr << "timepoint: Reading failed\n";
+    }
+}
