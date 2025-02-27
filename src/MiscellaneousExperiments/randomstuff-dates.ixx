@@ -113,6 +113,8 @@ namespace RunDateParsing
         std::istringstream ss{ s };
         std::chrono::sys_seconds timePoint;
         ss >> std::chrono::parse("%Y%m%d-%H:%M:%S", timePoint);
+        if (not ss)
+            return;
         std::println("{}", timePoint);
 
         auto localTime = std::chrono::zoned_time(std::chrono::current_zone(), timePoint);
