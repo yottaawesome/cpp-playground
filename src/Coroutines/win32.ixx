@@ -19,9 +19,17 @@ export namespace Win32
 	using
 		::DWORD,
 		::HANDLE,
-		::GetStdHandle;
+		::GetStdHandle,
+		::SetEvent,
+		::CreateEventW,
+		::CloseHandle,
+		::ResetEvent,
+		::WaitForSingleObject
+		;
 
 	constexpr Constant<STD_INPUT_HANDLE> StdIn;
 	constexpr Constant<STD_OUTPUT_HANDLE> StdOut;
 	constexpr Constant<STD_ERROR_HANDLE> StdError;
+
+	constexpr auto Infinite = INFINITE;
 }

@@ -13,6 +13,7 @@ int main()
     //Coroutines::Random::Run();
     //Coroutines::WithFutex::Run();
     //Coroutines::EvenMoreBasicAwaitables::Run();
-    Signal::Run();
+    //Signal::Run();
+    Win32Event::Run();
     return 0;
 }
