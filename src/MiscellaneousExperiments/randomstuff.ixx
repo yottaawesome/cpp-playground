@@ -693,3 +693,71 @@ namespace ImplicitLifetimes
         
     }
 }
+
+namespace Termination
+{
+    // See https://www.studyplan.dev/pro-cpp/rethrowing-exceptions
+    // https://github.com/MicrosoftDocs/cpp-docs/blob/main/docs/cpp/transporting-exceptions-between-threads.md
+    void Run()
+    {
+        constexpr auto FinalException =
+            []
+            {
+                try
+                {
+                    if (auto ptr = std::current_exception(); ptr)
+                        std::rethrow_exception(ptr);
+                    std::abort(); // shouldn't hit this line, unexpected
+                }
+                // catch other types
+                catch (const std::exception& ex)
+                {
+                    std::abort();
+                }
+                catch (...)
+                {
+                    std::abort();
+                }
+            };
+
+        // Unwinds standard nested exceptions
+        constexpr auto NestedException =
+            [](this auto self, const std::exception& ex) -> void // trailing return type required because MSVC
+            {
+                try
+                {
+                    std::rethrow_if_nested(ex);
+                    FinalException();
+                }
+                catch (const std::exception& ex)
+                {
+                    self(ex);
+                }
+                catch (...)
+                {
+                    std::abort();
+                }
+            };
+
+        std::set_terminate(
+            []
+            {
+                std::exception_ptr ptr = std::current_exception();
+                if (not ptr) // no exception, means terminate() was manually called
+                    std::abort();
+
+                try
+                {
+                    std::rethrow_exception(ptr);
+                }
+                catch (const std::exception& ex)
+                {
+                    NestedException(ex);
+                }
+                catch (...)
+                {
+                    std::abort();
+                }
+            });
+    }
+}
