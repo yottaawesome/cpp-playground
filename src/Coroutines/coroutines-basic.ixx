@@ -423,12 +423,18 @@ export namespace Win32Event
 {
 	struct Event
 	{
-		~Event() { Win32::CloseHandle(Handle); }
+		~Event() 
+		{ 
+			Win32::CloseHandle(Handle); 
+		}
+
 		Win32::HANDLE Handle = Win32::CreateEventW(nullptr, false, false, nullptr);
+		
 		void Signal()
 		{
 			Win32::SetEvent(Handle);
 		}
+		
 		void Wait()
 		{
 			Win32::WaitForSingleObject(Handle, Win32::Infinite);
@@ -441,41 +447,52 @@ export namespace Win32Event
 		int Number = 0;
 	};
 
+	template<typename TPromise>
+	struct Awaitable
+	{
+		~Awaitable() 
+		{ 
+			std::println("Awaitable destroyed"); 
+		}
+		
+		std::jthread& out;
+		
+		Awaitable(std::jthread* param) : out(*param) {}
+
+		bool await_ready() 
+		{ 
+			std::println("Awaitable::await_ready()");
+			return false;
+		}
+
+		void await_suspend(std::coroutine_handle<TPromise> h)
+		{
+			std::println("Awaitable::await_suspend()");
+			out = std::jthread(
+				[h]
+				{
+					std::this_thread::sleep_for(std::chrono::seconds{ 2 });
+					h.resume();
+				}
+			);
+		}
+		
+		void await_resume()
+		{
+			std::println("Awaitable::await_resume(): {}", std::this_thread::get_id());
+		}
+	};
+
 	struct Task
 	{
 		~Task()
 		{
 			std::println("Task destroyed {}", std::this_thread::get_id());
 		}
-		struct Awaitable;
-		struct promise_type;
 
 		std::shared_ptr<Result> value;
 
 		Task(std::shared_ptr<Result> p) : value(std::move(p)) {}
-		
-		struct Awaitable
-		{
-			~Awaitable() { std::println("Awaitable destroyed"); }
-			std::jthread& out;
-			Awaitable(std::jthread* param) : out(*param) {}
-
-			bool await_ready() { return false; }
-			void await_suspend(std::coroutine_handle<Task::promise_type> h)
-			{
-				out = std::jthread(
-					[h] 
-					{ 
-						std::this_thread::sleep_for(std::chrono::seconds{ 2 });
-						h.resume(); 
-					}
-				);
-			}
-			void await_resume()
-			{
-				std::println("AwaitResume(): {}", std::this_thread::get_id());
-			}
-		};
 
 		int Get()
 		{
@@ -485,29 +502,49 @@ export namespace Win32Event
 
 		struct promise_type // name must be promise_type
 		{
-			~promise_type() { std::println("promise_type destroyed."); }
+			~promise_type() 
+			{ 
+				std::println("promise_type destroyed."); 
+			}
+
 			std::shared_ptr<Result> ptr = std::make_shared<Result>();
+			
 			Task get_return_object()
 			{
 				// Can pass this back to Task. Don't pass the promise_type
 				// instance back as it's destroyed by then.
 				//std::coroutine_handle<promise_type>::from_promise(*this);
+				std::println("promise_type::get_return_object().");
 				return { ptr };
 			}
-			std::suspend_never initial_suspend() { return {}; }
-			std::suspend_never final_suspend() noexcept { return {}; }
+			
+			std::suspend_never initial_suspend()
+			{ 
+				std::println("promise_type::initial_suspend().");
+				return {};
+			}
+
+			std::suspend_never final_suspend() noexcept 
+			{ 
+				std::println("promise_type::final_suspend().");
+				return {};
+			}
+
 			void unhandled_exception() {}
+
 			void return_value(int i)
 			{
+				std::println("promise_type::return_value().");
 				ptr->Number = i;
 				ptr->Done.Signal();
 			}
 		};
 
 		Task(std::jthread* jthread) : out(jthread) {}
-		Task::Awaitable operator co_await()
+
+		Awaitable<promise_type> operator co_await()
 		{
-			return Awaitable{ out };
+			return Awaitable<promise_type>{ out };
 		} 
 		std::jthread* out;
 	};
@@ -516,7 +553,7 @@ export namespace Win32Event
 	{
 		std::println("Coroutine started on thread: {}", std::this_thread::get_id());
 		std::jthread out;
-		co_await Task::Awaitable{ &out };
+		co_await Awaitable<Task::promise_type>{ &out };
 		// awaiter destroyed here
 		std::println("Coroutine resumed on thread: {}", std::this_thread::get_id());
 		co_return 8;
