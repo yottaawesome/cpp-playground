@@ -283,79 +283,80 @@ export namespace Signal
 		Event& operator=(const Event&) = delete;
 		Event& operator=(Event&&) = delete;
 
-		struct Awaiter;
-		Awaiter operator co_await() const noexcept;
-
-		void notify() noexcept;
-
-	private:
-		friend struct Awaiter;
-		mutable std::atomic<void*> suspendedWaiter{ nullptr };
-		mutable std::atomic<bool> notified{ false };
-	};
-
-	struct Event::Awaiter
-	{
-		Awaiter(const Event& eve) : event(eve) {}
-
-		bool await_ready() const;
-		bool await_suspend(std::coroutine_handle<> corHandle) noexcept;
-		void await_resume() noexcept {}
-
-	private:
-		friend struct Event;
-		const Event& event;
-		std::coroutine_handle<> coroutineHandle;
-	};
-
-	bool Event::Awaiter::await_ready() const 
-	{
-		// allow at most one waiter
-		if (event.suspendedWaiter.load() != nullptr) 
+		void notify() noexcept
 		{
-			throw std::runtime_error("More than one waiter is not valid");
-		}
+			std::println("Thread invoking notify() {}", std::this_thread::get_id());
+			m_notified = true;
 
-		// event.notified == false; suspends the coroutine
-		// event.notified == true; the coroutine is executed like a normal function
-		return event.notified;
-	}
+			void* waiter = m_suspendedWaiter.load();
 
-	bool Event::Awaiter::await_suspend(std::coroutine_handle<> corHandle) noexcept 
-	{
-		coroutineHandle = corHandle;
-
-		const Event& ev = event;
-		ev.suspendedWaiter.store(this);
-
-		if (ev.notified) 
-		{
-			void* thisPtr = this;
-
-			if (ev.suspendedWaiter.compare_exchange_strong(thisPtr, nullptr)) 
+			if (waiter != nullptr && m_suspendedWaiter.compare_exchange_strong(waiter, nullptr))
 			{
-				return false;
+				std::println("notify() compare_exchange_strong() {}", std::this_thread::get_id());
+				static_cast<Awaiter*>(waiter)->coroutineHandle.resume();
 			}
 		}
-		return true;
-	}
 
-	void Event::notify() noexcept 
-	{
-		notified = true;
-
-		void* waiter = suspendedWaiter.load();
-
-		if (waiter != nullptr && suspendedWaiter.compare_exchange_strong(waiter, nullptr)) 
+		struct Awaiter
 		{
-			static_cast<Awaiter*>(waiter)->coroutineHandle.resume();
-		}
-	}
+			Awaiter(const Event& eve) : event(eve) {}
 
-	Event::Awaiter Event::operator co_await() const noexcept 
-	{
-		return Awaiter{ *this };
-	}
+			bool await_ready() const
+			{
+				std::println("Awaited::await_ready() {}", std::this_thread::get_id());
+				// allow at most one waiter
+				if (event.m_suspendedWaiter.load() != nullptr)
+				{
+					throw std::runtime_error("More than one waiter is not valid");
+				}
+
+				// event.notified == false; suspends the coroutine
+				// event.notified == true; the coroutine is executed like a normal function
+				return event.m_notified;
+			}
+			bool await_suspend(std::coroutine_handle<> corHandle) noexcept
+			{
+				std::println("Awaited::await_suspend() {}", std::this_thread::get_id());
+				coroutineHandle = corHandle;
+
+				const Event& ev = event;
+				ev.m_suspendedWaiter.store(this);
+
+				if (ev.m_notified)
+				{
+					void* thisPtr = this;
+
+					std::println("await_suspend() m_notified() {}", std::this_thread::get_id());
+					if (ev.m_suspendedWaiter.compare_exchange_strong(thisPtr, nullptr))
+					{
+						std::println("await_suspend() compare_exchange_strong() {}", std::this_thread::get_id());
+						return false;
+					}
+				}
+				std::println("await_suspend() true {}", std::this_thread::get_id());
+				return true;
+			}
+
+			void await_resume() noexcept 
+			{
+				std::println("Resuming thread {}", std::this_thread::get_id());
+			}
+
+		private:
+			friend struct Event;
+			const Event& event;
+			std::coroutine_handle<> coroutineHandle;
+		};
+
+		Awaiter operator co_await() const noexcept
+		{
+			return Awaiter{ *this };
+		}
+
+	private:
+		mutable std::atomic<void*> m_suspendedWaiter{ nullptr };
+		mutable std::atomic<bool> m_notified{ false };
+	};
 
 	struct Task 
 	{
@@ -371,40 +372,48 @@ export namespace Signal
 
 	Task receiver(Event & event) 
 	{
+		std::println("Receiver() {}", std::this_thread::get_id());
 		auto start = std::chrono::high_resolution_clock::now();
 		co_await event;
-		std::cout << "Got the notification! " << '\n';
+		std::println("Got the notification! {}", std::this_thread::get_id());
 		auto end = std::chrono::high_resolution_clock::now();
 		std::chrono::duration<double> elapsed = end - start;
-		std::cout << "Waited " << elapsed.count() << " seconds." << '\n';
+		std::println("Waited {} seconds {}", elapsed.count(), std::this_thread::get_id());
 	}
 
 	void Run()
 	{
 		using namespace std::chrono_literals;
 
-		std::cout << '\n';
-		std::cout << "Notification before waiting" << '\n';
+		std::println("Notification before waiting {}", std::this_thread::get_id());
 		Event event1{};
-		auto senderThread1 = std::thread([&event1] { event1.notify(); }); // Notification
-		auto receiverThread1 = std::thread(receiver, std::ref(event1));
+		auto senderThread1 = std::thread( // notifies and exits
+			[&event1] 
+			{ 
+				std::println("Thread doing notification {}", std::this_thread::get_id());
+				event1.notify();
+				std::println("Exiting {}", std::this_thread::get_id());
+			}
+		); // Notification
+		auto receiverThread1 = std::thread(receiver, std::ref(event1)); // runs the coroutine
 
 		receiverThread1.join();
 		senderThread1.join();
 
-		std::cout << '\n';
+		std::println("Notification after 2 seconds waiting {}\n", std::this_thread::get_id());
 
-		std::cout << "Notification after 2 seconds waiting" << '\n';
 		Event event2{};
-		auto receiverThread2 = std::thread(receiver, std::ref(event2));
-		auto senderThread2 = std::thread([&event2] {
-			std::this_thread::sleep_for(2s);
-			event2.notify(); // Notification
+		auto receiverThread2 = std::thread(receiver, std::ref(event2)); // suspends at the coroutine and exits before thread2
+		auto senderThread2 = std::thread( // notifies then runs the coroutine suspended by thread1
+			[&event2] 
+			{
+				std::println("Thread doing notification {}", std::this_thread::get_id());
+				std::this_thread::sleep_for(2s);
+				event2.notify(); // Notification
+				std::println("Exiting {}", std::this_thread::get_id());
 			});
 
 		receiverThread2.join();
 		senderThread2.join();
-
-		std::cout << '\n';
 	}
 }

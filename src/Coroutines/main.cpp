@@ -12,6 +12,7 @@ int main()
     //Coroutines::EvenMoreBasicAwaitables::Run();
     //Coroutines::Random::Run();
     //Coroutines::WithFutex::Run();
-    Coroutines::EvenMoreBasicAwaitables::Run();
+    //Coroutines::EvenMoreBasicAwaitables::Run();
+    Signal::Run();
     return 0;
 }
