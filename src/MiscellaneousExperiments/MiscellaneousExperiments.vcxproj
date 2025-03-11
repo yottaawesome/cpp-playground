@@ -134,6 +134,7 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="randomstuff-dates.ixx" />
     <ClCompile Include="randomstuff-deducingthis.ixx" />
+    <ClCompile Include="randomstuff-lockfree.ixx" />
     <ClCompile Include="randomstuff-stringconversion.ixx" />
     <ClCompile Include="randomstuff.cpp" />
     <ClCompile Include="randomstuff.ixx" />
