@@ -132,6 +132,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="coroutines-basic.ixx" />
+    <ClCompile Include="coroutines-communication.ixx" />
     <ClCompile Include="coroutines-pool.ixx" />
     <ClCompile Include="coroutines-workqueues.ixx" />
     <ClCompile Include="coroutines-eagerfuture.ixx" />

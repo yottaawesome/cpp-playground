@@ -14,6 +14,7 @@ int main()
     //Coroutines::WithFutex::Run();
     //Coroutines::EvenMoreBasicAwaitables::Run();
     //Signal::Run();
-    Win32Event::Run();
+    //Win32Event::Run();
+    Coroutines::Communication::Run();
     return 0;
 }

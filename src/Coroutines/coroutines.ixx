@@ -8,3 +8,4 @@ export import :tumble;
 export import :workqueues;
 export import :basic;
 export import :pool;
+export import :communication;
