@@ -15,6 +15,7 @@ int main()
     //Coroutines::EvenMoreBasicAwaitables::Run();
     //Signal::Run();
     //Win32Event::Run();
-    Coroutines::Communication::Run();
+    //Coroutines::Communication::Run();
+    Coroutines::Communication3::Run();
     return 0;
 }
