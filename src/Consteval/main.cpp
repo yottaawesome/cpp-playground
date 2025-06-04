@@ -99,6 +99,84 @@ namespace Consteval2
     }
 }
 
+namespace Consteval3
+{
+    constexpr bool IsIP4Address(std::string_view s)
+    {
+        if (s.empty())
+            return false;
+        if (s.size() < 7)
+            return false;
+
+        size_t currentPos = 0;
+        for (int i = 0; i < 4; i++)
+        {
+            auto iter = s.find(".", currentPos);
+            std::string_view octet;
+            if (iter == s.npos and i != 3) // Not enough octets
+                return false;
+            else if (iter == s.npos) // Final octet
+                octet = s.substr(currentPos, s.size());
+            else // Intermediate octets
+                octet = s.substr(currentPos, iter - currentPos);
+
+            // Octets cannot be zero-length or have more than 3 digits
+            if (octet.size() > 3 or octet.size() == 0)
+                return false;
+
+            // Octet contents must be digits
+            bool allNumeric = std::ranges::all_of(
+                octet,
+                [](char c) -> bool
+                {
+                    return c == '0'
+                        or c == '1'
+                        or c == '2'
+                        or c == '3'
+                        or c == '4'
+                        or c == '5'
+                        or c == '6'
+                        or c == '7'
+                        or c == '8'
+                        or c == '9';
+                });
+            if (not allNumeric)
+                return false;
+            // Octet must not be >255
+            int value = 0;
+            for (int i = static_cast<int>(octet.size()) - 1, j = 1; i > -1; i--, j *= 10)
+                value += (static_cast<unsigned char>(octet[i]) - 48) * j; // digits start at 48
+            if (value > 255)
+                return false;
+
+            // not constexpr
+            //std::strtol(octet.data(), nullptr, 10);
+
+            currentPos = iter + 1;
+        }
+
+        return true;
+    }
+
+    static_assert(
+        [] {
+            return IsIP4Address("127.2.3.1")
+                and IsIP4Address("0.0.0.0");
+        }()
+    );
+    static_assert(
+        ![] {
+            return IsIP4Address("1274.2.3.1")
+                or IsIP4Address("270.2.3.1");
+        }()
+    );
+
+    void Run()
+    {
+        bool b = IsIP4Address("255.2.3.1");
+    }
+}
+
 namespace FixedStrings
 {
     template<size_t N>
@@ -455,9 +533,11 @@ namespace StaticTests
     }
 }
 
-
 auto main() -> int
 {
+    Consteval3::Run();
+    return 0;
+
     Unrelated::Run();
     Consteval2::Run();
     FixedStrings::Run();
