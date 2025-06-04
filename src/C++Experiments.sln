@@ -95,6 +95,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Bitset", "Bitset\Bitset.vcx
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Consteval", "Consteval\Consteval.vcxproj", "{14203F40-7103-4856-86B5-92D247D69C15}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "EventPropagation", "EventPropagation\EventPropagation.vcxproj", "{E77E819F-760F-4C36-8E7D-8CA57AE5155D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|ARM = Debug|ARM
@@ -827,6 +829,22 @@ Global
 		{14203F40-7103-4856-86B5-92D247D69C15}.Release|x64.Build.0 = Release|x64
 		{14203F40-7103-4856-86B5-92D247D69C15}.Release|x86.ActiveCfg = Release|Win32
 		{14203F40-7103-4856-86B5-92D247D69C15}.Release|x86.Build.0 = Release|Win32
+		{E77E819F-760F-4C36-8E7D-8CA57AE5155D}.Debug|ARM.ActiveCfg = Debug|x64
+		{E77E819F-760F-4C36-8E7D-8CA57AE5155D}.Debug|ARM.Build.0 = Debug|x64
+		{E77E819F-760F-4C36-8E7D-8CA57AE5155D}.Debug|ARM64.ActiveCfg = Debug|x64
+		{E77E819F-760F-4C36-8E7D-8CA57AE5155D}.Debug|ARM64.Build.0 = Debug|x64
+		{E77E819F-760F-4C36-8E7D-8CA57AE5155D}.Debug|x64.ActiveCfg = Debug|x64
+		{E77E819F-760F-4C36-8E7D-8CA57AE5155D}.Debug|x64.Build.0 = Debug|x64
+		{E77E819F-760F-4C36-8E7D-8CA57AE5155D}.Debug|x86.ActiveCfg = Debug|Win32
+		{E77E819F-760F-4C36-8E7D-8CA57AE5155D}.Debug|x86.Build.0 = Debug|Win32
+		{E77E819F-760F-4C36-8E7D-8CA57AE5155D}.Release|ARM.ActiveCfg = Release|x64
+		{E77E819F-760F-4C36-8E7D-8CA57AE5155D}.Release|ARM.Build.0 = Release|x64
+		{E77E819F-760F-4C36-8E7D-8CA57AE5155D}.Release|ARM64.ActiveCfg = Release|x64
+		{E77E819F-760F-4C36-8E7D-8CA57AE5155D}.Release|ARM64.Build.0 = Release|x64
+		{E77E819F-760F-4C36-8E7D-8CA57AE5155D}.Release|x64.ActiveCfg = Release|x64
+		{E77E819F-760F-4C36-8E7D-8CA57AE5155D}.Release|x64.Build.0 = Release|x64
+		{E77E819F-760F-4C36-8E7D-8CA57AE5155D}.Release|x86.ActiveCfg = Release|Win32
+		{E77E819F-760F-4C36-8E7D-8CA57AE5155D}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
