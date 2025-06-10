@@ -533,8 +533,30 @@ namespace StaticTests
     }
 }
 
+struct L
+{
+    constexpr virtual ~L() {}
+    constexpr virtual std::string S() { return ""; }
+};
+
+struct LL : L 
+{
+    constexpr ~LL() {}
+    constexpr virtual std::string S() override { return ""; }
+};
+
+consteval bool M()
+{
+    L* l = new LL{};
+    static_assert([l]() consteval { return true; }());
+    delete l;
+    return true;
+}
+
 auto main() -> int
 {
+    bool MMM = M();
+
     Consteval3::Run();
     return 0;
 

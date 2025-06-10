@@ -94,6 +94,33 @@ export namespace Coroutines::Pool
 		}
 	};
 
+
+	using LM = auto(*)()->int;
+
+	LM l = []() {return 1; };
+
+	template<class T>
+	struct decompose;
+
+	template<class TReturn, typename... TArgs>
+	struct decompose<auto(*)(TArgs...)->TReturn>
+	{
+		constexpr static int n = sizeof...(TArgs);
+		using Signature = auto(*)(TArgs...)->TReturn;
+	};
+
+	template<auto VFunc>
+	struct MMM
+	{
+		using FN = decompose<decltype(VFunc)>;
+	};
+
+
+	int FFF() { return 4; }
+	using XXXX = MMM<FFF>;
+
+	typename XXXX::FN::Signature S = FFF;
+
 	template<typename T>
 	struct Task
 	{
