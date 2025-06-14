@@ -548,7 +548,6 @@ struct LL : L
 consteval bool M()
 {
     L* l = new LL{};
-    static_assert([l]() consteval { return true; }());
     delete l;
     return true;
 }

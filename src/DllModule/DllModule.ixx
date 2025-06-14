@@ -22,7 +22,8 @@ export namespace ERT
 
 // Classes don't need __declspec(dllexport) if
 // functions are defined in the declaration.
-export struct AA
+// 14/06/2025 -- now needed.
+export struct __declspec(dllexport) AA
 {
 	void MM() {};
 	void NN() {};

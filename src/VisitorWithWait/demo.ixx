@@ -38,7 +38,6 @@ export namespace WithTuple
 	// Three ways of constrained function signatures
 	EventInvocable auto SomeFunc1();
 	auto SomeFunc2() -> EventInvocable auto;
-	EventInvocable auto SomeFunc3() -> auto;
 
 	template <class Tuple, size_t N = 0>
 	auto RuntimeInvoke(Tuple& tup, size_t idx)
