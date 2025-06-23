@@ -7,7 +7,9 @@ int x() { return 1; }
 static_assert(std::is_same_v<int, decltype(x())>, "No");
 
 template<typename T>
-concept Exception = std::is_base_of_v<std::exception, std::remove_cvref_t<T>>;
+concept Exception = 
+    std::same_as<std::exception, T> 
+    or std::is_base_of_v<std::exception, std::remove_cvref_t<T>>;
 
 struct S : public std::exception {};
 struct T : public std::exception {};
@@ -23,6 +25,10 @@ static_assert(Exception<T>);
 //        return format_to(ctx.out(), "{}", object.what());
 //    }
 //};
+
+using Map = std::map<std::string, std::vector<double>>;
+auto GetMap()       -> Map;
+auto GetAndSetMap() -> Map;
 
 namespace Logging
 {
@@ -51,9 +57,44 @@ namespace Logging
     }
 }
 
+template<size_t N>
+struct FixedString
+{
+    char Buffer[N]{};
+    consteval FixedString(const char(&buffer)[N]) noexcept
+    {
+        std::copy_n(buffer, N, Buffer); 
+    }
+
+    auto View   (this auto self)    noexcept -> std::string_view    { return self.Buffer; }
+    auto String (this auto self)    noexcept -> std::string         { return self.Buffer; }
+};
+
+template<FixedString F, typename...TArgs>
+concept FormatStringTest =
+    [] consteval -> bool
+    {
+        std::format_string<TArgs...> f{F.Buffer};
+        return true;
+    }();
+
+template<FixedString F, typename...TArgs>
+concept FormatString = 
+    [] consteval -> bool
+    {
+        static_assert(FormatStringTest<F, TArgs...>, "This is not a valid format string.");
+        return true;
+    }();
 
 int main() 
 {
+    FormatString<"{} {}", std::string, std::string>;
+
+    [](auto...a)
+    {
+
+    }(std::pair{"a", 1});
+
     Logging::Log("A");
     Logging::Log("A {}, {}", 1, 10);
     Logging::Log("a", std::exception{});
