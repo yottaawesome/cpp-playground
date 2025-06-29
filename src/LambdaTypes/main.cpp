@@ -26,17 +26,36 @@ static_assert(Exception<T>);
 //    }
 //};
 
-using Map = std::map<std::string, std::vector<double>>;
-auto GetMap()       -> Map;
-auto GetAndSetMap() -> Map;
-
 namespace Logging
 {
+    template<size_t N>
+    struct FixedString
+    {
+        char Buffer[N]{};
+        consteval FixedString(const char(&buffer)[N]) noexcept
+        {
+            std::copy_n(buffer, N, Buffer);
+        }
+
+        auto View(this auto self)    noexcept -> std::string_view { return self.Buffer; }
+        auto String(this auto self)    noexcept -> std::string { return self.Buffer; }
+    };
+
+    template<FixedString F, typename...TArgs>
+    concept FormatStringTest =
+        [] { std::format_string<TArgs...> f{ F.Buffer }; return true; }();
+
+    template<FixedString F, typename...TArgs>
+    concept FormatString =
+        [] { static_assert(FormatStringTest<F, TArgs...>, "This is not a valid format string."); return true; }();
+
     template<typename...TArgs>
     struct Test
     {
         std::format_string<TArgs...> Fmt;
-        consteval Test(auto&& fmt) : Fmt{ fmt } {}
+        consteval Test(auto&& fmt) : Fmt{ fmt }
+        {
+        }
     };
 
     template<typename THead, typename...TTail>
@@ -57,44 +76,147 @@ namespace Logging
     }
 }
 
-template<size_t N>
-struct FixedString
+template<typename T>
+struct Helper
 {
-    char Buffer[N]{};
-    consteval FixedString(const char(&buffer)[N]) noexcept
-    {
-        std::copy_n(buffer, N, Buffer); 
-    }
+    size_t N = std::tuple_size_v<T>;
+    static auto S = std::make_index_sequence<std::tuple_size_v<T>>{};
 
-    auto View   (this auto self)    noexcept -> std::string_view    { return self.Buffer; }
-    auto String (this auto self)    noexcept -> std::string         { return self.Buffer; }
+    /*operator std::index_sequence() const noexcept
+    {
+        return S;
+    }*/
 };
 
-template<FixedString F, typename...TArgs>
-concept FormatStringTest =
-    [] consteval -> bool
+namespace DoAParticularTest
+{
+    struct A
     {
-        std::format_string<TArgs...> f{F.Buffer};
-        return true;
-    }();
+        void Do(this auto self)
+        {
+            std::println("A");
+        }
+    };
+    struct B : A
+    {
+        void Do(this auto self)
+        {
+            std::println("B");
+        }
+    };
+    struct C : A
+    {
+        void Do(this auto self)
+        {
+            std::println("C");
+        }
+    };
+    template<typename...Ts>
+    struct Overload : Ts...
+    {
+        using Ts::operator()...;
+    };
 
-template<FixedString F, typename...TArgs>
-concept FormatString = 
-    [] consteval -> bool
+    struct Helper
     {
-        static_assert(FormatStringTest<F, TArgs...>, "This is not a valid format string.");
-        return true;
-    }();
+        std::variant<A, B, C> ABC = B{};
+        auto Visit(auto&&...fns)
+        {
+            std::visit(Overload{ fns... }, ABC);
+        }
+    };
+
+    struct Operator
+    {
+        void Do(this auto self)
+        {
+            //Overload v{ &decltype(self)::Do };
+
+            std::variant<int, float> f = 1.f;
+            std::visit(self, f);
+            std::visit([self](auto v) { self.Handle(v); }, f);
+        }
+
+        void Do2(this auto self)
+        {
+            //auto x = (decltype(self)::Do2);
+            // ICE: Overload v{ Operator::Do2 };
+        }
+
+        void operator()(this auto self, auto&& arg) { self.Handle(arg); }
+        //static void operator()(this auto self, auto&& arg) {  }
+
+        void Handle(this auto self, int) {}
+        void Handle(this auto self, float) {}
+    };
+
+
+    void DoSomething()
+    {
+        Operator o{};
+        o.Do();
+        o.Do2();
+
+        Helper h;
+        h.Visit(
+            [](const A& a) { a.Do(); },
+            [](auto&& a) { a.Do(); }
+        );
+
+        std::variant<A, B, C> ABC = B{};
+        std::visit(
+            Overload{ 
+                [](this auto&& self, auto a) { a.Do(); } 
+            }, 
+            ABC
+        );
+    }
+}
+
+template<auto V>
+using Integral = std::integral_constant<int, V>;
+
+void Invoke(Integral<1>)
+{
+
+}
+
+void Invoke(auto)
+{
+
+}
+
+void SomethingElse(int x)
+{
+    std::tuple constants{
+        std::pair { Integral<1>{}, [] { std::println("Hello 1"); }},
+        std::pair { Integral<2>{}, [] { std::println("Hello 2"); }}
+    };
+
+    std::apply(
+        [x](auto...pairs)
+        {
+            ((pairs.first == x ? (pairs.second(), true) : false) or ...);
+        },
+        constants
+    );
+}
 
 int main() 
 {
-    FormatString<"{} {}", std::string, std::string>;
+    SomethingElse(1);
 
-    [](auto...a)
+    std::tuple someTuple{ 1, std::string{} };
+
+    [&someTuple]<size_t...M>(std::index_sequence<M...>)
     {
+        ([&someTuple]<size_t N = M> 
+        { 
+            auto value = std::get<N>(someTuple); 
+        }(), ...);
+    }(std::make_index_sequence<std::tuple_size_v<decltype(someTuple)>>{});
 
-    }(std::pair{"a", 1});
-
+    Logging::FormatString<"{} {}", std::string, std::string>;
     Logging::Log("A");
     Logging::Log("A {}, {}", 1, 10);
     Logging::Log("a", std::exception{});
