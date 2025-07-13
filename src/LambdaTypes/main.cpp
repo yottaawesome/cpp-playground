@@ -202,8 +202,43 @@ void SomethingElse(int x)
     );
 }
 
+struct LL
+{
+    void Do(this auto&& self)
+    {
+        self.Get();
+    }
+
+    void Print(this auto&& self, int n)
+    {
+        std::println("Nothing");
+    }
+
+    void Something(this auto&& self) {}
+};
+
+struct LLL : LL
+{
+    using LL::Print;
+
+    void Print(this auto&& self, std::integral_constant<int, 1>)
+    {
+        std::println("Hello");
+    }
+
+    void Something(this LLL& self) {}
+};
+
+template<typename T>
+using M = decltype(&T::Do);
+
 int main() 
 {
+    constexpr auto k = &LLL::Something;
+    LLL l{};
+    l.Print(2);
+    l.Print(std::integral_constant<int, 1>{});
+
     SomethingElse(1);
 
     std::tuple someTuple{ 1, std::string{} };
