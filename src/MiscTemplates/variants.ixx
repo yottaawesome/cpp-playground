@@ -147,6 +147,19 @@ export namespace VariantOfVariants
 			return *this;
 		}
 
+		auto ExpectOne(auto&& fn)
+		{
+			return std::visit(
+				Overload{
+					[fn = std::forward<decltype(fn)>(fn)](auto& s)
+					{
+						std::visit(Overload{ fn, [](auto&&) { throw std::runtime_error("Wrong message type."); } }, s);
+					}
+				},
+				Any
+			);
+		}
+
 		auto ExpectHttp(auto&&...fn)
 		{
 			return std::visit(
@@ -200,6 +213,13 @@ export namespace VariantOfVariants
 	void Run()
 	{
 		Messages a = SocketMessageA{};
+		a.ExpectOne(
+			[](HttpMessageA)
+			{
+
+			}
+		);
+
 		a.ExpectHttp(
 			[](HttpMessageA)
 			{
