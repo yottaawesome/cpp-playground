@@ -114,3 +114,131 @@ export namespace VariantsE
 		std::visit(Handler{}, State::Variant);
 	}
 }
+
+export namespace VariantOfVariants
+{
+	struct SocketMessageA {};
+	struct SocketMessageB {};
+	struct HttpMessageA {};
+	struct HttpMessageB {};
+
+	using SocketMessage = std::variant<SocketMessageA, SocketMessageB>;
+	using HttpMessage = std::variant<HttpMessageA, HttpMessageB>;
+	using AnyMessage = std::variant<SocketMessage, HttpMessage>;
+
+	template<typename T>
+	concept Convertible = std::convertible_to<T, SocketMessage> or std::convertible_to<T, HttpMessage>;
+
+	template<typename...T>
+	struct Overload : T...
+	{
+		using T::operator()...;
+	};
+
+	struct Messages
+	{
+		Messages() = default;
+
+		Messages(Convertible auto&& a) : Any(a) {};
+
+		Messages& operator=(Convertible auto&& a)
+		{
+			Any = a;
+			return *this;
+		}
+
+		auto ExpectHttp(auto&&...fn)
+		{
+			return std::visit(
+				Overload{
+					[](SocketMessage& s)
+					{
+						throw std::runtime_error("Wrong message type");
+					},
+					[...fn = std::forward<decltype(fn)>(fn)](HttpMessage& s)
+					{
+						std::visit(Overload{ fn... }, s);
+					}
+				},
+				Any
+			);
+		}
+
+		auto ExpectSocket(auto&&...fn)
+		{
+			return std::visit(
+				Overload{
+					[...fn = std::forward<decltype(fn)>(fn)](SocketMessage& s)
+					{
+						return std::visit(Overload{ fn... }, s);
+					},
+					[](HttpMessage&)
+					{
+						throw std::runtime_error("Wrong message type");
+					}
+				},
+				Any
+			);
+		}
+
+		auto ExpectAny(auto&&...fn)
+		{
+			return std::visit(
+				Overload{
+					[...fn = std::forward<decltype(fn)>(fn)](auto& s)
+					{
+						return std::visit(Overload{ fn... }, s);
+					}
+				},
+				Any
+			);
+		}
+
+		AnyMessage Any;
+	};
+
+	void Run()
+	{
+		Messages a = SocketMessageA{};
+		a.ExpectHttp(
+			[](HttpMessageA)
+			{
+
+			},
+			[](HttpMessageB)
+			{
+
+			}
+		);
+
+		a.ExpectAny(
+			[](HttpMessageA)
+			{
+				return 0;
+			},
+			[](HttpMessageB)
+			{
+				return 0;
+			},
+			[](SocketMessageA)
+			{
+				return 0;
+			},
+			[](SocketMessageB)
+			{
+				return 0;
+			}
+		);
+	}
+
+	struct Demo
+	{
+		virtual ~Demo() = default;
+		virtual void Do() = 0;
+	};
+
+	struct Impl : Demo
+	{
+		void Do() override {}
+	};
+}
