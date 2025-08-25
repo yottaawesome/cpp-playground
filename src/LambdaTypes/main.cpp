@@ -232,8 +232,37 @@ struct LLL : LL
 template<typename T>
 using M = decltype(&T::Do);
 
+
+int F(int i)
+{
+    static int j = 
+        [i] 
+        {
+            std::println("Called {}", i);
+            if (i == 0)
+                throw std::exception();
+            return i; 
+        }();
+    return j;
+}
+
 int main() 
 {
+    [](auto...i)
+    {
+        ([i]
+        {
+            try
+            {
+                std::println("{}", F(i));
+            }
+            catch (...)
+            {
+                std::println("Failure on {}", i);
+            }
+        }(), ...);
+    }(0,1,0);
+
     constexpr auto k = &LLL::Something;
     LLL l{};
     l.Print(2);

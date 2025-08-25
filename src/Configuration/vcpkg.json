@@ -1,0 +1,7 @@
+{
+  "name": "config-test",
+  "version-string": "1.0.0",
+  "dependencies": [
+    "toml11"
+  ]
+}
