@@ -2,7 +2,7 @@ module;
 
 #include <Windows.h>
 
-export module win32;
+export module config:win32;
 
 export namespace Win32
 {

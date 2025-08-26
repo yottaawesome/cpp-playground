@@ -130,8 +130,13 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="main.cpp" />
-    <ClCompile Include="win32.ixx" />
+    <ClCompile Include="config-basicsetting.ixx" />
+    <ClCompile Include="config-concepts.ixx" />
+    <ClCompile Include="config-config.ixx" />
+    <ClCompile Include="config-fixedstring.ixx" />
+    <ClCompile Include="config-toml.ixx" />
+    <ClCompile Include="config.ixx" />
+    <ClCompile Include="config-win32.ixx" />
   </ItemGroup>
   <ItemGroup>
     <None Include="settings.toml" />
