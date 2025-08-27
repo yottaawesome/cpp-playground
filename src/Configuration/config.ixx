@@ -40,6 +40,16 @@ auto GetValue(
 {
 }
 
+namespace TestFormattable
+{
+	enum class Test { A };
+	void Run()
+	{
+		// https://stackoverflow.com/questions/72430369/how-to-check-that-a-type-is-formattable-using-type-traits-concepts
+		std::println("{}", std::formattable<Test, char>);
+	}
+}
+
 export extern "C" auto main() -> int
 try
 {

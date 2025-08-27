@@ -13,4 +13,7 @@ export namespace Config
 	concept TomlSetting = requires(T t) { requires std::remove_cvref_t<T>::Type == Type::Toml; };
 	template<typename T>
 	concept RegistrySetting = requires(T t) { requires std::remove_cvref_t<T>::Type == Type::Registry; };
+
+	template<typename T>
+	struct FalseType : std::false_type {};
 }
