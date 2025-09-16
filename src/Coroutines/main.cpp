@@ -3,6 +3,7 @@ import coroutines;
 
 int main()
 {
+    ExceptionTest::Run();
     //Coroutines::ThreadSwitch::RunSample();
     //Coroutines::Generator::RunSample();
     //Coroutines::EagerFuture::RunSample();
@@ -16,6 +17,6 @@ int main()
     //Signal::Run();
     //Win32Event::Run();
     //Coroutines::Communication::Run();
-    Coroutines::Communication3::Run();
+    //Coroutines::Communication3::Run();
     return 0;
 }

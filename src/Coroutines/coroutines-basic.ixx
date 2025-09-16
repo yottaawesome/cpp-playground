@@ -577,3 +577,220 @@ export namespace Win32Event
 		std::println("Got {}", t.Get());
 	}
 }
+
+export namespace ExceptionTest
+{
+	struct Event
+	{
+		~Event()
+		{
+			Win32::CloseHandle(Handle);
+		}
+
+		Win32::HANDLE Handle = Win32::CreateEventW(nullptr, false, false, nullptr);
+
+		void Signal()
+		{
+			Win32::SetEvent(Handle);
+		}
+
+		void Wait()
+		{
+			Win32::WaitForSingleObject(Handle, Win32::Infinite);
+		}
+	};
+
+	struct Result
+	{
+		Event Done;
+		int Number = 0;
+	};
+
+	template<typename TPromise>
+	struct Awaitable
+	{
+		~Awaitable()
+		{
+			std::println("Awaitable destroyed");
+		}
+
+		auto await_ready() -> bool
+		{
+			std::println("Awaitable::await_ready()");
+			return false;
+		}
+
+		void await_suspend(std::coroutine_handle<TPromise> h)
+		{
+			std::println("Awaitable::await_suspend()");
+			std::jthread(
+				[h]
+				{
+					std::this_thread::sleep_for(std::chrono::seconds{ 2 });
+					h.resume();
+				}
+			).detach();
+		}
+
+		void await_resume()
+		{
+			std::println("Awaitable::await_resume(): {}", std::this_thread::get_id());
+		}
+	};
+
+	struct Task
+	{
+		~Task()
+		{
+			std::println("Task destroyed {}", std::this_thread::get_id());
+		}
+
+		std::shared_ptr<Result> value;
+
+		Task(std::shared_ptr<Result> p) : value(std::move(p)) {}
+
+		auto Get() -> int
+		{
+			value->Done.Wait();
+			return value->Number;
+		}
+
+		struct promise_type // name must be promise_type
+		{
+			~promise_type()
+			{
+				std::println("promise_type destroyed.");
+			}
+
+			std::shared_ptr<Result> ptr = std::make_shared<Result>();
+
+			auto get_return_object() -> Task
+			{
+				// Can pass this back to Task. Don't pass the promise_type
+				// instance back as it's destroyed by then.
+				//std::coroutine_handle<promise_type>::from_promise(*this);
+				std::println("promise_type::get_return_object().");
+				return { ptr };
+			}
+
+			auto initial_suspend() -> std::suspend_never
+			{
+				std::println("promise_type::initial_suspend().");
+				return {};
+			}
+
+			auto final_suspend() noexcept -> std::suspend_never
+			{
+				std::println("promise_type::final_suspend().");
+				return {};
+			}
+
+			void unhandled_exception() 
+			{
+				std::println("An exception occurred.");
+				ptr->Done.Signal();
+			}
+
+			void return_value(int i)
+			{
+				std::println("promise_type::return_value().");
+				ptr->Number = i;
+				ptr->Done.Signal();
+			}
+		};
+	};
+
+	auto ResumeOnNewThread() -> Task
+	{
+		std::println("Coroutine started on thread: {}", std::this_thread::get_id());
+		co_await Awaitable<Task::promise_type>{};
+		throw std::exception("a");
+		// awaiter destroyed here
+		std::println("Coroutine resumed on thread: {}", std::this_thread::get_id());
+		co_return 8;
+	}
+
+	void Run()
+	{
+		auto t = ResumeOnNewThread();
+		std::println("Got {}", t.Get());
+	}
+}
+
+export namespace MoreCoro
+{
+	using namespace std::chrono_literals;
+	// --- Tiny awaitable to "sleep" without blocking the coroutine ---------------
+
+	struct sleep_awaitable 
+	{
+		std::chrono::milliseconds dur;
+		bool await_ready() const noexcept { return dur.count() == 0; }   // run-through?
+		void await_resume() const noexcept {}                             // nothing to return
+		// Schedule resume on a background thread after 'dur'
+		void await_suspend(std::coroutine_handle<> h) const 
+		{
+			std::thread(
+				[h, d = dur] 
+				{
+					std::this_thread::sleep_for(d);
+					h.resume();                                               // continue pipeline()
+				}
+			).detach();
+		}
+	};
+
+	// --- Minimal Task so main() can wait for completion -------------------------
+	struct Task 
+	{
+		struct promise_type 
+		{
+			std::binary_semaphore done{ 0 };
+			Task get_return_object() 
+			{
+				return Task{ std::coroutine_handle<promise_type>::from_promise(*this) };
+			}
+			
+			std::suspend_never initial_suspend() noexcept 
+			{ 
+				return {}; 
+			}  // start immediately
+			
+			std::suspend_always final_suspend() noexcept 
+			{                 // signal on finish
+				done.release();
+				return {};
+			}
+
+			void return_void() {}
+			
+			void unhandled_exception() { std::terminate(); }
+		};
+
+		std::coroutine_handle<promise_type> h;
+
+		void wait() 
+		{ 
+			h.promise().done.acquire(); 
+			h.destroy(); 
+		}
+	};
+
+	// --- The async pipeline, but written linearly --------------------------------
+	Task pipeline() 
+	{
+		std::cout << "Downloading...\n";
+		co_await sleep_awaitable{ 500ms };   // pause here, resume later
+		std::cout << "Processing...\n";
+		co_await sleep_awaitable{ 400ms };
+		std::cout << "Saving...\n";
+		co_await sleep_awaitable{ 300ms };
+		std::cout << "Saved: processed(data)\n";
+	}
+
+	void Run() 
+	{
+		auto t = pipeline();  // starts and runs until first co_await
+		t.wait();             // wait for coroutine to finish
+	}
+}
