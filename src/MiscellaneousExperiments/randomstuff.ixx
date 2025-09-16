@@ -57,6 +57,36 @@ export namespace Random
     }
 }
 
+export namespace ProperMessageAndLocation
+{
+    constexpr auto Format = "{}\n    ['{}' in {}:{}].";
+
+    template<typename...TArgs>
+    struct MessageAndLocation
+    {
+        std::format_string<TArgs...> Fmt;
+        std::source_location Location;
+
+        consteval MessageAndLocation(auto&& fmt, std::source_location loc = std::source_location::current()) : Fmt(fmt), Location(loc) {};
+    };
+
+    template<typename...TArgs>
+    constexpr auto FMT(MessageAndLocation<std::type_identity_t<TArgs>...> m, TArgs&&...args)
+    {
+        return std::format(
+            Format,
+            std::format(m.Fmt, std::forward<TArgs>(args)...),
+            m.Location.function_name(),
+            m.Location.file_name(),
+            m.Location.line());
+    }
+
+    void Run()
+    {
+        FMT("What is this {}", 10);
+    }
+}
+
 export namespace Random2
 {
     struct MessageAndLocation

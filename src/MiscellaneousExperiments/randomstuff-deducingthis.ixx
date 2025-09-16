@@ -31,7 +31,7 @@ export namespace DeducingThis
 		m.Do();
 		f.Do();
 		std::invocable<F> auto l = &F::M;
-		std::invoke(F::M, f);
+		std::invoke(&F::M, f);
 	}
 }
 

@@ -1,0 +1,10 @@
+environment = "dev"
+
+[server]
+[server.dev]
+ip = "127.0.0.1"
+domain = "dev.server"
+
+[server.staging]
+ip = "255.0.0.1"
+domain = "staging.server"

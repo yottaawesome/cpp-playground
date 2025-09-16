@@ -499,10 +499,10 @@ namespace MultiTypes
 		template<typename...TTypes>
 		void PostData(std::vector<std::byte> data)
 		{
-			([]<typename S = TTypes>()
-			{
-				auto x = std::get<S>(Tuple);
-			}, ...);
+			((
+				[]<typename S = TTypes>() { auto x = std::get<S>(Tuple); return true; }(),
+				[]<typename S = TTypes>() { auto x = std::get<S>(Tuple); return 10; }()
+			), ...);
 		}
 
 		void PostData(std::vector<std::byte> data)

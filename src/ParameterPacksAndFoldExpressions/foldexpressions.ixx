@@ -45,7 +45,7 @@ export namespace Forward
 	{
 		testClass() = default;
 		testClass(const testClass& other) { std::cout << "COPY C" << std::endl; }
-		testClass& operator=(const testClass& other) { std::cout << "COPY A" << std::endl; }
+		testClass& operator=(const testClass& other) { std::cout << "COPY A" << std::endl; return *this; }
 	};
 
 	template<class T>
