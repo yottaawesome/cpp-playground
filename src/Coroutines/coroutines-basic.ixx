@@ -725,8 +725,15 @@ export namespace MoreCoro
 	struct sleep_awaitable 
 	{
 		std::chrono::milliseconds dur;
-		bool await_ready() const noexcept { return dur.count() == 0; }   // run-through?
+
+		auto await_ready() const noexcept -> bool 
+		{ 
+			// run-through?
+			return dur.count() == 0; 
+		}
+
 		void await_resume() const noexcept {}                             // nothing to return
+
 		// Schedule resume on a background thread after 'dur'
 		void await_suspend(std::coroutine_handle<> h) const 
 		{
@@ -746,17 +753,18 @@ export namespace MoreCoro
 		struct promise_type 
 		{
 			std::binary_semaphore done{ 0 };
-			Task get_return_object() 
+
+			auto get_return_object() -> Task
 			{
 				return Task{ std::coroutine_handle<promise_type>::from_promise(*this) };
 			}
 			
-			std::suspend_never initial_suspend() noexcept 
+			auto initial_suspend() noexcept -> std::suspend_never
 			{ 
 				return {}; 
 			}  // start immediately
 			
-			std::suspend_always final_suspend() noexcept 
+			auto final_suspend() noexcept -> std::suspend_always
 			{                 // signal on finish
 				done.release();
 				return {};
@@ -764,7 +772,10 @@ export namespace MoreCoro
 
 			void return_void() {}
 			
-			void unhandled_exception() { std::terminate(); }
+			void unhandled_exception() 
+			{ 
+				std::terminate(); 
+			}
 		};
 
 		std::coroutine_handle<promise_type> h;
@@ -777,15 +788,15 @@ export namespace MoreCoro
 	};
 
 	// --- The async pipeline, but written linearly --------------------------------
-	Task pipeline() 
+	auto pipeline() -> Task
 	{
-		std::cout << "Downloading...\n";
+		std::println("Downloading...");
 		co_await sleep_awaitable{ 500ms };   // pause here, resume later
-		std::cout << "Processing...\n";
+		std::println("Processing...");
 		co_await sleep_awaitable{ 400ms };
-		std::cout << "Saving...\n";
+		std::println("Saving...");
 		co_await sleep_awaitable{ 300ms };
-		std::cout << "Saved: processed(data)\n";
+		std::println("Saved: processed(data)");
 	}
 
 	void Run() 
@@ -793,4 +804,53 @@ export namespace MoreCoro
 		auto t = pipeline();  // starts and runs until first co_await
 		t.wait();             // wait for coroutine to finish
 	}
+}
+
+namespace X
+{
+	struct IoResult {
+		std::error_code ec;
+		int result;
+	};
+
+	struct RecvFromAwaitable 
+	{
+		auto operator co_await()
+		{
+			struct Awaiter {
+				RecvFromAwaitable& awaitable;
+				IoResult result = {};
+
+				bool await_ready() const noexcept { return false; }
+
+				void await_suspend(std::coroutine_handle<> handle) noexcept
+				{
+					std::thread([handle] {handle.resume(); }).detach();
+				}
+
+				IoResult await_resume() const noexcept { return result; }
+			};
+			return Awaiter{ *this };
+		}
+	};
+	struct BasicCoroutine 
+	{
+		struct promise_type 
+		{
+			BasicCoroutine get_return_object() { return BasicCoroutine{}; }
+
+			void unhandled_exception() noexcept {}
+
+			void return_void() noexcept {}
+
+			std::suspend_never initial_suspend() noexcept { return {}; }
+			std::suspend_never final_suspend() noexcept { return {}; }
+		};
+	};
+
+	BasicCoroutine Run()
+	{
+		auto [a,b] = co_await RecvFromAwaitable{};
+	}
+
 }

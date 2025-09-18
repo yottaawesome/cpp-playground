@@ -5,7 +5,8 @@ import coroutines;
 
 int main()
 {
-    ExceptionTest::Run();
+    MoreCoro::Run();
+    //ExceptionTest::Run();
     //Coroutines::ThreadSwitch::RunSample();
     //Coroutines::Generator::RunSample();
     //Coroutines::EagerFuture::RunSample();
