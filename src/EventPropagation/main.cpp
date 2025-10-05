@@ -104,8 +104,81 @@ namespace Events
     }
 }
 
+struct Mod
+{
+    constexpr Mod(std::string s)
+    {
+        if consteval
+        {
+            s += s;
+        }
+        else
+        {
+            s += std::format("{}", s);
+        }
+    }
+
+    static void operator()()
+    {
+
+    }
+};
+
+static_assert(
+    [] consteval
+    {
+        Mod("aaa");
+        return true;
+    }()
+);
+
+
+namespace B
+{
+    template<typename M>
+    concept FFF = requires(M m) { m.DoA(); };
+
+    struct TypeErased
+    {
+        
+        template<FFF TT>
+        TypeErased(TT&& x)
+            : M(std::make_unique<AImple<TT>>(std::forward<TT>(x)))
+        {
+        }
+
+    private:
+        struct A
+        {
+            virtual~A() = default;
+            virtual void DoA() = 0;
+        };
+
+        template<FFF T>
+        struct AImple : A
+        {
+            AImple(const T& aa) : a(aa) {}
+
+            void DoA() override
+            {
+                a.DoA();
+            }
+
+            T a;
+        };
+
+        std::unique_ptr<A> M;
+    };
+}
+
+struct L { void DoA() {} };
+
 int main()
 {
+    B::TypeErased b(L{});
+
+    Mod::operator();
+
     Events::Run();
     return 0;
 }
