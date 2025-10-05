@@ -12,7 +12,7 @@ export namespace Config
 			std::copy_n(arg, N, Buffer);
 		}
 
-		constexpr auto ToView(this auto&& self) noexcept -> std::basic_string_view<TChar, std::char_traits<TChar>>
+		consteval auto ToView(this auto&& self) noexcept -> std::basic_string_view<TChar, std::char_traits<TChar>>
 		{
 			return { self.Buffer };
 		}
