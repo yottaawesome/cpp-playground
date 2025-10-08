@@ -13,8 +13,8 @@ namespace Logging
             std::copy_n(buffer, N, Buffer);
         }
 
-        auto View(this auto self)    noexcept -> std::string_view { return self.Buffer; }
-        auto String(this auto self)    noexcept -> std::string { return self.Buffer; }
+        auto View(this auto self) noexcept -> std::string_view { return self.Buffer; }
+        auto String(this auto self) noexcept -> std::string { return self.Buffer; }
     };
 
     template<FixedString F, typename...TArgs>
@@ -50,9 +50,6 @@ namespace Logging
         auto f = std::format(s.Fmt, std::forward<TArgs>(a)...);
     }
 }
-
-template<auto V>
-using Integral = std::integral_constant<int, V>;
 
 int main() 
 {
