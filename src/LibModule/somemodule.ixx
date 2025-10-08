@@ -1,4 +1,5 @@
 export module somemodule;
+import std;
 
 // Export single type.
 export struct ClassA {};
@@ -8,6 +9,20 @@ export
 {
 	struct ClassB {};
 	struct ClassC {};
+}
+
+// This used to error with https://developercommunity.visualstudio.com/t/Thread-local-storage-inside-C-module-l/10529078?sort=newest
+export struct Singleton
+{
+	static std::unique_ptr<int>& get() {
+		static thread_local std::unique_ptr<int> value;
+		return value;
+	}
+};
+
+consteval auto M()
+{
+
 }
 
 // Export an entire namespace.

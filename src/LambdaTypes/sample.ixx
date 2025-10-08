@@ -4,6 +4,14 @@ import std;
 // Based off https://qiita.com/angeart/items/94734d68999eca575881
 export namespace A
 {
+    struct Singleton
+    {
+        static std::unique_ptr<int>& get() {
+            static thread_local std::unique_ptr<int> value;
+            return value;
+        }
+    };
+
     namespace stx
     {
         namespace lambda_detail

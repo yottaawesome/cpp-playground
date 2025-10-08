@@ -32,8 +32,66 @@ namespace detail {
 
 struct S { int i; };
 
+namespace lambda_detail
+{
+    template<class Ret, class Cls, class IsMutable, class... Args>
+    struct types
+    {
+        using is_mutable = IsMutable;
+
+        enum { arity = sizeof...(Args) };
+
+        using return_type = Ret;
+
+        template<size_t i>
+        struct arg
+        {
+            typedef typename std::tuple_element<i, std::tuple<Args...>>::type type;
+        };
+    };
+}
+
+template<class Ld>
+struct lambda_type
+    : lambda_type<decltype(&Ld::operator())>
+{
+};
+
+template<class Ret, class Cls, class... Args>
+struct lambda_type<Ret(Cls::*)(Args...)>
+    : lambda_detail::types<Ret, Cls, std::true_type, Args...>
+{
+};
+
+template<class Ret, class Cls, class... Args>
+struct lambda_type<Ret(Cls::*)(Args...) const>
+    : lambda_detail::types<Ret, Cls, std::false_type, Args...>
+{
+};
+
+template<typename T>
+struct SS
+{
+    auto operator()(auto&& fn)
+    {
+        using X = lambda_type<std::remove_cvref_t<decltype(fn)>>::template arg<0>::type;
+        if constexpr (std::same_as<T&, X>)
+        {
+            std::println("non-const");
+        }
+        else if constexpr (std::same_as<const T&, X>)
+        {
+            std::println("const");
+        }
+    }
+    T s;
+};
+
 int main()
 {
+    SS<S> s;
+    s([](const S& x) {});
+
     int&& r = 42;
     PRINT_VALUE_CAT(4); // prvalue
     PRINT_VALUE_CAT(r); // lvalue

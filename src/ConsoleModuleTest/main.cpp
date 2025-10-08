@@ -18,6 +18,10 @@ import somemodule;
 
 int main(int argc, char** args)
 {
+	Singleton::get() = std::make_unique<int>(1);
+
+	std::jthread j([] { Singleton::get() = std::make_unique<int>(10); });
+
 	int someF = NamespaceTest::Get();
 	std::string s = NamespaceTest::GetAString();
 	ERT::XX k;
