@@ -11,7 +11,7 @@ namespace StaticTests
             [](auto c) static { return c >= '0' and c <= '9'; };
 
         std::string_view numberPart{ toTest.data(), toTest.length() - 1 };
-        if (numberPart.ends_with('.'))
+        if (numberPart.empty() or numberPart.ends_with('.'))
             return false;
 
         bool decimalPointSeen = false;
@@ -30,6 +30,7 @@ namespace StaticTests
     static_assert(not IsPercent("100"), "Test failed");
     static_assert(not IsPercent("100.%"), "Test failed");
     static_assert(not IsPercent("9o0%"), "Test failed");
+    static_assert(not IsPercent("%"), "Test failed");
 }
 
 int main()
