@@ -1,4 +1,5 @@
 export module main;
+export import :coroutine;
 import std;
 
 // Adapted from the code and explanations here:
