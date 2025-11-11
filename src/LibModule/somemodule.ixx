@@ -20,11 +20,6 @@ export struct Singleton
 	}
 };
 
-consteval auto M()
-{
-
-}
-
 // Export an entire namespace.
 export namespace NamespaceA
 {
