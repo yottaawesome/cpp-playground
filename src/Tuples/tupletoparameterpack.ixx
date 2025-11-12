@@ -536,6 +536,13 @@ export namespace TupleToVector
         );
     }
 
+	template<typename THead, typename...TRest>
+    struct HeadTail
+    {
+        using Head = std::remove_cvref_t<THead>;
+        using Tail = std::tuple<TRest...>;
+	};
+
     // Adapted from https://stackoverflow.com/a/42495119/7448661
     template <class Tuple, class T = std::decay_t<std::tuple_element_t<0, std::decay_t<Tuple>>>>
     std::vector<T> to_vector_no_copies(Tuple&& tuple)
@@ -543,13 +550,21 @@ export namespace TupleToVector
         return std::apply(
             []<typename...T>(T&&... elems) 
             {
-                std::vector<T> result;
+                // This compiles too.
+                // std::vector<typename HeadTail<T...>Head> result;
+                std::vector<HeadTail<T...>::template Head> result;
                 result.reserve(sizeof...(elems));
                 (result.push_back(std::forward<T>(elems)), ...);
                 return result;
             }, 
             std::forward<Tuple>(tuple)
         );
+    }
+
+    void TestToVectorNoCopies()
+    {
+        std::tuple t{ 1,2,3 };
+        to_vector_no_copies(t);
     }
 }
 
