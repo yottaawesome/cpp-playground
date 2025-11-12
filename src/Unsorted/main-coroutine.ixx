@@ -130,4 +130,27 @@ namespace FileCoroutine1
             std::println("{}", line);
         }
     }
+
+    struct FileReader
+    {
+		std::ifstream in; 
+        explicit FileReader(const std::filesystem::path& path)
+            : in(path.c_str())
+        { 
+            if (not in.good())
+				throw std::runtime_error("Failed to open file.");
+        }
+
+        auto GetLine() -> std::optional<std::string>
+        {
+            if (not in.is_open())
+                return std::nullopt;
+
+            std::string line;
+            if (std::getline(in, line))
+                return line;
+
+            return std::nullopt;
+		}
+	};
 }

@@ -132,6 +132,18 @@ namespace RuleOfFive
     }
 }
 
+namespace CountTest
+{
+    constexpr auto Add(auto a, auto b)
+    {
+        return a + b;
+	}
+
+    static_assert(
+        [] -> bool { return Add(2, 3) == 5; }(), 
+        "The return value was not the expected sum.");
+}
+
 namespace BufferTests
 {
     struct Buffer
