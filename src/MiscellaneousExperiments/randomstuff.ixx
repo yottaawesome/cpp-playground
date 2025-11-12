@@ -338,7 +338,7 @@ export namespace dont_return_protected_reference
     struct protect
     {
         template<typename...TArgs>
-        auto invoke_on(restricted_function<T, TArgs> auto&& func, TArgs&&...args)
+        auto invoke_on(restricted_function<T, TArgs...> auto&& func, TArgs&&...args)
         {
             return std::invoke(func, to_protect, std::forward<TArgs>(args)...);
         }
