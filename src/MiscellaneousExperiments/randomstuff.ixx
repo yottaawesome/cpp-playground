@@ -7,6 +7,7 @@ import std;
 import std.compat;
 export import :dates;
 export import :stringconversion;
+export import :altvariant;
 
 export namespace Random
 {

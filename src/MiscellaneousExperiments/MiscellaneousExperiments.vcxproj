@@ -132,6 +132,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="randomstuff-altvariant.ixx" />
     <ClCompile Include="randomstuff-dates.ixx" />
     <ClCompile Include="randomstuff-deducingthis.ixx" />
     <ClCompile Include="randomstuff-lockfree.ixx" />
