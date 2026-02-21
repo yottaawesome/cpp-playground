@@ -794,7 +794,7 @@ namespace Termination
 }
 
 // Experimenting with a way to force users to specify a field, while leaving others to be defaultable
-// without using std::optional or something similar. Appears to work in MSVS, but no in GCC or Clang, 
+// without using std::optional or something similar. Appears to work in MSVC, but not in GCC or Clang, 
 // likely due to some quirk of MSVC's handling of NSDMI and lambdas. Will need to dig further.
 namespace SpecifyOrError
 {
