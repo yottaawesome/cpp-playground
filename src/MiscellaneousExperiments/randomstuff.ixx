@@ -792,3 +792,34 @@ namespace Termination
             });
     }
 }
+
+// Experimenting with a way to force users to specify a field, while leaving others to be defaultable
+// without using std::optional or something similar. Appears to work in MSVS, but no in GCC or Clang, 
+// likely due to some quirk of MSVC's handling of NSDMI and lambdas. Will need to dig further.
+namespace SpecifyOrError
+{
+    template<typename T>
+    struct FalseType : std::false_type
+    {
+    };
+
+    template<typename T>
+    constexpr auto MustSpecify = 
+        [](this auto&& self) -> T
+        {
+            static_assert(FalseType<decltype(self)>::value, "You must specify this field.");
+            return T{};
+        };
+
+    struct Something
+    {
+        int y = 1;                                // optional — defaults to 1
+        int x = MustSpecify<int>();               // required — () deferred to NSDMI
+        std::string z = MustSpecify<std::string>(); // required — () deferred to NSDMI
+    };
+
+    void FF()
+    {
+        Something s{.x = 42, .z = "Hello"};
+    }
+}
