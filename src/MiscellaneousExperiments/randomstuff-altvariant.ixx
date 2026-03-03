@@ -182,3 +182,63 @@ export namespace AltVariant
 			SetDatabase(DatabaseB{});
 	}
 }
+
+// Alternative approach using an O(1) jump table to map runtime indices
+// to concrete types, eliminating manual if/else chains per decision point.
+// Compared to AltVariant, this factors the runtime-to-type dispatch into
+// a reusable pick() utility; multiple choices compose via nested lambdas.
+export namespace AltVariant2
+{
+	// O(1) jump table: maps a runtime index to one of Ts... and
+	// forwards the concrete type to a continuation.
+	template<typename...Ts>
+	void pick(std::size_t choice, auto&& fn)
+	{
+		using Fn = decltype(fn);
+		using caller_t = void(*)(Fn);
+		const caller_t table[] = {
+			[](Fn f) { std::forward<Fn>(f)(Ts{}); }...
+		};
+		table[choice](std::forward<Fn>(fn));
+	}
+
+	struct DatabaseA {};
+	struct DatabaseB {};
+	struct ConnectionA {};
+	struct ConnectionB {};
+
+	template<typename T>
+	concept DatabaseLike = true;
+	template<typename T>
+	concept ConnectionLike = true;
+
+	template<ConnectionLike TConnection, DatabaseLike TDatabase>
+	struct Application
+	{
+		void Run() {}
+		TConnection connection;
+		TDatabase database;
+	};
+
+	void RunWithOptions(ConnectionLike auto conn, DatabaseLike auto db)
+	{
+		Application app{ std::move(conn), std::move(db) };
+		app.Run();
+	}
+
+	void Run()
+	{
+		int dbChoice = 1;
+		int connChoice = 0;
+
+		// Each pick() resolves one runtime value to a concrete type,
+		// passing it into the next level as a deduced template argument.
+		pick<DatabaseA, DatabaseB>(dbChoice, [&](auto db)
+			{
+				pick<ConnectionA, ConnectionB>(connChoice, [&](auto conn)
+					{
+						RunWithOptions(std::move(conn), std::move(db));
+					});
+			});
+	}
+}

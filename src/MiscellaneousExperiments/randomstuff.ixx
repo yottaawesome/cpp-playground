@@ -823,3 +823,22 @@ namespace SpecifyOrError
         Something s{.x = 42, .z = "Hello"};
     }
 }
+
+namespace SomeTest
+{
+    struct A
+    {
+        void DoSomething(const A& self) {}
+    };
+
+    struct B : A
+    {
+        void DoSomething(const B& self) {}
+	};
+
+    void Run()
+     {
+         B b;
+         b.DoSomething(b);
+	}
+}
