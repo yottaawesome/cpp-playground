@@ -1,0 +1,118 @@
+C++20 Coroutines
+=================
+
+C++20 coroutines are stackless, meaning they suspend by returning to the caller
+and store their state on the heap rather than preserving an entire call stack.
+
+
+Key Concepts
+------------
+
+1. A coroutine is any function that uses co_await, co_yield, or co_return.
+
+   The compiler transforms it into a state machine with a heap-allocated
+   coroutine frame that holds local variables and the current suspension point.
+
+2. Three new keywords:
+
+   co_await expr    — Suspend execution until expr is ready.
+   co_yield expr    — Suspend and produce a value
+                      (sugar for co_await promise.yield_value(expr)).
+   co_return expr   — Complete the coroutine and (optionally) return a final value.
+
+3. The machinery behind the scenes — three types work together:
+
+   - Promise type (promise_type) — controls coroutine behavior (initial/final
+     suspend, how values are returned, exception handling). Lives inside the
+     coroutine frame.
+   - Coroutine handle (std::coroutine_handle<P>) — a non-owning pointer to the
+     coroutine frame. Used to resume() or destroy() it.
+   - Awaitable / Awaiter — any object with await_ready(), await_suspend(), and
+     await_resume(). This is what co_await operates on.
+
+
+Simplified Lifecycle
+--------------------
+
+  caller calls coroutine()
+    → coroutine frame allocated on heap
+    → promise_type constructed
+    → promise.get_return_object() → creates the return type (e.g., Task/Generator)
+    → promise.initial_suspend()   → co_await: suspend immediately or run eagerly?
+    → body executes...
+        → co_await someAwaitable:
+            → awaitable.await_ready()?  → if true, skip suspend
+            → awaitable.await_suspend(handle) → suspend, return to caller
+            → ... (later, someone calls handle.resume())
+            → awaitable.await_resume() → provides the result
+        → co_yield value:
+            → promise.yield_value(value) → stores value, suspends
+    → co_return or exception
+    → promise.final_suspend()     → usually suspend (so caller can clean up)
+    → frame destroyed
+
+
+Minimal Generator Example
+-------------------------
+
+  #include <coroutine>
+  #include <iostream>
+
+  struct Generator {
+      struct promise_type {
+          int current_value;
+
+          Generator get_return_object() {
+              return Generator{std::coroutine_handle<promise_type>::from_promise(*this)};
+          }
+          std::suspend_always initial_suspend() { return {}; }
+          std::suspend_always final_suspend() noexcept { return {}; }
+          std::suspend_always yield_value(int value) {
+              current_value = value;
+              return {};
+          }
+          void return_void() {}
+          void unhandled_exception() { std::terminate(); }
+      };
+
+      std::coroutine_handle<promise_type> handle;
+
+      bool next() {
+          handle.resume();
+          return !handle.done();
+      }
+      int value() { return handle.promise().current_value; }
+
+      ~Generator() { if (handle) handle.destroy(); }
+  };
+
+  Generator range(int start, int end) {   // this is a coroutine!
+      for (int i = start; i < end; ++i)
+          co_yield i;
+  }
+
+  int main() {
+      auto gen = range(1, 5);
+      while (gen.next())
+          std::cout << gen.value() << " ";  // prints: 1 2 3 4
+  }
+
+
+Key Takeaways
+-------------
+
+- Stackless — only the coroutine's own frame is saved, not the entire call
+  stack. This makes them very lightweight but means you can only suspend at the
+  top-level coroutine, not from nested calls.
+
+- The compiler does the transformation — you write sequential-looking code; the
+  compiler generates the state machine.
+
+- The library defines behavior — the promise type and awaitables are
+  user-defined, giving you full control over scheduling, lazy vs. eager
+  execution, and value delivery. The standard provides very little out of the
+  box (just std::suspend_always, std::suspend_never, and
+  std::coroutine_handle).
+
+- C++23 adds std::generator so you don't have to write the boilerplate above
+  for simple generator use cases.
