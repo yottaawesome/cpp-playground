@@ -20,7 +20,7 @@ export namespace MemoryPoolSampleA
         }*/
 
         template<typename T, typename...Args>
-        T* Allocate(Args&&...args)
+        auto Allocate(Args&&...args) -> T*
         {
             short totalBytesNeeded = sizeof(AllocationHeader) + sizeof(T);
             int byteOffset = 0;
@@ -95,7 +95,7 @@ export namespace MemoryPoolSampleA
     class required_shared_ptr
     {
     public:
-        virtual T* operator->() const
+        virtual auto operator->() const -> T*
         {
             T* value = _internal.operator->();
             if (value == nullptr)
@@ -103,13 +103,13 @@ export namespace MemoryPoolSampleA
             return value;
         }
 
-        virtual required_shared_ptr<T>& operator=(T* other)
+        virtual auto operator=(T* other) -> required_shared_ptr<T>&
         {
             _internal.reset(other);
             return *this;
         }
 
-        virtual required_shared_ptr<T>& operator=(required_shared_ptr<T>& other)
+        virtual auto operator=(required_shared_ptr<T>& other) -> required_shared_ptr<T>&
         {
             _internal = other._internal;
             return *this;
@@ -160,15 +160,15 @@ export namespace MemoryPoolSampleB
         {}
 
         MemoryPool(const MemoryPool&) = delete;
-        MemoryPool& operator=(const MemoryPool&) = delete;
+        auto operator=(const MemoryPool&) -> MemoryPool& = delete;
         MemoryPool(MemoryPool&&) noexcept = default;
-        MemoryPool& operator=(MemoryPool&&) noexcept = default;
+        auto operator=(MemoryPool&&) noexcept -> MemoryPool& = default;
 
         ~MemoryPool() { DestroyAll(); }
 
         template<typename T, typename... Args>
             requires std::constructible_from<T, Args...>
-        [[nodiscard]] T* Allocate(Args&&... args)
+        [[nodiscard]] auto Allocate(Args&&... args) -> T*
         {
             void* ptr = m_buffer.get() + m_offset;
             std::size_t space = m_capacity - m_offset;
@@ -206,9 +206,9 @@ export namespace MemoryPoolSampleB
             m_offset = 0;
         }
 
-        [[nodiscard]] constexpr std::size_t Capacity() const noexcept { return m_capacity; }
-        [[nodiscard]] constexpr std::size_t Used()     const noexcept { return m_offset; }
-        [[nodiscard]] constexpr std::size_t Available()const noexcept { return m_capacity - m_offset; }
+        [[nodiscard]] constexpr auto Capacity() const noexcept -> std::size_t { return m_capacity; }
+        [[nodiscard]] constexpr auto Used()     const noexcept -> std::size_t { return m_offset; }
+        [[nodiscard]] constexpr auto Available()const noexcept -> std::size_t { return m_capacity - m_offset; }
 
     private:
         struct Entry
@@ -259,7 +259,7 @@ export namespace MemoryPoolSampleB
     };
 
     // Helper to verify alignment at runtime
-    constexpr bool IsAligned(const void* ptr, std::size_t alignment) noexcept
+    constexpr auto IsAligned(const void* ptr, std::size_t alignment) noexcept -> bool
     {
         return (std::bit_cast<std::uintptr_t>(ptr) % alignment) == 0;
     }
@@ -356,14 +356,14 @@ export namespace MemoryPoolSampleC
         }
 
         MemoryPool(const MemoryPool&) = delete;
-        MemoryPool& operator=(const MemoryPool&) = delete;
+        auto operator=(const MemoryPool&) -> MemoryPool& = delete;
 
         ~MemoryPool() { DestroyTracked(); }
 
         // First-fit allocation with automatic alignment handling
         template<typename T, typename... Args>
             requires std::constructible_from<T, Args...>
-        [[nodiscard]] T* Allocate(Args&&... args)
+        [[nodiscard]] auto Allocate(Args&&... args) -> T*
         {
             for (BlockHeader* block = m_head; block; block = block->next)
             {
@@ -450,14 +450,14 @@ export namespace MemoryPoolSampleC
             };
         }
 
-        [[nodiscard]] constexpr std::size_t Capacity()  const noexcept { return m_capacity; }
+        [[nodiscard]] constexpr auto Capacity()  const noexcept -> std::size_t { return m_capacity; }
 
-        [[nodiscard]] std::size_t UsedBytes() const noexcept
+        [[nodiscard]] auto UsedBytes() const noexcept -> std::size_t
         {
             return m_capacity - FreeBytes();
         }
 
-        [[nodiscard]] std::size_t FreeBytes() const noexcept
+        [[nodiscard]] auto FreeBytes() const noexcept -> std::size_t
         {
             std::size_t total = 0;
             for (auto* b = m_head; b; b = b->next)
@@ -465,14 +465,14 @@ export namespace MemoryPoolSampleC
             return total;
         }
 
-        [[nodiscard]] std::size_t BlockCount() const noexcept
+        [[nodiscard]] auto BlockCount() const noexcept -> std::size_t
         {
             std::size_t n = 0;
             for (auto* b = m_head; b; b = b->next) ++n;
             return n;
         }
 
-        [[nodiscard]] std::size_t FreeBlockCount() const noexcept
+        [[nodiscard]] auto FreeBlockCount() const noexcept -> std::size_t
         {
             std::size_t n = 0;
             for (auto* b = m_head; b; b = b->next)
@@ -480,7 +480,7 @@ export namespace MemoryPoolSampleC
             return n;
         }
 
-        [[nodiscard]] std::size_t LargestFreeBlock() const noexcept
+        [[nodiscard]] auto LargestFreeBlock() const noexcept -> std::size_t
         {
             std::size_t largest = 0;
             for (auto* b = m_head; b; b = b->next)
@@ -542,7 +542,7 @@ export namespace MemoryPoolSampleC
         }
     };
 
-    constexpr bool IsAligned(const void* ptr, std::size_t alignment) noexcept
+    constexpr auto IsAligned(const void* ptr, std::size_t alignment) noexcept -> bool
     {
         return (std::bit_cast<std::uintptr_t>(ptr) % alignment) == 0;
     }
