@@ -1,151 +1,29 @@
 export module mempool;
 import std;
 
-// see new additions https://en.cppreference.com/w/cpp/memory/construct_at
+// A memory pool (also known as a region or arena allocator) pre-allocates a
+// contiguous block of memory and hands out portions of it on demand, avoiding
+// the overhead of repeated calls to the system allocator (new/malloc).
+//
+// Key C++ facilities used in the samples below:
+//   std::construct_at  — constructs an object in pre-existing storage, replacing
+//                        placement-new with a constexpr-friendly, type-safe API.
+//   std::destroy_at    — explicitly invokes an object's destructor without
+//                        releasing the underlying memory.
+//   std::align         — adjusts a pointer and remaining-space count so that
+//                        the pointer satisfies a given alignment requirement.
+//
+// See https://en.cppreference.com/w/cpp/memory/construct_at
 // and https://en.cppreference.com/w/cpp/memory/destroy_at
-export namespace MemoryPoolSampleA
-{
-    class MemoryPool
-    {
-    public:
-        MemoryPool(int size) : pool(new char[size]), offset(0) {}
-        virtual ~MemoryPool() { delete[] pool; }
-
-        /*template<typename T, typename...Args>
-        T* Allocate(Args&&...args)
-        {
-            std::cout << "alignment: " << std::alignment_of<T>::value << " sizeof: " << sizeof(T) << std::endl;
-            offset += sizeof(T);
-            return new(pool + offset) T(args...);
-        }*/
-
-        template<typename T, typename...Args>
-        auto Allocate(Args&&...args) -> T*
-        {
-            short totalBytesNeeded = sizeof(AllocationHeader) + sizeof(T);
-            int byteOffset = 0;
-
-            AllocationHeader* newHeader = nullptr;
-            T* newObject = nullptr;
-
-            // Get the latest header
-            if (offset == 0)
-            {
-                newHeader = new(pool) AllocationHeader();
-                byteOffset = sizeof(AllocationHeader);
-            }
-            else
-            {
-                AllocationHeader* header = (AllocationHeader*)pool[0];
-                while (header->nextHeader != nullptr)
-                {
-                    byteOffset += header->totalAllocatedBytes;
-                    header = header->nextHeader;
-                }
-            }
-
-            if (newHeader == nullptr)
-                throw std::runtime_error("This should never happen");
-
-            //Figure out the alignment
-            short alignmentRequired = std::alignment_of<T>::value;
-            if (byteOffset % alignmentRequired == 0)
-            {
-                newObject = new(pool + byteOffset) T(args...);
-            }
-            else
-            {
-                int additionalOffset = 0;
-                if (byteOffset < alignmentRequired)
-                    additionalOffset = alignmentRequired - byteOffset;
-                else
-                    additionalOffset = (byteOffset % alignmentRequired);
-
-                totalBytesNeeded += additionalOffset;
-                newObject = new(pool + byteOffset + additionalOffset) T(args...);
-            }
-
-            newHeader->totalAllocatedBytes = totalBytesNeeded;
-            newHeader->ptr = newObject;
-
-            return newObject;
-        }
-
-        template<typename T>
-        void Deallocate(T* t)
-        {
-            //if (std::is_trivially_destructible<T>::value == false)
-            t->~T();
-        }
-
-    protected:
-        char* pool;
-        int offset;
-
-        class AllocationHeader
-        {
-            friend class MemoryPool;
-            void* ptr;
-            unsigned short totalAllocatedBytes;
-            AllocationHeader* nextHeader;
-        };
-    };
-
-    template<typename T>
-    class required_shared_ptr
-    {
-    public:
-        virtual auto operator->() const -> T*
-        {
-            T* value = _internal.operator->();
-            if (value == nullptr)
-                throw std::runtime_error("value is nullptr");
-            return value;
-        }
-
-        virtual auto operator=(T* other) -> required_shared_ptr<T>&
-        {
-            _internal.reset(other);
-            return *this;
-        }
-
-        virtual auto operator=(required_shared_ptr<T>& other) -> required_shared_ptr<T>&
-        {
-            _internal = other._internal;
-            return *this;
-        }
-
-    private:
-        std::shared_ptr<T> _internal;
-    };
-
-    class A
-    {
-    public:
-        A() : i(1), t(2) {}
-        A(int i, short t) : i(i), t(t) {}
-        int i;
-        short t;
-    };
-
-    void Run()
-    {
-        required_shared_ptr<int> test;
-
-        MemoryPoolSampleA::MemoryPool op(10000);
-        A* a = op.Allocate<A>(1, 5);
-        std::cout << a->i << std::endl;
-        //A* b = op.Allocate<A>(2, 7);
-        //int* i = op.Allocate<int>(1);
-        //op.Deallocate(i);
-
-        //std::cout << sizeof(wchar_t) << std::alignment_of<wchar_t>::value << std::endl;
-        //std::cout << b->i << " " << a->t << std::endl;
-    }
-}
 
 // Generated by AI
 // Linear allocator
+// ================
+// A linear (or "bump") allocator is the simplest pool strategy: it maintains a
+// single offset that advances ("bumps") forward with each allocation. Because
+// it never reuses individual allocations, it has zero per-object bookkeeping
+// overhead and excellent cache locality. The trade-off is that memory can only
+// be reclaimed all-at-once via Reset(), not on a per-object basis.
 export namespace MemoryPoolSampleB
 {
     // A linear (bump) allocator that handles alignment automatically
@@ -154,69 +32,127 @@ export namespace MemoryPoolSampleB
     class MemoryPool
     {
     public:
+        // Allocates a raw byte buffer of the requested size. We use
+        // make_unique_for_overwrite rather than make_unique because the
+        // buffer contents will be overwritten by construct_at before use,
+        // so zero-initialising the bytes up front would be wasted work.
         explicit MemoryPool(std::size_t sizeBytes)
             : m_buffer{std::make_unique_for_overwrite<std::byte[]>(sizeBytes)}
             , m_capacity{sizeBytes}
         {}
 
+        // Non-copyable because two pools sharing the same buffer would lead to
+        // double-free / double-destroy. Move is fine — ownership transfers cleanly.
         MemoryPool(const MemoryPool&) = delete;
         auto operator=(const MemoryPool&) -> MemoryPool& = delete;
         MemoryPool(MemoryPool&&) noexcept = default;
         auto operator=(MemoryPool&&) noexcept -> MemoryPool& = default;
 
+        // The destructor calls DestroyAll() to run the destructors of any
+        // non-trivially-destructible objects still alive in the pool. The
+        // buffer memory itself is released by unique_ptr's own destructor.
         ~MemoryPool() { DestroyAll(); }
 
+        // Allocate constructs a T inside the pool and returns a pointer to it.
+        // The [[nodiscard]] attribute warns callers who forget to capture the
+        // pointer — since the pool owns the memory, a lost pointer means a
+        // leaked (inaccessible) object.
         template<typename T, typename... Args>
             requires std::constructible_from<T, Args...>
         [[nodiscard]] auto Allocate(Args&&... args) -> T*
         {
+            // Start from the current bump-pointer position.
             void* ptr = m_buffer.get() + m_offset;
             std::size_t space = m_capacity - m_offset;
 
-            if (!std::align(alignof(T), sizeof(T), ptr, space))
+            // std::align advances 'ptr' forward (and shrinks 'space') until
+            // it satisfies alignof(T). If there isn't enough room to fit
+            // sizeof(T) after alignment, it returns nullptr and we throw.
+            if (not std::align(alignof(T), sizeof(T), ptr, space))
                 throw std::bad_alloc{};
 
+            // After std::align, 'space' reflects how many bytes remain after
+            // the aligned pointer. We compute the new offset by subtracting
+            // that remaining space from the total capacity, then adding
+            // sizeof(T) for the object we're about to construct.
             m_offset = m_capacity - space + sizeof(T);
 
+            // std::construct_at invokes T's constructor in the pre-allocated
+            // storage, equivalent to placement-new but constexpr-friendly.
+            // std::forward preserves the value category (lvalue/rvalue) of
+            // each argument, enabling move semantics where possible.
             T* obj = std::construct_at(
                 reinterpret_cast<T*>(ptr),
                 std::forward<Args>(args)...
             );
 
-            // Track non-trivially-destructible objects for automatic cleanup
-            if constexpr (!std::is_trivially_destructible_v<T>)
-                m_entries.emplace_back(obj, [](void* p) noexcept { std::destroy_at(static_cast<T*>(p)); });
+            // We only need to track objects whose destructors have side effects
+            // (e.g. freeing heap memory, closing handles). Trivially-destructible
+            // types like int or Point can be silently abandoned because their
+            // destructor is a no-op. This check is evaluated at compile time
+            // (if constexpr), so there is zero runtime cost for trivial types.
+            if constexpr (not std::is_trivially_destructible_v<T>)
+                m_entries.emplace_back(obj, [](void* p) static noexcept { std::destroy_at(static_cast<T*>(p)); });
 
             return obj;
         }
 
+        // Deallocate destroys a single object but does NOT reclaim its memory.
+        // In a linear allocator, individual deallocation is inherently limited:
+        // the bump pointer only moves forward. The object's destructor runs
+        // immediately, and we remove it from the tracking list so that
+        // DestroyAll() won't try to destroy it a second time.
         template<typename T>
         void Deallocate(T* obj) noexcept
         {
-            if (!obj) return;
+            if (not obj) 
+                return;
             std::destroy_at(obj);
             // Remove from tracked entries to prevent double-destroy.
             // Memory itself is not reclaimed in a linear allocator.
             std::erase_if(m_entries, [obj](const Entry& e) { return e.ptr == obj; });
         }
 
+        // Reset destroys all tracked objects and rewinds the bump pointer to
+        // zero, effectively recycling the entire buffer for reuse. This is
+        // the primary way to reclaim memory in a linear allocator.
         void Reset() noexcept
         {
             DestroyAll();
             m_offset = 0;
         }
 
-        [[nodiscard]] constexpr auto Capacity() const noexcept -> std::size_t { return m_capacity; }
-        [[nodiscard]] constexpr auto Used()     const noexcept -> std::size_t { return m_offset; }
-        [[nodiscard]] constexpr auto Available()const noexcept -> std::size_t { return m_capacity - m_offset; }
+        [[nodiscard]] constexpr auto Capacity() const noexcept -> std::size_t 
+        { 
+            return m_capacity; 
+        }
+        [[nodiscard]] constexpr auto Used()     const noexcept -> std::size_t 
+        { 
+            return m_offset; 
+        }
+        [[nodiscard]] constexpr auto Available()const noexcept -> std::size_t 
+        { 
+            return m_capacity - m_offset; 
+        }
 
     private:
+        // Entry implements a type-erasure pattern for destructor tracking.
+        // Because the pool stores heterogeneous types, we can't keep a
+        // typed pointer — instead we store a void* alongside a function
+        // pointer that knows how to cast it back to the correct type and
+        // call std::destroy_at. Each entry's 'destroy' lambda is stamped
+        // out at Allocate time with the concrete type T baked in.
         struct Entry
         {
             void* ptr;
             void (*destroy)(void*) noexcept;
         };
 
+        // Objects are destroyed in reverse allocation order (LIFO), which
+        // mirrors the guarantee of automatic (stack) variables in C++.
+        // This matters when later-allocated objects hold references to
+        // earlier-allocated ones — destroying in forward order could leave
+        // dangling references mid-teardown.
         void DestroyAll() noexcept
         {
             for (auto& [ptr, destroy] : m_entries | std::views::reverse)
@@ -224,24 +160,32 @@ export namespace MemoryPoolSampleB
             m_entries.clear();
         }
 
-        std::unique_ptr<std::byte[]> m_buffer;
-        std::size_t m_capacity;
-        std::size_t m_offset{0};
-        std::vector<Entry> m_entries;
+        std::unique_ptr<std::byte[]> m_buffer;  // the raw backing store
+        std::size_t m_capacity;                  // total buffer size in bytes
+        std::size_t m_offset{0};                 // bump pointer (next free byte)
+        std::vector<Entry> m_entries;            // destructor tracking list
     };
 
     // --- Sample types ---
 
+    // A plain-old-data type — trivially destructible, so the pool won't
+    // bother tracking it in the destructor list.
     struct Point
     {
         float x, y, z;
     };
 
+    // alignas(32) forces 32-byte alignment, which is required for 256-bit
+    // SIMD instructions (e.g. AVX). This exercises the allocator's ability
+    // to satisfy over-aligned requests through std::align.
     struct alignas(32) SimdVector
     {
         std::array<float, 8> data{};
     };
 
+    // A non-trivially-destructible type: it contains a std::string whose
+    // destructor frees heap memory. The pool must track Named objects and
+    // call their destructors before releasing the buffer.
     struct Named
     {
         std::string name;
@@ -258,7 +202,10 @@ export namespace MemoryPoolSampleB
         }
     };
 
-    // Helper to verify alignment at runtime
+    // Helper to verify alignment at runtime. std::bit_cast reinterprets the
+    // pointer's bit pattern as an integer (without undefined behaviour, unlike
+    // reinterpret_cast). A pointer is aligned to N bytes when its numeric
+    // address is evenly divisible by N, i.e. address % N == 0.
     constexpr auto IsAligned(const void* ptr, std::size_t alignment) noexcept -> bool
     {
         return (std::bit_cast<std::uintptr_t>(ptr) % alignment) == 0;
@@ -319,6 +266,19 @@ export namespace MemoryPoolSampleB
 
 // Generated by AI
 // Free-list allocator with coalescing
+// ====================================
+// Unlike the linear allocator (SampleB), a free-list allocator can reclaim
+// individual allocations. It divides its buffer into a linked list of blocks,
+// each prefixed with a header that tracks the block's size and free/allocated
+// status. When a block is freed, adjacent free blocks are merged ("coalesced")
+// to prevent the pool from fragmenting into many tiny unusable pieces.
+//
+// Trade-offs vs. the linear allocator:
+//   + Individual deallocation — memory is truly returned to the pool.
+//   + Coalescing — adjacent free blocks merge, reducing fragmentation.
+//   - Per-block header overhead (one BlockHeader per allocation).
+//   - Allocation is O(n) in the number of blocks (first-fit scan).
+//   - More complex bookkeeping (split, coalesce, linked-list maintenance).
 export namespace MemoryPoolSampleC
 {
     class MemoryPool
@@ -326,6 +286,9 @@ export namespace MemoryPoolSampleC
         // Stored at the start of every block (free or allocated).
         // All blocks form a doubly-linked list in memory order,
         // enabling O(1) coalescing of adjacent free blocks.
+        // alignas(std::max_align_t) ensures headers sit on maximally-aligned
+        // boundaries so that the data region following each header is suitable
+        // for any fundamental type without additional padding or adjustment.
         struct alignas(std::max_align_t) BlockHeader
         {
             std::size_t size;       // total block size including this header
@@ -336,9 +299,15 @@ export namespace MemoryPoolSampleC
 
         static constexpr auto HeaderSize = sizeof(BlockHeader);
         static constexpr auto HeaderAlign = alignof(BlockHeader);
-        // A split is only worthwhile if the remainder can hold a header + some data
+        // A split is only worthwhile if the remainder can hold a header plus
+        // at least one maximally-aligned datum. Without this threshold we'd
+        // create free blocks too small to satisfy any real allocation, wasting
+        // both memory (on the header) and time (scanning unusable blocks).
         static constexpr auto MinSplitSize = HeaderSize + alignof(std::max_align_t);
 
+        // Type-erased destructor entry — same pattern as SampleB's Entry.
+        // Stores a void* to the object and a function pointer that knows the
+        // concrete type, allowing heterogeneous destructor dispatch.
         struct DestructorEntry
         {
             void* ptr;
@@ -346,6 +315,10 @@ export namespace MemoryPoolSampleC
         };
 
     public:
+        // The constructor allocates a raw byte buffer and initialises it as a
+        // single free block spanning the entire capacity. Placement-new
+        // constructs the BlockHeader directly in the buffer so no extra
+        // allocation is needed. This one block is the seed of the free list.
         explicit MemoryPool(std::size_t sizeBytes)
             : m_buffer{std::make_unique_for_overwrite<std::byte[]>(sizeBytes)}
             , m_capacity{sizeBytes}
@@ -358,32 +331,63 @@ export namespace MemoryPoolSampleC
         MemoryPool(const MemoryPool&) = delete;
         auto operator=(const MemoryPool&) -> MemoryPool& = delete;
 
+        // The destructor runs all tracked (non-trivially-destructible) object
+        // destructors. The buffer and block headers are released automatically
+        // when unique_ptr destructs — no per-block delete is needed.
         ~MemoryPool() { DestroyTracked(); }
 
-        // First-fit allocation with automatic alignment handling
+        // First-fit allocation with automatic alignment handling.
+        // Walks the block list looking for the first free block that can
+        // satisfy the requested size and alignment. "First-fit" is simple
+        // and fast in practice, though it can cause fragmentation over time
+        // compared to "best-fit" (which scans all blocks for the tightest
+        // match) or "worst-fit" strategies.
         template<typename T, typename... Args>
             requires std::constructible_from<T, Args...>
         [[nodiscard]] auto Allocate(Args&&... args) -> T*
         {
+            // Walk every block in memory order, skipping allocated ones.
             for (BlockHeader* block = m_head; block; block = block->next)
             {
-                if (!block->isFree) continue;
+                if (not block->isFree) 
+                    continue;
 
+                // The usable data region starts immediately after the header.
+                // 'space' is the number of bytes available for data in this block.
                 auto* blockStart = reinterpret_cast<std::byte*>(block);
                 void* dataPtr = blockStart + HeaderSize;
                 std::size_t space = block->size - HeaderSize;
 
-                if (!std::align(alignof(T), sizeof(T), dataPtr, space))
+                // std::align adjusts dataPtr forward until it meets alignof(T),
+                // and shrinks 'space' accordingly. If the block is too small
+                // to fit sizeof(T) after alignment, we move on to the next block.
+                // https://en.cppreference.com/w/cpp/memory/align.html
+                if (not std::align(alignof(T), sizeof(T), dataPtr, space))
                     continue;
 
-                // Round consumed bytes up so the next header stays aligned
+                // 'consumed' = total bytes from the start of this block that
+                // this allocation will occupy (header + alignment padding + object).
                 std::size_t consumed =
                     static_cast<std::byte*>(dataPtr) - blockStart + sizeof(T);
+                // Round consumed up to the next HeaderAlign boundary so that any
+                // subsequent block header placed at (blockStart + consumed) will
+                // be properly aligned. Uses the bitmask trick:
+                //   add (HeaderAlign - 1) to push past the boundary, then
+                //   AND with ~(HeaderAlign - 1) to clear the low bits.
                 consumed = (consumed + HeaderAlign - 1) & ~(HeaderAlign - 1);
 
-                if (consumed > block->size) continue;
+                // After rounding up, the allocation may no longer fit. If so,
+                // this block is too small — try the next one.
+                if (consumed > block->size)
+                    continue;
 
-                // Split off the remainder into a new free block
+                // --- Block splitting ---
+                // If the leftover space after this allocation is large enough
+                // to form a useful free block (header + at least one aligned
+                // datum), split the block in two. This prevents large free
+                // blocks from being entirely consumed by small allocations.
+                // The new free block is inserted into the doubly-linked list
+                // right after the current block.
                 if (std::size_t remaining = block->size - consumed;
                     remaining >= MinSplitSize)
                 {
@@ -393,11 +397,13 @@ export namespace MemoryPoolSampleC
                         .prev = block,
                         .isFree = true
                     };
-                    if (block->next) block->next->prev = newBlock;
+                    if (block->next) 
+                        block->next->prev = newBlock;
                     block->size = consumed;
                     block->next = newBlock;
                 }
 
+                // Mark the block as allocated and construct the object.
                 block->isFree = false;
 
                 T* obj = std::construct_at(
@@ -405,43 +411,57 @@ export namespace MemoryPoolSampleC
                     std::forward<Args>(args)...
                 );
 
-                if constexpr (!std::is_trivially_destructible_v<T>)
+                // Track non-trivially-destructible objects (see SampleB's
+                // Allocate for a detailed explanation of this pattern).
+                if constexpr (not std::is_trivially_destructible_v<T>)
                     m_destructors.emplace_back(
                         obj,
-                        [](void* p) noexcept { std::destroy_at(static_cast<T*>(p)); }
+                        [](void* p) static noexcept { std::destroy_at(static_cast<T*>(p)); }
                     );
 
                 return obj;
             }
 
+            // If no free block could satisfy the request, allocation fails.
             throw std::bad_alloc{};
         }
 
-        // Destroys the object and returns its block to the free list,
-        // coalescing with any adjacent free blocks.
+        // Destroys the object, marks its block as free, and merges it with
+        // any adjacent free blocks (coalescing). Unlike the linear allocator,
+        // this truly returns memory to the pool for future allocations.
+        //
+        // The block search is O(n) because we must walk from the head to find
+        // which block contains the given pointer. A production allocator might
+        // store a back-pointer or use arithmetic to locate the header in O(1).
         template<typename T>
         void Deallocate(T* obj) noexcept
         {
-            if (!obj) return;
+            if (not obj) 
+                return;
 
+            // Destroy the object first, then remove it from the tracking list
+            // to prevent a double-destroy in DestroyTracked().
             std::destroy_at(obj);
-            std::erase_if(m_destructors, [obj](const DestructorEntry& e) {
-                return e.ptr == obj;
-            });
+            std::erase_if(m_destructors, [obj](const DestructorEntry& e) { return e.ptr == obj; });
 
+            // Walk the block list to find the block that owns this pointer.
             auto* objByte = reinterpret_cast<std::byte*>(obj);
             for (BlockHeader* block = m_head; block; block = block->next)
             {
                 auto* blockStart = reinterpret_cast<std::byte*>(block);
-                if (objByte >= blockStart && objByte < blockStart + block->size)
-                {
-                    block->isFree = true;
-                    Coalesce(block);
-                    return;
-                }
+                // The object's address must fall within [blockStart, blockStart + size).
+                if (objByte < blockStart or objByte >= blockStart + block->size)
+                    continue;
+                block->isFree = true;
+                // Coalesce merges this block with its neighbours if they are
+                // also free, reducing fragmentation.
+                Coalesce(block);
+                return;
             }
         }
 
+        // Reset destroys all tracked objects and collapses the entire buffer
+        // back into a single free block, as if the pool were freshly constructed.
         void Reset() noexcept
         {
             DestroyTracked();
@@ -450,8 +470,19 @@ export namespace MemoryPoolSampleC
             };
         }
 
-        [[nodiscard]] constexpr auto Capacity()  const noexcept -> std::size_t { return m_capacity; }
+        // --- Diagnostic accessors ---
+        // These walk the block list to compute pool statistics. They are O(n)
+        // in the number of blocks, intended for debugging and testing rather
+        // than hot-path use.
 
+        [[nodiscard]] constexpr auto Capacity()  const noexcept -> std::size_t 
+        { 
+            return m_capacity; 
+        }
+
+        // "Used" is defined as total capacity minus the sum of all free blocks.
+        // This includes block header overhead in the "used" figure, which is
+        // appropriate since headers are real memory consumption.
         [[nodiscard]] auto UsedBytes() const noexcept -> std::size_t
         {
             return m_capacity - FreeBytes();
@@ -465,6 +496,8 @@ export namespace MemoryPoolSampleC
             return total;
         }
 
+        // Total number of blocks (free + allocated). A high block count
+        // relative to allocation count suggests fragmentation.
         [[nodiscard]] auto BlockCount() const noexcept -> std::size_t
         {
             std::size_t n = 0;
@@ -480,6 +513,8 @@ export namespace MemoryPoolSampleC
             return n;
         }
 
+        // The largest contiguous free block determines the maximum single
+        // allocation the pool can currently satisfy (minus header overhead).
         [[nodiscard]] auto LargestFreeBlock() const noexcept -> std::size_t
         {
             std::size_t largest = 0;
@@ -489,16 +524,30 @@ export namespace MemoryPoolSampleC
         }
 
     private:
+        // Coalescing merges a freshly-freed block with its immediate neighbours
+        // in memory order. Because blocks are kept in a doubly-linked list
+        // sorted by address, the "next" and "prev" pointers always point to
+        // the physically adjacent blocks. This makes coalescing O(1):
+        //
+        //   Before:  [free A] [free B] [free C]
+        //   After:   [       free ABC          ]
+        //
+        // Without coalescing, repeated alloc/dealloc cycles would shatter the
+        // pool into many small free blocks that individually can't satisfy
+        // larger requests — a problem known as external fragmentation.
         void Coalesce(BlockHeader* block) noexcept
         {
-            // Merge with next neighbour
+            // Merge with the next block: absorb its size and skip over it
+            // in the linked list.
             if (block->next && block->next->isFree)
             {
                 block->size += block->next->size;
                 block->next = block->next->next;
                 if (block->next) block->next->prev = block;
             }
-            // Merge with previous neighbour
+            // Merge with the previous block: let the predecessor absorb this
+            // block. Note that 'block' itself becomes unreachable in the list
+            // after this — its header memory is simply part of prev's payload.
             if (block->prev && block->prev->isFree)
             {
                 block->prev->size += block->size;
@@ -507,6 +556,8 @@ export namespace MemoryPoolSampleC
             }
         }
 
+        // Destroy all tracked objects in reverse allocation order (LIFO),
+        // mirroring C++ stack-variable destruction semantics.
         void DestroyTracked() noexcept
         {
             for (auto& [ptr, destroy] : m_destructors | std::views::reverse)
@@ -514,18 +565,18 @@ export namespace MemoryPoolSampleC
             m_destructors.clear();
         }
 
-        std::unique_ptr<std::byte[]> m_buffer;
-        std::size_t m_capacity;
-        BlockHeader* m_head{nullptr};
-        std::vector<DestructorEntry> m_destructors;
+        std::unique_ptr<std::byte[]> m_buffer;  // raw backing store
+        std::size_t m_capacity;                  // total buffer size in bytes
+        BlockHeader* m_head{nullptr};            // head of the block linked list
+        std::vector<DestructorEntry> m_destructors; // destructor tracking list
     };
 
-    // --- Sample types ---
+    // --- Sample types (same as SampleB — see those comments for details) ---
 
-    struct Point { float x, y, z; };
+    struct Point { float x, y, z; };                       // trivially destructible
+    struct alignas(32) SimdVector { std::array<float, 8> data{}; }; // over-aligned
 
-    struct alignas(32) SimdVector { std::array<float, 8> data{}; };
-
+    // Non-trivially-destructible; exercises destructor tracking.
     struct Named
     {
         std::string name;
@@ -554,6 +605,10 @@ export namespace MemoryPoolSampleC
             pool.BlockCount(), pool.FreeBlockCount(), pool.LargestFreeBlock());
     }
 
+    // Demonstrates the free-list allocator's key advantage over the linear
+    // allocator: individual deallocation with coalescing. The demo allocates
+    // several objects, frees two adjacent ones (triggering a merge), then
+    // shows that the reclaimed space can satisfy a new allocation.
     void Run()
     {
         constexpr std::size_t PoolSize = 4096;
