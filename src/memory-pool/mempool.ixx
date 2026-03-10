@@ -519,7 +519,8 @@ export namespace MemoryPoolSampleC
         {
             std::size_t largest = 0;
             for (auto* b = m_head; b; b = b->next)
-                if (b->isFree && b->size > largest) largest = b->size;
+                if (b->isFree and b->size > largest) 
+                    largest = b->size;
             return largest;
         }
 
@@ -539,7 +540,7 @@ export namespace MemoryPoolSampleC
         {
             // Merge with the next block: absorb its size and skip over it
             // in the linked list.
-            if (block->next && block->next->isFree)
+            if (block->next and block->next->isFree)
             {
                 block->size += block->next->size;
                 block->next = block->next->next;
@@ -548,7 +549,7 @@ export namespace MemoryPoolSampleC
             // Merge with the previous block: let the predecessor absorb this
             // block. Note that 'block' itself becomes unreachable in the list
             // after this — its header memory is simply part of prev's payload.
-            if (block->prev && block->prev->isFree)
+            if (block->prev and block->prev->isFree)
             {
                 block->prev->size += block->size;
                 block->prev->next = block->next;
