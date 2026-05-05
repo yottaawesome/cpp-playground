@@ -10,6 +10,8 @@ struct Function {};
 template<typename Ret, typename...Args>
 struct Function<Ret(*)(Args...)>
 {
+	using FnType = Ret(*)(Args...);
+
 	template<auto Fn>
 	struct Invoker
 	{
@@ -20,7 +22,6 @@ struct Function<Ret(*)(Args...)>
 	};
 
 
-	using FnType = Ret(*)(Args...);
 	inline auto operator()(this auto& self, Args&&... args)
 	{
 		//return self.Invoke(std::forward<Args>(args)...);
@@ -49,8 +50,11 @@ constexpr auto SomeFunctionPtr = Function2<SomeFunction>{};
 
 constexpr auto XX = Function<decltype(&SomeFunction)>::Invoker<SomeFunction>{};
 
+constexpr auto YY = Function<decltype(&SomeFunction)>::FnType(SomeFunction);
+
 int main()
 {
+	YY(1, 2);
 	XX(1, 2);
 	SomeFunctionPtr(1, 2);
 	SomeFunctionPtr(1,2);
