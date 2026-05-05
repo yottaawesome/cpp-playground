@@ -10,35 +10,27 @@ struct Function {};
 template<typename Ret, typename...Args>
 struct Function<Ret(*)(Args...)>
 {
+	template<auto Fn>
+	struct Invoker
+	{
+		static inline auto operator()(Args&&... args)
+		{
+			return std::invoke(Fn, std::forward<Args>(args)...);
+		}
+	};
+
+
 	using FnType = Ret(*)(Args...);
 	inline auto operator()(this auto& self, Args&&... args)
 	{
-		return self.Invoke(std::forward<Args>(args)...);
+		//return self.Invoke(std::forward<Args>(args)...);
 		//return FnType(std::forward<Args>(args)...);
-	}
-
-	inline auto Invoke(this auto&& self, Args&&... args)
-	{
-		
 	}
 };
 
 template<auto Fn>
-struct Function2 : Function<decltype(Fn)> 
+struct Function2 : Function<decltype(Fn)>::template Invoker<Fn>
 {
-	using FnType = Function<decltype(Fn)>::FnType;
-
-	inline auto Invoke(this auto&& self, auto&&... args)
-	{
-		return Fn(std::forward<decltype(args)>(args)...);
-	}
-
-	/*static inline auto operator()(auto&&... args)
-	{
-		return std::invoke(Fn, std::forward<decltype(args)>(args)...);
-	}*/
-	//constexpr static auto FnType Invoker = Fn;
-
 };
 
 template<auto VFn>
@@ -47,7 +39,7 @@ auto inline Fn(auto&&... args)
 	return VFn(std::forward<decltype(args)>(args)...);
 }
 
-void SomeFunction(int X)
+void SomeFunction(int X, int Y)
 {
 
 }
@@ -55,9 +47,13 @@ void SomeFunction(int X)
 constexpr auto SomeFunctionPtr1 = Function<decltype(&SomeFunction)>{};
 constexpr auto SomeFunctionPtr = Function2<SomeFunction>{};
 
+constexpr auto XX = Function<decltype(&SomeFunction)>::Invoker<SomeFunction>{};
+
 int main()
 {
-	SomeFunctionPtr(5);
+	XX(1, 2);
+	SomeFunctionPtr(1, 2);
+	SomeFunctionPtr(1,2);
 	//SomeFunctionPtr.Invoker(5);
 
 	TupleCats::Run();
