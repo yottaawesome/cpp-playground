@@ -232,6 +232,53 @@ namespace ApproachC
 	}
 }
 
+namespace ApproachD
+{
+	struct E1 {};
+	struct E2 {};
+
+	template<typename...T>
+	struct EventBusT
+	{
+		std::tuple<std::vector<std::move_only_function<auto(const T&)->void>>...> vector;
+
+		template<typename TEvent>
+		auto Add(auto&& callback) -> void
+		{
+			using TVector = std::vector<std::move_only_function<auto(const TEvent&)->void>>;
+			std::get<TVector>(vector).push_back(std::forward<decltype(callback)>(callback));
+		}
+
+		auto Emit(OneOf<T...> auto&& event) -> void
+		{
+			auto& subscribers = std::get<std::vector<std::move_only_function<auto(const std::remove_cvref_t<decltype(event)>&)->void>>>(vector);
+			for (auto&& subscriber : subscribers)
+			{
+				subscriber(event);
+			}
+		}
+	};
+
+	using EventBus = EventBusT<E1, E2>;
+
+	struct M
+	{
+		auto On(const E1& e) -> void
+		{
+			std::println("M received E1");
+		}
+	};
+
+	void Run()
+	{
+		auto a = EventBus{};
+		M m;
+		a.Add<E1>([&m](const E1& e) { m.On(e); });
+		a.Emit(E1{});
+	}
+}
+
+
 auto main() -> int
 {
 	ApproachB::Run();
